@@ -23,9 +23,9 @@ const Navbar = () => {
         <div className="w-full px-6 md:px-12 flex justify-between items-center relative">
             
             {/* LOGO */}
-            <div className="font-black text-2xl tracking-tighter italic z-[1001] relative shrink-0">
+            <a href="#home" className="font-black text-2xl tracking-tighter italic z-[1001] relative shrink-0">
                 DAEKAN<span className="font-light">INC.</span>
-            </div>
+            </a>
 
             {/* MENU DESKTOP */}
             <div className="hidden md:flex gap-10 font-bold text-sm tracking-widest absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
