@@ -5,6 +5,7 @@ export const products = [
       name: "Daekan Graphite Pro", 
       price: "250.000", 
       image: "https://placehold.co/600x400/1a1a1a/ffffff?text=Graphite+Pro",
+      description : "",
       
       // --- Link product ---
       instagram: "https://www.instagram.com/daekan.inc/",

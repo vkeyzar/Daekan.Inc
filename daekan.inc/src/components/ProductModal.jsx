@@ -56,10 +56,13 @@ const ProductModal = ({ product, close }) => {
                 <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter mb-2">{product.name}</h2>
                 <p className="text-2xl text-gray-900 font-bold mb-6">IDR {product.price}</p>
                 
-                <div className="space-y-2 text-sm text-gray-600 mb-8 border-t border-b py-4">
-                  <p><strong>Size:</strong> 900 x 400 x 4mm</p>
-                  <p><strong>Surface:</strong> Speed & Control Hybrid</p>
-                  <p><strong>Feature:</strong> Waterproof & Anti-Fray Stitching</p>
+                <div className="text-sm text-gray-600 mb-8 border-t border-b py-4">
+                  {/* Kita pake white-space-pre-line biar kalau lo enter 
+                    di database, tampilannya di web juga ganti baris.
+                  */}
+                  <p className="whitespace-pre-line leading-relaxed">
+                    {product.description || "No description available for this premium gear."}
+                  </p>
                 </div>
 
                 {/* --- 3 TOMBOL DENGAN LOGO --- */}
