@@ -25,7 +25,7 @@ const ProductCard = ({ product, onOpenModal, isAnyModalOpen }) => {
         </h3>
         <div className="flex justify-between items-center mt-4 px-2">
             <span className="text-xs text-zinc-400 uppercase font-medium">Limited</span>
-            <span className="text-black font-bold text-lg">{product.price}</span>
+            <p className="text-black font-bold text-lg">IDR {product.price}</p>
         </div>
       </div>
     </div>
