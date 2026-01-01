@@ -27,13 +27,41 @@ const Footer = () => {
                 <div className="flex flex-col items-start md:items-end text-left md:text-right">
                     <h4 className="font-bold text-sm uppercase tracking-[0.2em] mb-6 text-zinc-400">Socials</h4>
                     <div className="flex gap-5 mb-8">
-                        <FaInstagram size={20} className="hover:text-zinc-400 cursor-pointer transition-colors" />
-                        <FaTiktok size={20} className="hover:text-zinc-400 cursor-pointer transition-colors" />
-                        <FaYoutube size={20} className="hover:text-zinc-400 cursor-pointer transition-colors" />
+                        <a 
+                            href="https://instagram.com/daekan.inc" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="hover:text-zinc-400 transition-colors"
+                            >
+                            <FaInstagram size={20} className="cursor-pointer" />
+                        </a>
+                        <a 
+                            href="https://tiktok.com/username_lo" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="hover:text-zinc-400 transition-colors"
+                        >
+                            <FaTiktok size={20} className="cursor-pointer" />
+                        </a>
+                        <a 
+                            href="https://youtube.com/username_lo" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="hover:text-zinc-400 transition-colors"
+                        >
+                            <FaYoutube size={20} className="cursor-pointer" />
+                        </a>
+                        <a 
+                            href="https://wa.me/+62896669394557" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="hover:text-zinc-400 transition-colors"
+                        >
+                            <FaWhatsapp size={20} className="cursor-pointer" />
+                        </a>
                     </div>
                     <div className="text-sm text-zinc-500 space-y-1">
                         <p className="font-medium">daekan.inc@gmail.com</p>
-                        <p>+62 8966-6939-4557</p>
                     </div>
                 </div>
             </div>

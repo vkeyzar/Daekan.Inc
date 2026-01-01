@@ -11,7 +11,7 @@ const ProductGrid = ({ products, onOpenModal }) => {
   }
 
   return (
-    <div className="max-w-screen-xl mx-auto px-4 pb-20 overflow-hidden">
+    <div className="max-w-screen-xl mx-auto px-10 pb-20">
       
       {/* HEADER: KITA UMPETIN DULU */}
       <motion.div 
@@ -42,32 +42,11 @@ const ProductGrid = ({ products, onOpenModal }) => {
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10"
       >
         {products.map((product) => (
-          <div 
-            key={product.id}
-            onClick={() => onOpenModal(product)}
-            className="bg-white rounded-xl overflow-hidden cursor-pointer group shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100"
-          >
-            
-            <div className="h-64 overflow-hidden relative bg-gray-100">
-               <img 
-                 src={product.image} 
-                 alt={product.name} 
-                 className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
-               />
-               <div className="absolute top-4 right-4 bg-black text-white text-xs font-bold px-3 py-1 rounded-full uppercase">
-                  {product.category}
-               </div>
-            </div>
-
-            <div className="p-6">
-              <h3 className="text-xl font-bold text-black mb-2 italic uppercase">{product.name}</h3>
-              <div className="flex justify-between items-center">
-                 <p className="text-gray-500 text-sm">Limited Edition</p>
-                 <p className="text-black font-bold text-lg">{product.price}</p>
-              </div>
-            </div>
-
-          </div>
+            <ProductCard 
+              key={product.id} 
+              product={product} 
+              onOpenModal={onOpenModal} 
+            />
         ))}
       </motion.div>
 
