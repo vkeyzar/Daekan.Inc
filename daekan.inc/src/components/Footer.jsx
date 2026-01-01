@@ -52,7 +52,7 @@ const Footer = () => {
                             <FaYoutube size={20} className="cursor-pointer" />
                         </a>
                         <a 
-                            href="https://wa.me/+62896669394557" 
+                            href="https://wa.me/+6289669394557" 
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="hover:text-zinc-400 transition-colors"
@@ -62,7 +62,7 @@ const Footer = () => {
                     </div>
                     <div className="text-sm text-zinc-500 space-y-1">
                         <p className="font-medium">daekan.inc@gmail.com</p>
-                        <p>+62 896-669-394-557</p>
+                        <p>+62 896-6939-4557</p>
                     </div>
                 </div>
             </div>
