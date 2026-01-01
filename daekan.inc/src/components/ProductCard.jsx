@@ -1,11 +1,13 @@
 import React from 'react'
 
-const ProductCard = ({ product, onOpenModal }) => {
+const ProductCard = ({ product, onOpenModal, isAnyModalOpen }) => {
   return (
+
     <div 
       onClick={() => onOpenModal(product)}
       /* KUNCI 1: Tambahkan group-hover:z-[999] agar selalu di depan tetangganya */
-      className="group relative bg-white border border-zinc-100 rounded-2xl p-4 cursor-pointer transition-all duration-500 hover:shadow-2xl hover:border-transparent group-hover:z-[999]"
+      className={`group relative bg-white border border-zinc-100 rounded-2xl p-4 cursor-pointer transition-all duration-500 hover:shadow-2xl hover:border-transparent group-hover:z-[999]
+        ${!isAnyModalOpen ? 'hover:shadow-2xl group-hover:z-[999]' : ''}`}
     >
       <div className="relative h-[200px] flex items-center justify-center">
         <img 
@@ -27,6 +29,7 @@ const ProductCard = ({ product, onOpenModal }) => {
         </div>
       </div>
     </div>
+
   )
 }
 

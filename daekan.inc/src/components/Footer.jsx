@@ -62,6 +62,7 @@ const Footer = () => {
                     </div>
                     <div className="text-sm text-zinc-500 space-y-1">
                         <p className="font-medium">daekan.inc@gmail.com</p>
+                        <p>+62 896-669-394-557</p>
                     </div>
                 </div>
             </div>

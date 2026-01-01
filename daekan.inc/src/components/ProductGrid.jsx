@@ -2,7 +2,7 @@ import React from 'react'
 import ProductCard from './ProductCard' // <--- Panggil si kartu tadi
 import { motion } from 'framer-motion'
 
-const ProductGrid = ({ products, onOpenModal }) => {
+const ProductGrid = ({ products, onOpenModal, selectedProduct }) => {
   
   // Settingan Animasi: Mulai dari bawah (y: 100) dan Transparan (opacity: 0)
   const fadeUp = {
@@ -45,7 +45,8 @@ const ProductGrid = ({ products, onOpenModal }) => {
             <ProductCard 
               key={product.id} 
               product={product} 
-              onOpenModal={onOpenModal} 
+              onOpenModal={onOpenModal}
+              isAnyModalOpen={selectedProduct !== null} 
             />
         ))}
       </motion.div>
