@@ -9,30 +9,36 @@ const Login = () => {
   const navigate = useNavigate() // Ini buat mindahin halaman lewat kodingan
 
   const handleLogin = async (e) => {
-    e.preventDefault()
+  e.preventDefault();
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    let message = "Terjadi kesalahan saat login.";
     
-    // Perintah Supabase buat cek email & password
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ 
-    email, 
-    password 
+    // Custom pesan berdasarkan tipe error dari Supabase
+    if (error.message.includes("Invalid login credentials")) {
+      message = "Email atau Password lo salah, Bro!";
+    } else if (error.message.includes("Email not confirmed")) {
+      message = "Cek email lo dulu buat konfirmasi akun!";
+    }
+
+    Swal.fire({
+      title: 'LOGIN FAILED!',
+      text: message,
+      icon: 'error',
+      confirmButtonColor: '#000000'
     });
-
-    if (authData?.user) {
-    // Biarkan Navbar mengurus session-nya sendiri lewat onAuthStateChange
-    // Kita fokus ke redirect role saja
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', authData.user.id)
-        .single();
-
-    if (profile?.role === 'admin') {
-        navigate('/admin-dashboard');
-    } else {
-        navigate('/');
-    }
-    }
-  };
+  } else {
+    // Notif Sukses
+    Swal.fire({
+      title: 'WELCOME BACK!',
+      text: 'Login berhasil, mengalihkan...',
+      icon: 'success',
+      timer: 1500,
+      showConfirmButton: false
+    });
+  }
+};
     
 
   return (
