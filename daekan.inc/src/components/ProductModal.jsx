@@ -14,7 +14,7 @@ const ProductModal = ({ product, close }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }} // Pas tutup, dia fading out
-        className="fixed inset-0 z-[99999] p-2 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 z-[99999] flex items-center justify-center p-2 md:p-4 bg-black/60 backdrop-blur-sm"
         onClick={close}
         >
           
@@ -35,16 +35,16 @@ const ProductModal = ({ product, close }) => {
             {/* Tombol Close (X) */}
             <button 
               onClick={close}
-              className="absolute top-4 right-4 text-gray-500 hover:text-black z-20 bg-white/50 rounded-full p-2"
+              className="absolute top-2 right-2 md:top-4 md:right-4 text-gray-500 hover:text-black z-50 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-md"
             >
                 <IoClose className="w-6 h-6" />
             </button>
 
             {/* --- BAGIAN KIRI: GAMBAR (60% Lebar) --- */}
             {/* Kita hapus padding (p-8) dan ganti background jadi warna soft */}
-            <div className="w-full md:w-[60%] bg-gray-50 h-64 md:h-auto shrink-0 flex items-center justify-center relative">
+            <div className="w-full md:w-[60%] bg-gray-50 flex items-center justify-center relative h-64 md:h-auto shrink-0">
                <img 
-                  src={product.image} 
+                  src={product.image_url} 
                   alt={product.name} 
                   // object-contain biar gambar utuh, h-full biar menuhin tinggi
                   className="w-full h-full object-contain p-4" 
@@ -52,7 +52,7 @@ const ProductModal = ({ product, close }) => {
             </div>
 
             {/* --- BAGIAN KANAN: DETAIL (40% Lebar) --- */}
-            <div className="w-full md:w-[40%] p-8 md:p-10 flex flex-col justify-center bg-white overflow-y-auto">
+            <div className="w-full md:w-[40%] p-6 md:p-10 flex flex-col justify-start md:justify-center bg-white overflow-y-auto">
                 <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter mb-2">{product.name}</h2>
                 <p className="text-2xl text-gray-900 font-bold mb-6">IDR {product.price}</p>
                 

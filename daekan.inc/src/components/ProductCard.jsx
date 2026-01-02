@@ -11,7 +11,7 @@ const ProductCard = ({ product, onOpenModal, isAnyModalOpen }) => {
     >
       <div className="relative h-[200px] flex items-center justify-center">
         <img 
-          src={product.image} 
+          src={product.image_url} 
           alt={product.name} 
           /* KUNCI 2: Pastikan z-index pada image juga tinggi saat hover */
           className="h-full w-auto object-contain drop-shadow-md transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] 

@@ -11,7 +11,7 @@ const ProductGrid = ({ products, onOpenModal, selectedProduct }) => {
   }
 
   return (
-    <div className="max-w-screen-xl mx-auto px-10 pb-20">
+    <div className="w-full bg-white text-black pt-32 pb-20 px-4 md:px-10">
       
       {/* HEADER: KITA UMPETIN DULU */}
       <motion.div 
