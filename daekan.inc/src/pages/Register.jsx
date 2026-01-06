@@ -6,12 +6,12 @@ const Register = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [msg, setMsg] = useState('')
+  const [msg, setMsg] = useState({ text: '', type: '' }) // <-- Diubah jadi object buat simpen tipe (error/success)
 
   const handleRegister = async (e) => {
     e.preventDefault()
     setLoading(true)
-    setMsg('')
+    setMsg({ text: '', type: '' })
 
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -19,9 +19,17 @@ const Register = () => {
     })
 
     if (error) {
-      setMsg("Pendaftaran gagal: " + error.message)
+      // LOGIC PESAN EFEKTIF: Biar gak muncul kode karakter aneh kayak di gambar lo
+      let friendlyMsg = "Pendaftaran gagal. Cek data lo lagi."
+      if (error.message.includes("Password should contain")) {
+        friendlyMsg = "Password wajib kombinasi Huruf Besar dan Kecil, Angka, & Simbol."
+      } else if (error.message.includes("already registered")) {
+        friendlyMsg = "Email ini sudah terdaftar."
+      }
+      
+      setMsg({ text: friendlyMsg, type: 'error' })
     } else {
-      setMsg("Cek email tod untuk verifikasi akun lo!")
+      setMsg({ text: "REGISTRASI BERHASIL! CEK EMAIL UNTUK KONFIRMASI.", type: 'success' })
     }
     setLoading(false)
   }
@@ -30,9 +38,7 @@ const Register = () => {
     <div className="relative flex items-center justify-center min-h-screen bg-zinc-950 overflow-hidden text-white p-6 md:p-12">
         
         {/* --- GRADIENT MESH BACKGROUND --- */}
-        {/* Bulatan 1: Putih redup di kiri atas */}
         <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-white/5 rounded-full blur-[120px] pointer-events-none"></div>
-        {/* Bulatan 2: Abu-abu di kanan bawah */}
         <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-zinc-800/20 rounded-full blur-[100px] pointer-events-none"></div>
 
         {/* --- REGISTER FORM CONTAINER --- */}
@@ -44,12 +50,17 @@ const Register = () => {
             JOIN DAEKAN<span className="font-light"> INC.</span>
         </h2>
         <p className="text-zinc-500 text-[10px] md:text-xs uppercase tracking-normal md:tracking-[0.2em] mb-8 font-bold leading-none">
-            Create your icon account
+            Create your daekan account
         </p>
         
-        {msg && (
-            <div className="mb-6 p-4 bg-white/5 rounded-xl border border-white/10 text-center">
-            <p className="text-sm font-bold text-yellow-400 italic">{msg}</p>
+        {/* --- DYNAMIC NOTIFICATION BOX: FULL COLOR & CENTER --- */}
+        {msg.text && (
+            <div className={`mb-6 p-4 rounded-xl transition-all duration-300 text-center ${
+            msg.type === 'error' ? 'bg-[#FF0000]' : 'bg-[#004d00]'
+            }`}>
+            <p className="text-[10px] md:text-xs font-black uppercase italic tracking-tighter leading-tight text-white">
+                {msg.text}
+            </p>
             </div>
         )}
 
@@ -89,7 +100,7 @@ const Register = () => {
         </p>
         </form>
     </div>
-    )
+  )
 }
 
 export default Register
