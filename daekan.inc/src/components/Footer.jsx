@@ -54,6 +54,7 @@ const Footer = () => {
                         </a> 
                         */}
 
+                        {/*}
                         <a 
                             href="https://wa.me/+6289669394557" 
                             target="_blank" 
@@ -62,6 +63,7 @@ const Footer = () => {
                         >
                             <FaWhatsapp size={20} className="cursor-pointer" />
                         </a>
+                        */}
                     </div>
                     <div className="text-sm text-zinc-500 space-y-1">
                         <a 
