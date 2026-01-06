@@ -20,7 +20,7 @@ const Register = () => {
 
     if (error) {
       // LOGIC PESAN EFEKTIF: Biar gak muncul kode karakter aneh kayak di gambar lo
-      let friendlyMsg = "Pendaftaran gagal. Cek data lo lagi."
+      let friendlyMsg = "Pendaftaran gagal. Silahkan cek data lagi."
       if (error.message.includes("Password should contain")) {
         friendlyMsg = "Password wajib kombinasi Huruf Besar dan Kecil, Angka, & Simbol."
       } else if (error.message.includes("already registered")) {

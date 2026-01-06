@@ -61,7 +61,7 @@ const CreatorModal = ({ creator, close }) => {
                 <img 
                     src={creator.image}
                     alt={creator.name}
-                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full md:w-[120%] h-auto opacity-20 md:opacity-10 z-10 pointer-events-none mix-blend-screen object-contain"
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full md:w-[120%] h-auto opacity-25 md:opacity-25 z-10 pointer-events-none mix-blend-screen object-contain"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/50 to-transparent z-20"></div>
                 
@@ -108,6 +108,7 @@ const CreatorModal = ({ creator, close }) => {
                     </div>
 
                     { /*
+                    // GEAR / MERCH SECTION
                     <div>
                         <h3 className="text-xl font-bold mb-4">GEAR USED</h3>
                         <div className="grid grid-cols-1 gap-3">
