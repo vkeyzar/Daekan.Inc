@@ -23,7 +23,7 @@ const Hero = () => {
           DAEKAN <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-800 to-black">INC.</span>
         </h1>
         <p className="max-w-xl mx-auto text-gray-600 text-lg md:text-xl mb-10 leading-relaxed">
-           Design to be Willing.
+           Designed to be Willing.
         </p>
 
         {/* Tombol CTA */}

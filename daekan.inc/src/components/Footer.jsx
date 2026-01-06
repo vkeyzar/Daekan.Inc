@@ -10,7 +10,7 @@ const Footer = () => {
                 {/* KOLOM 1: DESKRIPSI (Gedhe & Rapi) */}
                 <div className="md:col-span-6 lg:col-span-5">
                     <div className="font-black text-2xl tracking-tighter italic mb-6">
-                        DAEKAN<span className="font-light">INC.</span>
+                        DAEKAN<span className="font-light"> INC.</span>
                     </div>
                     <p className="text-zinc-500 text-sm leading-relaxed max-w-md text-justify">
                         At its core, we believe that true design shouldn't just look good, it should be 'Daekan.' 
@@ -35,8 +35,9 @@ const Footer = () => {
                             >
                             <FaInstagram size={20} className="cursor-pointer" />
                         </a>
+                        {/*
                         <a 
-                            href="https://tiktok.com/username_lo" 
+                            href="https://tiktok.com" 
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="hover:text-zinc-400 transition-colors"
@@ -44,13 +45,15 @@ const Footer = () => {
                             <FaTiktok size={20} className="cursor-pointer" />
                         </a>
                         <a 
-                            href="https://youtube.com/username_lo" 
+                            href="https://youtube.com" 
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="hover:text-zinc-400 transition-colors"
                         >
                             <FaYoutube size={20} className="cursor-pointer" />
-                        </a>
+                        </a> 
+                        */}
+
                         <a 
                             href="https://wa.me/+6289669394557" 
                             target="_blank" 
@@ -61,21 +64,27 @@ const Footer = () => {
                         </a>
                     </div>
                     <div className="text-sm text-zinc-500 space-y-1">
-                        <p className="font-medium">daekan.inc@gmail.com</p>
-                        <p>+62 896-6939-4557</p>
+                        <a 
+                        href="mailto:daekan.inc@gmail.com" 
+                        className="font-medium text-zinc-400 tracking-[0.1em] uppercase hover:text-black transition-colors duration-300"
+                        >
+                        CONTACT US
+                        </a>
+                        
+                        { /* <p>+62 896-6939-4557</p> */ }
                     </div>
                 </div>
             </div>
 
             {/* BOTTOM BAR: COPYRIGHT & LEGAL */}
-            <div className="pt-8 border-t border-zinc-100 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="pt-8 border-t border-zinc-100 flex md:flex-row justify-center items-center gap-4">
                 <p className="text-[10px] text-zinc-400 tracking-[0.1em] uppercase">
                     &copy; 2025 DAEKAN INC. All Rights Reserved.
                 </p>
-                <div className="flex gap-8 text-[10px] text-zinc-400 tracking-[0.1em] uppercase font-bold">
+                {/* <div className="flex gap-8 text-[10px] text-zinc-400 tracking-[0.1em] uppercase font-bold">
                     <a href="#" className="hover:text-zinc-800">Privacy Policy</a>
                     <a href="#" className="hover:text-zinc-800">Terms of Service</a>
-                </div>
+                </div> */}
             </div>
         </div>
     </footer>

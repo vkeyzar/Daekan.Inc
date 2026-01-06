@@ -1,10 +1,8 @@
 import React from 'react'
-import ProductCard from './ProductCard' // <--- Panggil si kartu tadi
+import ProductCard from './ProductCard'
 import { motion } from 'framer-motion'
 
 const ProductGrid = ({ products, onOpenModal, selectedProduct }) => {
-  
-  // Settingan Animasi: Mulai dari bawah (y: 100) dan Transparan (opacity: 0)
   const fadeUp = {
     hidden: { opacity: 0, y: 100 },
     visible: { opacity: 1, y: 0 }
@@ -13,12 +11,10 @@ const ProductGrid = ({ products, onOpenModal, selectedProduct }) => {
   return (
     <div className="w-full bg-white text-black pt-32 pb-20 px-4 md:px-10">
       
-      {/* HEADER: KITA UMPETIN DULU */}
+      {/* HEADER*/}
       <motion.div 
         initial="hidden"
         whileInView="visible"
-        // 👇 MAGIC-NYA DISINI: 'amount: 0.5' 
-        // Artinya: Tunggu sampe 50% elemen ini masuk layar, baru animasi jalan.
         viewport={{ once: true, amount: 0.5 }} 
         transition={{ duration: 0.8 }}
         variants={fadeUp}
@@ -32,25 +28,27 @@ const ProductGrid = ({ products, onOpenModal, selectedProduct }) => {
         </p>
       </motion.div>
 
-      {/* GRID PRODUK: Muncul belakangan (Delay 0.2 detik) */}
-      <motion.div 
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.1 }}
-        transition={{ duration: 0.8, delay: 0.2 }}
-        variants={fadeUp}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10"
-      >
-        {products.map((product) => (
-            <ProductCard 
-              key={product.id} 
-              product={product} 
-              onOpenModal={onOpenModal}
-              isAnyModalOpen={selectedProduct !== null} 
-            />
-        ))}
-      </motion.div>
-
+      {/* GRID PRODUK*/}
+        <div className="flex justify-center w-full">
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.1 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            variants={fadeUp}
+            className="flex flex-wrap justify-center gap-10 mx-auto w-full max-w-7xl"
+          >
+            {products.map((product) => (
+              <div key={product.id} className="flex-none"> {/* Bungkus dikit biar ukurannya stabil */}
+                <ProductCard 
+                  product={product} 
+                  onOpenModal={onOpenModal}
+                  isAnyModalOpen={selectedProduct !== null} 
+                />
+              </div>
+            ))}
+          </motion.div>
+        </div>
     </div>
   )
 }

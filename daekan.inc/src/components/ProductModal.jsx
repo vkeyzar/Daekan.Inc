@@ -1,7 +1,7 @@
 import React from 'react'
 // Pindahin import Icon ke sini karena cuma dipake di sini
 import { FaInstagram } from "react-icons/fa";
-import { SiShopee } from "react-icons/si";
+import { SiShopee, SiGoogleforms } from "react-icons/si";
 import { RiShoppingBag4Fill } from "react-icons/ri";
 import { IoClose } from "react-icons/io5";
 import { motion } from "framer-motion";
@@ -80,6 +80,11 @@ const ProductModal = ({ product, close }) => {
                   {product.shopee && (
                     <a href={product.shopee} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-3 w-full bg-[#ee4d2d] text-white py-3 rounded-lg font-bold uppercase text-xs md:text-sm tracking-widest hover:bg-[#d73f1f] transition shadow-md">
                       <SiShopee className="w-5 h-5"/> Order via Shopee
+                    </a>
+                  )}
+                  {product.gform && (
+                    <a href={product.gform} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-3 w-full bg-[#7248B9] text-white py-3 rounded-lg font-bold uppercase text-xs md:text-sm tracking-widest hover:bg-[#d73f1f] transition shadow-md">
+                      <SiGoogleforms className="w-5 h-5"/> Order via Google Form
                     </a>
                   )}
                 </div>

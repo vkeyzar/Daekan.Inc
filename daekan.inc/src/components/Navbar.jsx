@@ -88,7 +88,8 @@ const Navbar = () => {
 
         {/* ICONS & BURGER */}
         <div className="flex items-center gap-6 z-[1001] relative shrink-0">
-            <FaShoppingBag size={20} className="cursor-pointer hover:text-gray-500 transition-colors" />
+          {/* shopping bag icon disabled for now */}
+            {/* <FaShoppingBag size={20} className="cursor-pointer hover:text-gray-500 transition-colors" /> */}
             
             <Link to={session ? "/profile" : "/login"} className="hidden md:flex hover:scale-110 transition-transform">
                 <FaUser size={18} className={`cursor-pointer ${session ? 'text-green-500' : ''}`} />

@@ -107,6 +107,7 @@ const CreatorModal = ({ creator, close }) => {
                         </div>
                     </div>
 
+                    { /*
                     <div>
                         <h3 className="text-xl font-bold mb-4">GEAR USED</h3>
                         <div className="grid grid-cols-1 gap-3">
@@ -121,6 +122,7 @@ const CreatorModal = ({ creator, close }) => {
                             ))}
                         </div>
                     </div>
+                    */ }
                 </div>
             </div>
         </div>
