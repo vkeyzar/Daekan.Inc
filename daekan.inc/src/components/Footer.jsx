@@ -10,7 +10,7 @@ const Footer = () => {
                 {/* KOLOM 1: DESKRIPSI (Gedhe & Rapi) */}
                 <div className="md:col-span-6 lg:col-span-5">
                     <div className="font-black text-2xl tracking-tighter italic mb-6">
-                        DAEKAN<span className="font-light"> INC.</span>
+                        DAEKAN<span className="font-light ml-0.5">INC.</span>
                     </div>
                     <p className="text-zinc-500 text-sm leading-relaxed max-w-md text-justify">
                         At its core, we believe that true design shouldn't just look good, it should be 'Daekan.' 
