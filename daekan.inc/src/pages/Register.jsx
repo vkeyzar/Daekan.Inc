@@ -29,7 +29,7 @@ const Register = () => {
       
       setMsg({ text: friendlyMsg, type: 'error' })
     } else {
-      setMsg({ text: "REGISTRASI BERHASIL! CEK EMAIL UNTUK KONFIRMASI.", type: 'success' })
+      setMsg({ text: "REGISTRASI BERHASIL! CEK INBOX EMAIL / SPAM UNTUK KONFIRMASI.", type: 'success' })
     }
     setLoading(false)
   }
