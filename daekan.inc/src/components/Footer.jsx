@@ -35,6 +35,14 @@ const Footer = () => {
                             >
                             <FaInstagram size={20} className="cursor-pointer" />
                         </a>
+                        <a 
+                            href="mailto:daekan.inc@gmail.com" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="hover:text-zinc-400 transition-colors"
+                            >
+                            <FaEnvelope size={20} className="cursor-pointer" />
+                        </a>
                         {/*
                         <a 
                             href="https://tiktok.com" 
