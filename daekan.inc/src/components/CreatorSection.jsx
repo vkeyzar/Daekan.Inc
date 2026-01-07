@@ -17,7 +17,7 @@ const CreatorSection = ({ creators, onOpenModal }) => {
         </div>
 
         {/* Grid Kreator */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 px-12 sm:px-0">
+        <div className="flex flex-wrap justify-center gap-8 px-12 sm:px-0">
           
           {/* ✅ Ganti 'talents.map' jadi 'creators.map' */}
           {creators && creators.map((creator) => (

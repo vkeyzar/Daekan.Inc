@@ -24,7 +24,7 @@ const ProductGrid = ({ products, onOpenModal, selectedProduct }) => {
           OFFICIAL <span className="text-gray-400">MERCH</span>
         </h2>
         <p className="text-gray-500 tracking-widest text-sm uppercase">
-          PREMIUM GEAR USED BY OUR CREATORS.
+          Shapes Idea Into Your Personality.
         </p>
       </motion.div>
 

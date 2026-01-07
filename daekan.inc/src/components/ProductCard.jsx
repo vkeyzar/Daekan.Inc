@@ -4,7 +4,7 @@ const ProductCard = ({ product, onOpenModal, isAnyModalOpen }) => {
   return (
     <div 
       onClick={() => onOpenModal(product)}
-      className={`group relative bg-white border border-zinc-100 rounded-2xl p-4 cursor-pointer transition-all duration-500 
+      className={`group relative bg-white border border-zinc-200 rounded-2xl p-4 cursor-pointer transition-all duration-500 
         ${!isAnyModalOpen ? 'hover:shadow-2xl hover:z-[50]' : ''} 
         w-full max-w-[350px] mx-auto`}
     >
