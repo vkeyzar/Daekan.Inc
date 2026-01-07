@@ -50,10 +50,10 @@ const ProductModal = ({ product, close }) => {
                {/* --- UPGRADED: Badge SALE di Image --- */}
                 {isSale && !isComingSoon && (
                   <div className="absolute top-0 left-0 bg-red-600 text-white px-6 py-4 rounded-br-2xl shadow-[0_10px_30px_rgba(220,38,38,0.4)] z-10 flex flex-col items-center">
-                    <p className="text-[12px] font-black uppercase tracking-[0.2em] leading-none mb-1">
+                    <p className="text-[20px] font-black uppercase tracking-[0.2em] leading-none mb-1">
                       LIMITED SALE
                     </p>
-                    <div className="font-mono text-xl font-black tabular-nums tracking-tighter">
+                    <div className="font-mono text-[18px] font-black tabular-nums tracking-tighter">
                       <Countdown date={new Date(product.sale_end_date)} />
                     </div>
                   </div>

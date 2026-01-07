@@ -31,7 +31,7 @@ const ProductCard = ({ product, onOpenModal, isAnyModalOpen }) => {
           </span>
 
           {/* TIMER: Dibuat Lebih Kecil & Rapi */}
-          <div className="text-[10px] font-mono font-bold tabular-nums opacity-90 border-t border-white/20 pt-1 w-full text-center">
+          <div className="text-[12px] font-mono font-bold tabular-nums opacity-90 border-t border-white/20 pt-1 w-full text-center">
             <Countdown date={new Date(product.sale_end_date)} />
           </div>
         </div>
