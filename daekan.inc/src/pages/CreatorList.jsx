@@ -4,27 +4,35 @@ import Swal from 'sweetalert2'
 
 const CreatorList = ({ creators, refreshData, onOpenEditCreator }) => {
   
+  // FUNGSI DELETE GACOR
   const handleDelete = async (id, name) => {
     const confirm = await Swal.fire({
-      title: `Hapus ${name}?`,
-      text: "Data creator ini bakal hilang dari roster.",
+      title: `HAPUS ${name}?`,
+      text: "Data ini bakal ilang permanen dari roster, yakin?",
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#000',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Hapus'
+      confirmButtonColor: '#d33', // Merah buat delete
+      cancelButtonColor: '#000',
+      confirmButtonText: 'YA, HAPUS!'
     });
 
     if (confirm.isConfirmed) {
-      const { error } = await supabase.from('creators').delete().eq('id', id);
-      if (!error) {
-        Swal.fire('Deleted!', 'Creator berhasil dihapus.', 'success');
+      // SIKAT DATABASE
+      const { error } = await supabase
+        .from('creators')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        Swal.fire('GAGAL!', error.message, 'error');
+      } else {
+        Swal.fire('BERHASIL!', `${name} telah dihapus.`, 'success');
+        // REFRESH DATA Dashboard (AutoSync)
         refreshData();
       }
     }
   };
 
-  // Helper untuk ambil semua link sosmed dari JSON
   const parseSocials = (socialsData) => {
     try {
       return typeof socialsData === 'string' ? JSON.parse(socialsData) : socialsData;
@@ -35,18 +43,19 @@ const CreatorList = ({ creators, refreshData, onOpenEditCreator }) => {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-left border-collapse min-w-[1100px]">
+      <table className="w-full text-left border-collapse min-w-[1200px]">
         <thead>
           <tr className="text-xs font-black tracking-[0.2em] text-zinc-400 uppercase border-b border-zinc-100">
             <th className="pb-6 font-black">Creator Profile</th>
             <th className="pb-6 font-black">Role</th>
-            <th className="pb-6 font-black">Bio</th>
-            <th className="pb-6 font-black text-center">Connected Socials</th>
+            <th className="pb-6 font-black">YouTube ID</th>
+            <th className="pb-6 font-black">Video ID</th>
+            <th className="pb-6 font-black text-center">Socials</th>
             <th className="pb-6 font-black text-right">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-zinc-50">
-          {creators.map((talent, index) => {
+          {creators.map((talent) => {
             const socials = parseSocials(talent.socials);
             
             return (
@@ -54,7 +63,7 @@ const CreatorList = ({ creators, refreshData, onOpenEditCreator }) => {
                 
                 {/* PROFILE */}
                 <td className="py-8 flex items-center gap-6">
-                  <div className="w-20 h-20 rounded-2xl overflow-hidden bg-zinc-100 border border-zinc-200 shadow-sm group-hover:scale-105 transition-transform duration-500">
+                  <div className="w-16 h-16 rounded-2xl overflow-hidden bg-zinc-100 border border-zinc-200 shadow-sm group-hover:scale-105 transition-transform duration-500">
                     <img 
                       src={talent.image || 'https://via.placeholder.com/150'} 
                       className="w-full h-full object-cover" 
@@ -62,68 +71,54 @@ const CreatorList = ({ creators, refreshData, onOpenEditCreator }) => {
                     />
                   </div>
                   <div>
-                    <p className="font-black text-lg uppercase tracking-tight leading-none mb-2">{talent.name}</p>
-                    <p className="text-xs text-zinc-400 font-mono">#{String(talent.id).padStart(3, '0')}</p>
+                    <p className="font-black text-base uppercase tracking-tight leading-none mb-1">{talent.name}</p>
+                    <p className="text-[10px] text-zinc-400 font-mono">ID: {talent.id}</p>
                   </div>
                 </td>
 
                 {/* ROLE */}
                 <td className="py-8">
-                  <span className="text-xs font-black bg-zinc-900 text-white px-3 py-1 rounded-md uppercase tracking-widest">
+                  <span className="text-[10px] font-black bg-zinc-900 text-white px-3 py-1 rounded-md uppercase tracking-widest">
                     {talent.role || 'TALENT'}
                   </span>
                 </td>
 
-                {/* BIO */}
-                <td className="py-8 max-w-xs">
-                  <p className="text-sm text-zinc-500 leading-relaxed line-clamp-2 italic">
-                    {talent.bio || 'No bio available.'}
+                {/* YOUTUBE CHANNEL ID */}
+                <td className="py-8">
+                  <p className="text-[11px] font-mono text-zinc-500 bg-zinc-50 px-2 py-1 rounded border border-zinc-100 inline-block">
+                    {talent.channel_id || '—'}
                   </p>
                 </td>
 
-                {/* SOCIALS - SEMUA PLATFORM */}
+                {/* YOUTUBE VIDEO ID */}
                 <td className="py-8">
-                  <div className="flex flex-wrap justify-center gap-2 max-w-[200px] mx-auto">
-                    {socials?.youtube && (
-                      <a href={socials.youtube} target="_blank" rel="noreferrer" title="YouTube"
-                         className="w-8 h-8 flex items-center justify-center bg-red-600 text-white rounded-lg hover:scale-110 transition-all">
-                        <span className="text-xs font-black italic">YT</span>
-                      </a>
-                    )}
-                    {socials?.instagram && (
-                      <a href={socials.instagram} target="_blank" rel="noreferrer" title="Instagram"
-                         className="w-8 h-8 flex items-center justify-center bg-zinc-900 text-white rounded-lg hover:scale-110 transition-all">
-                        <span className="text-xs font-black italic">IG</span>
-                      </a>
-                    )}
-                    {socials?.tiktok && (
-                      <a href={socials.tiktok} target="_blank" rel="noreferrer" title="TikTok"
-                         className="w-8 h-8 flex items-center justify-center bg-black text-white rounded-lg hover:scale-110 transition-all border border-zinc-700">
-                        <span className="text-xs font-black italic">TK</span>
-                      </a>
-                    )}
-                    {socials?.twitter && (
-                      <a href={socials.twitter} target="_blank" rel="noreferrer" title="X (Twitter)"
-                         className="w-8 h-8 flex items-center justify-center bg-zinc-100 text-black rounded-lg hover:scale-110 transition-all border border-zinc-200">
-                        <span className="text-xs font-black italic uppercase">X</span>
-                      </a>
-                    )}
-                    {socials?.twitch && (
-                      <a href={socials.twitch} target="_blank" rel="noreferrer" title="Twitch"
-                         className="w-8 h-8 flex items-center justify-center bg-purple-600 text-white rounded-lg hover:scale-110 transition-all">
-                        <span className="text-xs font-black italic uppercase">TW</span>
-                      </a>
-                    )}
+                  <p className="text-[11px] font-mono text-red-500 bg-red-50 px-2 py-1 rounded border border-red-100 inline-block font-bold">
+                    {talent.youtube_video_id || '—'}
+                  </p>
+                </td>
+
+                {/* SOCIALS */}
+                <td className="py-8 text-center">
+                  <div className="flex justify-center gap-2">
+                    {socials?.youtube && <span className="text-[9px] font-black bg-red-600 text-white px-2 py-1 rounded">YT</span>}
+                    {socials?.instagram && <span className="text-[9px] font-black bg-zinc-900 text-white px-2 py-1 rounded">IG</span>}
+                    {socials?.tiktok && <span className="text-[9px] font-black bg-black text-white px-2 py-1 rounded">TK</span>}
                   </div>
                 </td>
 
                 {/* ACTIONS */}
                 <td className="py-8 text-right">
                   <div className="flex justify-end gap-5">
-                    <button onClick={() => onOpenEditCreator(talent)} className="text-xs font-black uppercase tracking-widest text-zinc-400 hover:text-black transition-all">
+                    <button 
+                      onClick={() => onOpenEditCreator(talent)} 
+                      className="text-xs font-black uppercase tracking-widest text-zinc-400 hover:text-black transition-all"
+                    >
                       Edit
                     </button>
-                    <button onClick={() => handleDelete(talent.id, talent.name)} className="text-xs font-black uppercase tracking-widest text-red-500 hover:text-red-700">
+                    <button 
+                      onClick={() => handleDelete(talent.id, talent.name)} 
+                      className="text-xs font-black uppercase tracking-widest text-red-500 hover:text-red-700 transition-all"
+                    >
                       Remove
                     </button>
                   </div>
