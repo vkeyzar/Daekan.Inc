@@ -55,7 +55,7 @@ const Login = () => {
       });
 
       setTimeout(() => {
-        navigate('/dashboard'); // Menggunakan navigate sesuai import lo
+        navigate('/'); // Menggunakan navigate sesuai import lo
       }, 1500);
     }
   };
