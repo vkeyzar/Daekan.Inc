@@ -1,5 +1,6 @@
 import React from 'react'
 import { FaInstagram, FaTiktok, FaYoutube, FaEnvelope, FaWhatsapp } from 'react-icons/fa'
+import { FaXTwitter } from "react-icons/fa6"
 
 const Footer = () => {
   return (
@@ -43,15 +44,15 @@ const Footer = () => {
                             >
                             <FaEnvelope size={20} className="cursor-pointer" />
                         </a>
-                        {/*
+
                         <a 
-                            href="https://tiktok.com" 
+                            href="https://x.com/DaekanInc" 
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="hover:text-zinc-400 transition-colors"
                         >
-                            <FaTiktok size={20} className="cursor-pointer" />
-                        </a>
+                            <FaXTwitter size={20} className="cursor-pointer" />
+                        </a>{/*
                         <a 
                             href="https://youtube.com" 
                             target="_blank" 
