@@ -18,7 +18,8 @@ const UpdateProduct = ({ isOpen, onClose, productData, refreshData }) => {
     shopee: '',
     gform: '',
     sale_end_date: '',
-    category: 'Merch'
+    category: 'Merch',
+    is_open: true // --- FITUR BARU: Tambah default state is_open ---
   })
 
   // Sync data lama ke dalam form pas modal dibuka
@@ -27,7 +28,8 @@ const UpdateProduct = ({ isOpen, onClose, productData, refreshData }) => {
       setProduct({
         ...productData,
         // Formatting date biar kebaca input datetime-local
-        sale_end_date: productData.sale_end_date ? productData.sale_end_date.substring(0, 16) : ''
+        sale_end_date: productData.sale_end_date ? productData.sale_end_date.substring(0, 16) : '',
+        // is_open otomatis ketarik dari productData kalau di database udah ada nilainya
       })
     }
   }, [productData])
@@ -114,15 +116,32 @@ const UpdateProduct = ({ isOpen, onClose, productData, refreshData }) => {
                 onChange={(e) => setProduct({...product, description: e.target.value})} />
             </div>
 
-            <div>
-              <label className="text-xs font-black tracking-widest text-zinc-400 uppercase">Label (Status)</label>
-              <select value={product.label || ''} className="w-full border-b border-zinc-200 py-2 outline-none font-bold focus:border-black bg-transparent"
-                onChange={(e) => setProduct({...product, label: e.target.value})}>
-                <option value="">Normal</option>
-                <option value="COMING SOON">COMING SOON</option>
-                <option value="PRE-ORDER">PRE-ORDER</option>
-                <option value="LIMITED GEAR">LIMITED GEAR</option>
-              </select>
+            {/* --- FITUR BARU: LABEL & ORDER STATUS DIBIKIN SEJAJAR --- */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-black tracking-widest text-zinc-400 uppercase">Label (Status)</label>
+                <select value={product.label || ''} className="w-full border-b border-zinc-200 py-2 outline-none font-bold focus:border-black bg-transparent"
+                  onChange={(e) => setProduct({...product, label: e.target.value})}>
+                  <option value="">Normal</option>
+                  <option value="COMING SOON">COMING SOON</option>
+                  <option value="PRE-ORDER">PRE-ORDER</option>
+                  <option value="LIMITED GEAR">LIMITED GEAR</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-black tracking-widest text-zinc-400 uppercase mb-2 block">Order Status</label>
+                <button
+                  type="button"
+                  onClick={() => setProduct({ ...product, is_open: !product.is_open })}
+                  className={`w-full py-2 px-4 rounded-lg font-bold tracking-widest text-xs transition-all uppercase border 
+                    ${product.is_open 
+                      ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' 
+                      : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'}`}
+                >
+                  {product.is_open ? '● OPEN ORDER' : '■ CLOSED ORDER'}
+                </button>
+              </div>
             </div>
           </div>
 

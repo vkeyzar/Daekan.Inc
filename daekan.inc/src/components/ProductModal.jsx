@@ -1,10 +1,10 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { FaInstagram } from "react-icons/fa";
 import { SiShopee, SiGoogleforms } from "react-icons/si";
 import { RiShoppingBag4Fill } from "react-icons/ri";
 import { IoClose } from "react-icons/io5";
 import { motion } from "framer-motion";
-import Countdown from 'react-countdown'; // --- TAMBAHAN: Library Timer ---
+import Countdown from 'react-countdown';
 
 const ProductModal = ({ product, close }) => {
   const hasAnyLink = product.instagram || product.tokopedia || product.shopee || product.gform;
@@ -12,6 +12,21 @@ const ProductModal = ({ product, close }) => {
   // --- LOGIKA SALE & COMING SOON ---
   const isComingSoon = !product.price || product.price === 0;
   const isSale = product.original_price && Number(product.original_price) > Number(product.price);
+  
+  // 1. FITUR CLOSE ORDER
+  const isClosed = product.is_open === false;
+
+  // 2. FITUR AUTO-HIDE SALE
+  const [isSaleExpired, setIsSaleExpired] = useState(false);
+
+  useEffect(() => {
+    if (product.sale_end_date) {
+      const timeLeft = new Date(product.sale_end_date).getTime() - Date.now();
+      if (timeLeft <= 0) {
+        setIsSaleExpired(true);
+      }
+    }
+  }, [product.sale_end_date]);
 
   // Format IDR biar rapi
   const formatIDR = (price) => {
@@ -22,12 +37,14 @@ const ProductModal = ({ product, close }) => {
     }).format(price);
   };
 
+  const showSaleBadge = isSale && !isComingSoon && !isSaleExpired && !isClosed;
+
   return (
     <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[99999] flex items-center justify-center p-2 md:p-4 bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 z-[99999] flex items-center justify-center p-2 md:p-4 bg-black/80 backdrop-blur-sm"
         onClick={close}
     >
         <motion.div 
@@ -46,28 +63,43 @@ const ProductModal = ({ product, close }) => {
             </button>
 
             {/* IMAGE SECTION */}
-            <div className="w-full md:w-[60%] bg-gray-50 flex items-center justify-center relative h-64 md:h-auto shrink-0">
+            <div className="w-full md:w-[60%] bg-zinc-100 flex items-center justify-center relative h-64 md:h-auto shrink-0">
+               
+               {/* OVERLAY CLOSE ORDER DI GAMBAR (Opsional, biar makin jelas) */}
+               {isClosed && (
+                 <div className="absolute inset-0 bg-black/40 z-[5] flex items-center justify-center backdrop-blur-[2px]">
+                    <span className="bg-black text-white px-6 py-2 font-black text-2xl tracking-[0.2em] uppercase -rotate-12 border border-white/20 shadow-2xl">
+                      SOLD OUT
+                    </span>
+                 </div>
+               )}
+
                {/* --- UPGRADED: Badge SALE di Image --- */}
-                {isSale && !isComingSoon && (
+                {showSaleBadge && (
                   <div className="absolute top-0 left-0 bg-red-600 text-white px-6 py-4 rounded-br-2xl shadow-[0_10px_30px_rgba(220,38,38,0.4)] z-10 flex flex-col items-center">
                     <p className="text-[20px] font-black uppercase tracking-[0.2em] leading-none mb-1">
                       LIMITED SALE
                     </p>
                     <div className="font-mono text-[18px] font-black tabular-nums tracking-tighter">
-                      <Countdown date={new Date(product.sale_end_date)} />
+                      <Countdown 
+                        date={new Date(product.sale_end_date)} 
+                        onComplete={() => setIsSaleExpired(true)}
+                      />
                     </div>
                   </div>
                 )}
                <img 
                   src={product.image_url} 
                   alt={product.name} 
-                  className="w-full h-full object-contain p-4" 
+                  className={`w-full h-full object-contain p-4 transition-all duration-300 ${isClosed ? 'grayscale opacity-60' : ''}`} 
                 />
             </div>
 
             {/* CONTENT SECTION */}
             <div className="w-full md:w-[40%] p-6 md:p-10 flex flex-col justify-start md:justify-center bg-white overflow-y-auto">
-                <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter mb-2">{product.name}</h2>
+                <h2 className={`text-3xl md:text-4xl font-black uppercase tracking-tighter mb-2 ${isClosed ? 'text-zinc-400' : 'text-black'}`}>
+                  {product.name}
+                </h2>
                 
                 {/* --- BAGIAN HARGA (MODIFIED) --- */}
                 <div className="flex items-baseline gap-3 mb-6">
@@ -75,8 +107,10 @@ const ProductModal = ({ product, close }) => {
                     <p className="text-3xl text-gray-400 font-black italic tracking-tighter">COMING SOON</p>
                   ) : (
                     <>
-                      <p className="text-3xl text-gray-900 font-black">{formatIDR(product.price)}</p>
-                      {isSale && (
+                      <p className={`text-3xl font-black ${isClosed ? 'text-zinc-400' : 'text-gray-900'}`}>
+                        {formatIDR(product.price)}
+                      </p>
+                      {showSaleBadge && (
                         <p className="text-lg text-red-500 line-through font-bold opacity-60">
                           {formatIDR(product.original_price)}
                         </p>
@@ -92,7 +126,15 @@ const ProductModal = ({ product, close }) => {
                 </div>
 
                 <div className="flex flex-col gap-2 md:gap-3">
-                  {hasAnyLink && !isComingSoon ? (
+                  {/* --- LOGIC TOMBOL BERUBAH --- */}
+                  {isClosed ? (
+                    <button 
+                      disabled
+                      className="flex items-center justify-center gap-3 w-full bg-zinc-200 text-zinc-500 py-4 rounded-lg font-black uppercase text-xs md:text-sm tracking-[0.2em] cursor-not-allowed border border-zinc-300"
+                    >
+                      <IoClose className="w-5 h-5"/> CLOSE ORDER
+                    </button>
+                  ) : hasAnyLink && !isComingSoon ? (
                     <>
                       {product.instagram && (
                         <a href={product.instagram} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-3 w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-bold uppercase text-xs md:text-sm tracking-widest hover:opacity-90 transition shadow-md">

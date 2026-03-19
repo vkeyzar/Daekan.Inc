@@ -18,7 +18,8 @@ const CreateProduct = ({ isOpen, onClose, refreshData }) => {
     shopee: '',
     gform: '',
     sale_end_date: '',
-    category: 'Merch'
+    category: 'Merch',
+    is_open: true // --- FITUR BARU: Default produk selalu OPEN ---
   })
 
   // Handler Ganti Gambar + Preview
@@ -62,6 +63,7 @@ const CreateProduct = ({ isOpen, onClose, refreshData }) => {
             price: parseFloat(product.price) || 0,
             original_price: product.original_price ? parseFloat(product.original_price) : null,
             sale_end_date: product.sale_end_date ? `${product.sale_end_date}:00+07:00` : null
+            // is_open udah kebawa dari state ...product
           }
         ])
 
@@ -77,6 +79,10 @@ const CreateProduct = ({ isOpen, onClose, refreshData }) => {
       // Reset states
       setPreviewUrl(null)
       setImageFile(null)
+      setProduct({
+        name: '', price: '', original_price: '', description: '', label: '',
+        instagram: '', tokopedia: '', shopee: '', gform: '', sale_end_date: '', category: 'Merch', is_open: true
+      })
       onClose() 
       refreshData() 
     } catch (error) {
@@ -141,7 +147,7 @@ const CreateProduct = ({ isOpen, onClose, refreshData }) => {
             </div>
           </div>
 
-          {/* KOLOM KANAN: LINKS, DATE & DESC */}
+          {/* KOLOM KANAN: LINKS, DATE, DESC & STATUS */}
           <div className="space-y-6">
             <div>
               <label className="text-xs font-black tracking-widest text-zinc-400 uppercase">Description</label>
@@ -149,15 +155,32 @@ const CreateProduct = ({ isOpen, onClose, refreshData }) => {
                 onChange={(e) => setProduct({...product, description: e.target.value})} />
             </div>
 
-            <div>
-              <label className="text-xs font-black tracking-widest text-zinc-400 uppercase">Label (Status)</label>
-              <select className="w-full border-b border-zinc-200 py-2 outline-none font-bold focus:border-black bg-transparent"
-                onChange={(e) => setProduct({...product, label: e.target.value})}>
-                <option value="">Normal</option>
-                <option value="COMING SOON">COMING SOON</option>
-                <option value="PRE-ORDER">PRE-ORDER</option>
-                <option value="LIMITED GEAR">LIMITED GEAR</option>
-              </select>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-black tracking-widest text-zinc-400 uppercase">Label (Status)</label>
+                <select className="w-full border-b border-zinc-200 py-2 outline-none font-bold focus:border-black bg-transparent"
+                  onChange={(e) => setProduct({...product, label: e.target.value})}>
+                  <option value="">Normal</option>
+                  <option value="COMING SOON">COMING SOON</option>
+                  <option value="PRE-ORDER">PRE-ORDER</option>
+                  <option value="LIMITED GEAR">LIMITED GEAR</option>
+                </select>
+              </div>
+
+              {/* --- FITUR BARU: TOGGLE ORDER STATUS --- */}
+              <div>
+                <label className="text-xs font-black tracking-widest text-zinc-400 uppercase mb-2 block">Order Status</label>
+                <button
+                  type="button"
+                  onClick={() => setProduct({ ...product, is_open: !product.is_open })}
+                  className={`w-full py-2 px-4 rounded-lg font-bold tracking-widest text-xs transition-all uppercase border 
+                    ${product.is_open 
+                      ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' 
+                      : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'}`}
+                >
+                  {product.is_open ? '● OPEN ORDER' : '■ CLOSED ORDER'}
+                </button>
+              </div>
             </div>
 
             <div className="bg-zinc-50 p-6 rounded-[1.5rem] space-y-4">
