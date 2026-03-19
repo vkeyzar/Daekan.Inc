@@ -8,15 +8,16 @@ const ProductGrid = ({ products, onOpenModal, selectedProduct }) => {
     visible: { opacity: 1, y: 0 }
   }
 
-  // Tips: Di sini lo bisa nambahin filter kalau mau nampilin produk SALE di urutan paling atas
+  // Logic Sort: Sale di atas
   const sortedProducts = [...products].sort((a, b) => {
     const aIsSale = a.original_price && a.original_price > a.price;
     const bIsSale = b.original_price && b.original_price > b.price;
-    return bIsSale - aIsSale; // Produk sale bakal naik ke atas
+    return bIsSale - aIsSale;
   });
 
   return (
-    <div className="w-full bg-white text-black pt-32 pb-20 px-4 md:px-10">
+    // --- KUNCI FIX: bg-white diganti jadi bg-transparent, ditambah relative z-10 ---
+    <div className="w-full bg-transparent text-black pt-32 pb-20 px-4 md:px-10 relative z-10">
       
       {/* HEADER */}
       <motion.div 
@@ -27,7 +28,7 @@ const ProductGrid = ({ products, onOpenModal, selectedProduct }) => {
         variants={fadeUp}
         className="text-center mb-16"
       >
-        <h2 className="text-5xl md:text-6xl font-black uppercase text-black tracking-tighter mb-4">
+        <h2 className="text-5xl md:text-6xl font-black uppercase text-black tracking-tighter mb-4 drop-shadow-sm">
           OFFICIAL <span className="text-gray-400">MERCH</span>
         </h2>
         <p className="text-gray-500 tracking-widest text-sm uppercase font-medium">
@@ -47,6 +48,7 @@ const ProductGrid = ({ products, onOpenModal, selectedProduct }) => {
         >
           {sortedProducts.map((product) => (
             <div key={product.id} className="flex-none">
+              {/* ProductCard lo yang mantap itu bakal otomatis nge-render di atas layer transparan ini */}
               <ProductCard 
                 product={product} 
                 onOpenModal={onOpenModal}
