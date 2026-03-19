@@ -2,10 +2,12 @@ import React, { useState, useEffect, useMemo } from 'react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import Hero from '../components/Hero'
+import ProductSlideshow from '../components/ProductSlideshow' 
 import ProductGrid from '../components/ProductGrid'
 import CreatorSection from '../components/CreatorSection'
 import ProductModal from '../components/ProductModal'
 import CreatorModal from '../components/CreatorModal'
+import ReviewSection from '../components/ReviewSection' // ✅ IMPORT AMAN
 import { AnimatePresence } from 'framer-motion'
 import { useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient';
@@ -16,21 +18,25 @@ const Home = () => {
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [selectedCreator, setSelectedCreator] = useState(null)
   const [loading, setLoading] = useState(true) 
+  
+  // ✅ TAMBAHIN STATE SESSION DI SINI
+  const [session, setSession] = useState(null) 
+  
   const location = useLocation()
 
-  // --- LOGIC PARTIKEL FRIEREN (SNOW/PETALS) ---
+  // --- LOGIC PARTIKEL FRIEREN (FALLING PETALS) ---
   const particles = useMemo(() => {
     return [...Array(25)].map((_, i) => ({
       id: i,
       left: `${Math.random() * 100}%`,
-      animationDuration: `${Math.random() * 12 + 8}s`, // 8 - 20 detik
+      animationDuration: `${Math.random() * 12 + 8}s`,
       animationDelay: `-${Math.random() * 20}s`, 
-      opacity: Math.random() * 0.6 + 0.4, 
-      scale: Math.random() * 0.6 + 0.4, 
+      opacity: Math.random() * 0.5 + 0.3, 
+      scale: Math.random() * 0.5 + 0.5, 
     }))
   }, [])
 
-  // 1. Fungsi Fetch Data
+  // 1. Fungsi Fetch Data Produk & Kreator
   const fetchData = async () => {
     try {
       setLoading(true)
@@ -51,11 +57,23 @@ const Home = () => {
     }
   }
 
-  // 2. Jalankan Fetch & Scroll Logic
+  // 2. Cek Session & Fetch Data
   useEffect(() => {
     fetchData()
+
+    // ✅ LOGIC CEK USER LOGIN (Buat dikirim ke ReviewSection)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+
+    return () => subscription.unsubscribe()
   }, []) 
 
+  // 3. Scroll Logic
   useEffect(() => {
     if (!loading && location.hash) {
       const id = location.hash.replace('#', '')
@@ -88,20 +106,17 @@ const Home = () => {
 
       {/* --- LAYER AMBIENCE FRIEREN (FIXED BACKGROUND) --- */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-[0]">
-        {/* Layer 1: Cinematic Bokeh Background */}
         <img 
           src="https://corhxzcsgvcckigxleeo.supabase.co/storage/v1/object/public/asset/Blue_Moon_Weed_Full.webp" 
-          className="absolute -top-16 -left-16 w-80 md:w-[450px] opacity-80 blur-[2px] animate-[pulse_6s_ease-in-out_infinite] drop-shadow-[0_0_15px_rgba(150,200,255,0.4)]"
+          className="absolute -top-16 -left-16 w-80 md:w-[450px] opacity-80 animate-[pulse_6s_ease-in-out_infinite] drop-shadow-[0_0_15px_rgba(150,200,255,0.4)]"
           alt="Blue Moon Weed Background"
         />
         <img 
           src="https://corhxzcsgvcckigxleeo.supabase.co/storage/v1/object/public/asset/Blue_Moon_Weed_Full.webp" 
-          className="absolute -bottom-32 -right-20 w-96 md:w-[550px] opacity-60 blur-[4px] animate-[pulse_8s_ease-in-out_infinite] drop-shadow-[0_0_20px_rgba(150,200,255,0.3)]"
-          style={{ transform: 'scaleX(-1)' }} 
+          className="absolute -bottom-40 -right-40 md:-bottom-48 md:-right-48 w-96 md:w-[600px] opacity-60 animate-[pulse_8s_ease-in-out_infinite] drop-shadow-[0_0_20px_rgba(150,200,255,0.3)] rotate-[100deg]"
           alt="Blue Moon Weed Background"
         />
 
-        {/* Layer 2: Particle System (Falling Petals) */}
         {particles.map((p) => (
           <img
             key={p.id}
@@ -113,7 +128,7 @@ const Home = () => {
               animationDelay: p.animationDelay,
               '--opacity': p.opacity, 
               '--scale': p.scale,
-              filter: p.scale < 0.6 ? 'blur(3px)' : 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))',
+              filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))',
             }}
             alt="Blue Moon Petal Particle"
           />
@@ -121,21 +136,15 @@ const Home = () => {
       </div>
 
       {/* --- LAYER CONTENT (WEB UTAMA) --- */}
-      {/* Pake relative z-10 biar semua section ada di atas bunga */}
       <div className="relative z-10">
         <Navbar />
 
         <section id="home">
           <Hero />
         </section>
-        
-        <section id="talents">
-          {!loading && (
-            <CreatorSection 
-              creators={creators} 
-              onOpenModal={setSelectedCreator} 
-            />
-          )}
+
+        <section id="slideshow" className="min-h-[300px]">
+          <ProductSlideshow />
         </section>
 
         <section id="shop" className="min-h-[400px]">
@@ -151,6 +160,11 @@ const Home = () => {
             />
           )}
         </section>
+
+        {/* ✅ INJECT REVIEW SECTION DI SINI, DI BAWAH PRODUK */}
+        {/* Kita lempar data session ke dalemnya biar dia tau siapa yang lagi login */}
+        <ReviewSection session={session} />
+
       </div>
 
       <AnimatePresence>
@@ -170,7 +184,6 @@ const Home = () => {
         )}
       </AnimatePresence>
 
-      {/* Footer tetep di z-10 biar ga ketutup bunga */}
       <div className="relative z-10">
         <Footer />
       </div>
