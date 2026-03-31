@@ -62,7 +62,7 @@ const ProductModal = ({ product, close }) => {
             </button>
 
             {/* IMAGE SECTION */}
-            <div className="w-full md:w-[60%] bg-zinc-100 flex items-center justify-center relative h-64 md:h-auto shrink-0">
+            <div className="w-full md:w-[60%] bg-zinc-100 flex items-center justify-center relative h-64 md:h-[85vh] shrink-0">
                {isClosed && (
                  <div className="absolute inset-0 bg-black/40 z-[5] flex items-center justify-center backdrop-blur-[2px]">
                     <span className="bg-black text-white px-6 py-2 font-black text-2xl tracking-[0.2em] uppercase -rotate-12 border border-white/20 shadow-2xl">
@@ -94,12 +94,13 @@ const ProductModal = ({ product, close }) => {
             </div>
 
             {/* CONTENT SECTION */}
-            <div className="w-full md:w-[40%] p-6 md:p-10 flex flex-col justify-start md:justify-center bg-white overflow-y-auto">
-                <h2 className={`text-3xl md:text-4xl font-black uppercase tracking-tighter mb-2 ${isClosed ? 'text-zinc-400' : 'text-black'}`}>
+            {/* ✅ BUG FIX: Hapus md:justify-center, biarin flex-col justify-start biar gak kedorong ke atas kalau teks panjang */}
+            <div className="w-full md:w-[40%] p-6 md:p-10 flex flex-col justify-start bg-white overflow-y-auto max-h-[50vh] md:max-h-[85vh]">
+                <h2 className={`text-3xl md:text-4xl font-black uppercase tracking-tighter mb-2 shrink-0 ${isClosed ? 'text-zinc-400' : 'text-black'}`}>
                   {productName}
                 </h2>
                 
-                <div className="flex items-baseline gap-3 mb-6">
+                <div className="flex items-baseline gap-3 mb-6 shrink-0">
                   {isComingSoon ? (
                     <p className="text-3xl text-gray-400 font-black italic tracking-tighter">COMING SOON</p>
                   ) : (
@@ -122,7 +123,7 @@ const ProductModal = ({ product, close }) => {
                   </p>
                 </div>
 
-                <div className="flex flex-col gap-2 md:gap-3">
+                <div className="flex flex-col gap-2 md:gap-3 mt-auto shrink-0">
                   {isClosed ? (
                     <button 
                       disabled
