@@ -8,12 +8,20 @@ import { FaTimes, FaChevronLeft, FaChevronRight } from 'react-icons/fa'
 const slides = [
   {
     id: 1,
-    image: 'https://corhxzcsgvcckigxleeo.supabase.co/storage/v1/object/public/asset/Mockup_1.png', // Contoh: Mockup Frieren
+    image: 'https://corhxzcsgvcckigxleeo.supabase.co/storage/v1/object/public/asset/Mockup_1.webp', // Contoh: Mockup Frieren
   },
   {
     id: 2,
-    image: 'https://corhxzcsgvcckigxleeo.supabase.co/storage/v1/object/public/asset/images_2_19.jpg', // Contoh: Detail Sablon
-  }
+    image: 'https://corhxzcsgvcckigxleeo.supabase.co/storage/v1/object/public/asset/rn_image_picker_lib_temp_3851da7a-95bf-4441-b1c3-e31bceef27d0.jpg', // Contoh: Detail Sablon
+  },
+  {
+    id: 3,
+    image: 'https://corhxzcsgvcckigxleeo.supabase.co/storage/v1/object/public/asset/1773920723485.webp', // Contoh: Detail Sablon
+  },
+  {
+    id: 4,
+    image: 'https://corhxzcsgvcckigxleeo.supabase.co/storage/v1/object/public/asset/1773920712410.webp', // Contoh: Detail Sablon
+  },
 ]
 
 // --- KOMPONEN MODAL PRATINJAU GAMBAR PENUH (PAKE PORTALS) ---
