@@ -7,33 +7,33 @@ import { motion } from "framer-motion";
 import Countdown from 'react-countdown';
 
 const ProductModal = ({ product, close }) => {
-  const hasAnyLink = product.instagram || product.tokopedia || product.shopee || product.gform;
+  // AMANIN NAMA PRODUK
+  const productName = product.name || product.title || 'UNKNOWN GEAR';
 
-  // --- LOGIKA SALE & COMING SOON ---
+  const hasAnyLink = product.instagram || product.tokopedia || product.shopee || product.gform;
   const isComingSoon = !product.price || product.price === 0;
   const isSale = product.original_price && Number(product.original_price) > Number(product.price);
-  
-  // 1. FITUR CLOSE ORDER
   const isClosed = product.is_open === false;
 
-  // 2. FITUR AUTO-HIDE SALE
   const [isSaleExpired, setIsSaleExpired] = useState(false);
 
+  // FIX BUG TIMER EXPIRATION DI MODAL
   useEffect(() => {
     if (product.sale_end_date) {
       const timeLeft = new Date(product.sale_end_date).getTime() - Date.now();
       if (timeLeft <= 0) {
         setIsSaleExpired(true);
+      } else {
+        setIsSaleExpired(false);
       }
+    } else {
+      setIsSaleExpired(false);
     }
   }, [product.sale_end_date]);
 
-  // Format IDR biar rapi
   const formatIDR = (price) => {
     return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      maximumFractionDigits: 0,
+      style: 'currency', currency: 'IDR', maximumFractionDigits: 0,
     }).format(price);
   };
 
@@ -54,7 +54,6 @@ const ProductModal = ({ product, close }) => {
             className="bg-white rounded-xl max-w-7xl w-full overflow-hidden shadow-2xl relative flex flex-col md:flex-row max-h-[90vh] md:h-auto"
             onClick={(e) => e.stopPropagation()}
         >
-            {/* CLOSE BUTTON */}
             <button 
               onClick={close}
               className="absolute top-2 right-2 md:top-4 md:right-4 text-gray-500 hover:text-black z-50 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-md"
@@ -64,8 +63,6 @@ const ProductModal = ({ product, close }) => {
 
             {/* IMAGE SECTION */}
             <div className="w-full md:w-[60%] bg-zinc-100 flex items-center justify-center relative h-64 md:h-auto shrink-0">
-               
-               {/* OVERLAY CLOSE ORDER DI GAMBAR (Opsional, biar makin jelas) */}
                {isClosed && (
                  <div className="absolute inset-0 bg-black/40 z-[5] flex items-center justify-center backdrop-blur-[2px]">
                     <span className="bg-black text-white px-6 py-2 font-black text-2xl tracking-[0.2em] uppercase -rotate-12 border border-white/20 shadow-2xl">
@@ -74,23 +71,24 @@ const ProductModal = ({ product, close }) => {
                  </div>
                )}
 
-               {/* --- UPGRADED: Badge SALE di Image --- */}
                 {showSaleBadge && (
                   <div className="absolute top-0 left-0 bg-red-600 text-white px-6 py-4 rounded-br-2xl shadow-[0_10px_30px_rgba(220,38,38,0.4)] z-10 flex flex-col items-center">
                     <p className="text-[20px] font-black uppercase tracking-[0.2em] leading-none mb-1">
-                      LIMITED SALE
+                      {product.sale_end_date ? "LIMITED SALE" : "SPECIAL PRICE"}
                     </p>
-                    <div className="font-mono text-[18px] font-black tabular-nums tracking-tighter">
-                      <Countdown 
-                        date={new Date(product.sale_end_date)} 
-                        onComplete={() => setIsSaleExpired(true)}
-                      />
-                    </div>
+                    {product.sale_end_date && (
+                      <div className="font-mono text-[18px] font-black tabular-nums tracking-tighter">
+                        <Countdown 
+                          date={new Date(product.sale_end_date)} 
+                          onComplete={() => setIsSaleExpired(true)}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
                <img 
-                  src={product.image_url} 
-                  alt={product.name} 
+                  src={product.image_url || product.image} 
+                  alt={productName} 
                   className={`w-full h-full object-contain p-4 transition-all duration-300 ${isClosed ? 'grayscale opacity-60' : ''}`} 
                 />
             </div>
@@ -98,10 +96,9 @@ const ProductModal = ({ product, close }) => {
             {/* CONTENT SECTION */}
             <div className="w-full md:w-[40%] p-6 md:p-10 flex flex-col justify-start md:justify-center bg-white overflow-y-auto">
                 <h2 className={`text-3xl md:text-4xl font-black uppercase tracking-tighter mb-2 ${isClosed ? 'text-zinc-400' : 'text-black'}`}>
-                  {product.name}
+                  {productName}
                 </h2>
                 
-                {/* --- BAGIAN HARGA (MODIFIED) --- */}
                 <div className="flex items-baseline gap-3 mb-6">
                   {isComingSoon ? (
                     <p className="text-3xl text-gray-400 font-black italic tracking-tighter">COMING SOON</p>
@@ -126,7 +123,6 @@ const ProductModal = ({ product, close }) => {
                 </div>
 
                 <div className="flex flex-col gap-2 md:gap-3">
-                  {/* --- LOGIC TOMBOL BERUBAH --- */}
                   {isClosed ? (
                     <button 
                       disabled
