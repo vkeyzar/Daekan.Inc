@@ -40,7 +40,7 @@ const Checkout = () => {
     'JAWA_TIMUR': 17000,
     'JAWA_BARAT': 20000, 
     'JABODETABEK': 20000, 
-    'LUAR_JAWA': 35000 
+    'LUAR_JAWA': 30000 
   }
   const shippingCost = shippingRates[formData.province] || 20000
   const basePrice = product.price * (Number(formData.quantity) || 1)
