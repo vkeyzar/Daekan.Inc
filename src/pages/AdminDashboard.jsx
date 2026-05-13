@@ -7,12 +7,14 @@ import UpdateProduct from './UpdateProduct'
 import CreatorList from './CreatorList'
 import CreateCreator from './CreateCreator'
 import UpdateCreator from './UpdateCreator'
+import TransactionList from './TransactionList' // ✅ IMPORT COMPONENT BARU
 
 const AdminDashboard = () => {
   const [adminEmail, setAdminEmail] = useState('')
   const [loading, setLoading] = useState(true)
   const [products, setProducts] = useState([])
   const [creators, setCreators] = useState([])
+  const [transactions, setTransactions] = useState([]) // ✅ STATE TRANSAKSI
   const navigate = useNavigate()
 
   // --- STATE NAVIGASI & MODAL ---
@@ -23,36 +25,35 @@ const AdminDashboard = () => {
   const [isEditing, setIsEditing] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState(null)
 
-  // State Edit Creator (DIBERESIN DI SINI)
+  // State Edit Creator
   const [isEditingCreator, setIsEditingCreator] = useState(false)
   const [selectedCreator, setSelectedCreator] = useState(null)
 
   // --- FETCH DATA SAKTI (AUTOSYNC) ---
   const fetchAllData = async () => {
     setLoading(true)
-    const [prodResponse, creatorResponse] = await Promise.all([
+    const [prodResponse, creatorResponse, transResponse] = await Promise.all([
       supabase.from('products').select('*').order('created_at', { ascending: false }),
-      supabase.from('creators').select('*').order('created_at', { ascending: false })
+      supabase.from('creators').select('*').order('created_at', { ascending: false }),
+      supabase.from('transactions').select('*').order('created_at', { ascending: false }) // ✅ FETCH TRANSAKSI
     ])
 
     if (!prodResponse.error) setProducts(prodResponse.data)
     if (!creatorResponse.error) setCreators(creatorResponse.data)
+    if (!transResponse.error) setTransactions(transResponse.data)
     setLoading(false)
   }
 
-  // Handler Edit Produk
   const handleOpenEdit = (product) => {
     setSelectedProduct(product)
     setIsEditing(true)
   }
   
-  // Handler Edit Creator (FIXED)
   const handleOpenEditCreator = (creator) => {
     setSelectedCreator(creator)
     setIsEditingCreator(true)
   }
 
-  // Auth Protection Logic
   useEffect(() => {
     const checkAdmin = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -71,7 +72,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-white text-black p-8 pt-32 relative font-sans">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         
         {/* HEADER */}
         <div className="flex justify-between items-end mb-16 border-b border-zinc-100 pb-12">
@@ -92,91 +93,76 @@ const AdminDashboard = () => {
         </div>
 
         {/* --- GRID MENU / STATS --- */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div 
             onClick={() => setActiveTab('products')}
-            className={`group p-10 rounded-[2.5rem] border transition-all duration-500 cursor-pointer ${
+            className={`group p-8 rounded-[2rem] border transition-all duration-500 cursor-pointer ${
               activeTab === 'products' ? 'bg-black text-white border-black shadow-2xl scale-[1.02]' : 'bg-zinc-50 border-zinc-100 hover:bg-zinc-100'
             }`}
           >
-            <h3 className={`${activeTab === 'products' ? 'text-zinc-500' : 'text-zinc-400'} text-xs font-black uppercase tracking-widest mb-6`}>Live Products</h3>
-            <p className="text-5xl font-black italic">
-              {products.length.toString().padStart(2, '0')} 
-              <span className="text-xs font-light not-italic opacity-40"> Items</span>
-            </p>
+            <h3 className={`${activeTab === 'products' ? 'text-zinc-500' : 'text-zinc-400'} text-[10px] font-black uppercase tracking-widest mb-4`}>Live Products</h3>
+            <p className="text-4xl font-black italic">{products.length.toString().padStart(2, '0')}</p>
           </div>
           
           <div 
             onClick={() => setActiveTab('creators')}
-            className={`group p-10 rounded-[2.5rem] border transition-all duration-500 cursor-pointer ${
+            className={`group p-8 rounded-[2rem] border transition-all duration-500 cursor-pointer ${
               activeTab === 'creators' ? 'bg-black text-white border-black shadow-2xl scale-[1.02]' : 'bg-zinc-50 border-zinc-100 hover:bg-zinc-100'
             }`}
           >
-            <h3 className={`${activeTab === 'creators' ? 'text-zinc-500' : 'text-zinc-400'} text-xs font-black uppercase tracking-widest mb-6`}>Active Talent</h3>
-            <p className="text-5xl font-black italic">
-              {creators.length.toString().padStart(2, '0')} 
-              <span className="text-xs font-light not-italic opacity-40"> Person</span>
-            </p>
+            <h3 className={`${activeTab === 'creators' ? 'text-zinc-500' : 'text-zinc-400'} text-[10px] font-black uppercase tracking-widest mb-4`}>Active Talent</h3>
+            <p className="text-4xl font-black italic">{creators.length.toString().padStart(2, '0')}</p>
           </div>
 
+          {/* ✅ KOTAK TRANSAKSI BARU */}
           <div 
-            onClick={() => setIsAdding(true)}
-            className="bg-zinc-900 text-white p-10 rounded-[2.5rem] flex flex-col justify-between hover:scale-[1.02] transition-all cursor-pointer shadow-xl shadow-zinc-900/20 group"
+            onClick={() => setActiveTab('transactions')}
+            className={`group p-8 rounded-[2rem] border transition-all duration-500 cursor-pointer ${
+              activeTab === 'transactions' ? 'bg-black text-white border-black shadow-2xl scale-[1.02]' : 'bg-zinc-50 border-zinc-100 hover:bg-zinc-100'
+            }`}
           >
-            <h3 className="text-xs font-black uppercase tracking-widest opacity-50">Master Action</h3>
-            <p className="text-2xl font-black italic mt-8 leading-tight group-hover:translate-x-2 transition-transform uppercase">
-                {activeTab === 'products' ? 'Add New Gear +' : 'Add New Talent +'}
+            <h3 className={`${activeTab === 'transactions' ? 'text-zinc-500' : 'text-zinc-400'} text-[10px] font-black uppercase tracking-widest mb-4`}>Orders / Sales</h3>
+            <p className="text-4xl font-black italic">{transactions.length.toString().padStart(2, '0')}</p>
+          </div>
+
+          {/* TOMBOL ADD NYA MENYESUAIKAN TAB */}
+          <div 
+            onClick={() => {
+              if(activeTab === 'products' || activeTab === 'creators') setIsAdding(true)
+            }}
+            className={`p-8 rounded-[2rem] flex flex-col justify-between transition-all shadow-xl group ${activeTab === 'transactions' ? 'bg-zinc-200 cursor-not-allowed opacity-50' : 'bg-zinc-900 text-white cursor-pointer hover:scale-[1.02] shadow-zinc-900/20'}`}
+          >
+            <h3 className="text-[10px] font-black uppercase tracking-widest opacity-50">Action</h3>
+            <p className="text-xl font-black italic mt-6 leading-tight uppercase">
+                {activeTab === 'products' ? 'Add Gear +' : activeTab === 'creators' ? 'Add Talent +' : 'NO ACTION'}
             </p>
           </div>
         </div>
 
         {/* --- SECTION DINAMIS --- */}
-        <div className="mt-20">
+        <div className="mt-16">
             <h2 className="text-2xl font-black italic uppercase mb-8 tracking-tighter">
-                {activeTab === 'products' ? 'Recent Inventory' : 'Talent Roster'}
+                {activeTab === 'products' ? 'Inventory' : activeTab === 'creators' ? 'Talent Roster' : 'Sales Tracker'}
             </h2>
             
             {loading ? (
-              <div className="text-center py-20 text-zinc-400 animate-pulse font-black uppercase tracking-widest text-xs">Loading {activeTab}...</div>
+              <div className="text-center py-20 text-zinc-400 animate-pulse font-black uppercase tracking-widest text-xs">Loading Data...</div>
             ) : activeTab === 'products' ? (
               <ProductList products={products} refreshData={fetchAllData} onOpenEdit={handleOpenEdit} />
+            ) : activeTab === 'creators' ? (
+              <CreatorList creators={creators} refreshData={fetchAllData} onOpenEditCreator={handleOpenEditCreator} />
             ) : (
-              <CreatorList 
-                creators={creators} 
-                refreshData={fetchAllData} 
-                onOpenEditCreator={handleOpenEditCreator} // HUBUNGKAN KE HANDLER
-              />
+              // ✅ TAMPILIN KOMPONEN TRANSAKSI
+              <TransactionList transactions={transactions} refreshData={fetchAllData} />
             )}
         </div>
       </div>
 
       {/* --- MODALS --- */}
-      
-      {/* 1. Modal Tambah Produk */}
-      {isAdding && activeTab === 'products' && (
-        <CreateProduct isOpen={isAdding} onClose={() => setIsAdding(false)} refreshData={fetchAllData} />
-      )}
-      
-      {/* 2. Modal Tambah Creator */}
-      {isAdding && activeTab === 'creators' && (
-        <CreateCreator isOpen={isAdding} onClose={() => setIsAdding(false)} refreshData={fetchAllData} />
-      )}
-
-      {/* 3. Modal Edit Produk */}
-      <UpdateProduct 
-        isOpen={isEditing} 
-        onClose={() => { setIsEditing(false); setSelectedProduct(null); }} 
-        productData={selectedProduct} 
-        refreshData={fetchAllData} 
-      />
-
-      {/* 4. Modal Edit Creator (DIPASANG DI SINI) */}
-      <UpdateCreator 
-        isOpen={isEditingCreator} 
-        onClose={() => { setIsEditingCreator(false); setSelectedCreator(null); }} 
-        creatorData={selectedCreator} 
-        refreshData={fetchAllData} 
-      />
+      {isAdding && activeTab === 'products' && <CreateProduct isOpen={isAdding} onClose={() => setIsAdding(false)} refreshData={fetchAllData} />}
+      {isAdding && activeTab === 'creators' && <CreateCreator isOpen={isAdding} onClose={() => setIsAdding(false)} refreshData={fetchAllData} />}
+      <UpdateProduct isOpen={isEditing} onClose={() => { setIsEditing(false); setSelectedProduct(null); }} productData={selectedProduct} refreshData={fetchAllData} />
+      <UpdateCreator isOpen={isEditingCreator} onClose={() => { setIsEditingCreator(false); setSelectedCreator(null); }} creatorData={selectedCreator} refreshData={fetchAllData} />
     </div>
   )
 }

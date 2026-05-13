@@ -7,6 +7,7 @@ import Profile from './pages/Profile'
 import Navbar from './components/Navbar'
 import AdminDashboard from './pages/AdminDashboard'
 import ScrollToHash from './components/ScrollToHash';
+import Checkout from './pages/Checkout'
 
 const App = () => {
   return (
@@ -20,6 +21,7 @@ const App = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/checkout" element={<Checkout />} />
       </Routes>
     </Router>
   )

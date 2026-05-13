@@ -6,30 +6,22 @@ const UpdateProduct = ({ isOpen, onClose, productData, refreshData }) => {
   const [loading, setLoading] = useState(false)
   const [imageFile, setImageFile] = useState(null)
   
-  // State dibikin persis kyk CreateProduct biar konsisten
   const [product, setProduct] = useState({
     name: '',
     price: '',
     original_price: '',
     description: '',
     label: '',
-    instagram: '',
-    tokopedia: '',
-    shopee: '',
-    gform: '',
     sale_end_date: '',
     category: 'Merch',
-    is_open: true // --- FITUR BARU: Tambah default state is_open ---
+    is_open: true 
   })
 
-  // Sync data lama ke dalam form pas modal dibuka
   useEffect(() => {
     if (productData) {
       setProduct({
         ...productData,
-        // Formatting date biar kebaca input datetime-local
         sale_end_date: productData.sale_end_date ? productData.sale_end_date.substring(0, 16) : '',
-        // is_open otomatis ketarik dari productData kalau di database udah ada nilainya
       })
     }
   }, [productData])
@@ -39,32 +31,24 @@ const UpdateProduct = ({ isOpen, onClose, productData, refreshData }) => {
     setLoading(true)
 
     try {
-      let publicImageUrl = product.image_url // Pake foto lama defaultnya
+      let publicImageUrl = product.image_url 
 
-      // Proses Upload foto baru kalau ada yang dipilih
       if (imageFile) {
         const fileExt = imageFile.name.split('.').pop()
         const fileName = `${Date.now()}.${fileExt}`
-        const { error: uploadError } = await supabase.storage
-          .from('product-images')
-          .upload(fileName, imageFile)
-
+        const { error: uploadError } = await supabase.storage.from('product-images').upload(fileName, imageFile)
         if (uploadError) throw uploadError
         const { data } = supabase.storage.from('product-images').getPublicUrl(fileName)
         publicImageUrl = data.publicUrl
       }
 
-      // Update data lengkap ke Supabase
-      const { error: updateError } = await supabase
-        .from('products')
-        .update({ 
+      const { error: updateError } = await supabase.from('products').update({ 
           ...product,
           image_url: publicImageUrl,
           price: parseFloat(product.price) || 0,
           original_price: product.original_price ? parseFloat(product.original_price) : null,
           sale_end_date: product.sale_end_date ? `${product.sale_end_date}:00+07:00` : null
-        })
-        .eq('id', product.id)
+        }).eq('id', product.id)
 
       if (updateError) throw updateError
 
@@ -89,39 +73,32 @@ const UpdateProduct = ({ isOpen, onClose, productData, refreshData }) => {
         
         <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
           
-          {/* KOLOM KIRI: CORE INFO */}
           <div className="space-y-4">
             <div>
               <label className="text-xs font-black tracking-widest text-zinc-400 uppercase">Product Name</label>
-              <input type="text" value={product.name} className="w-full border-b border-zinc-200 py-2 outline-none font-bold uppercase focus:border-black transition-colors" 
-                onChange={(e) => setProduct({...product, name: e.target.value})} required />
+              <input type="text" value={product.name} className="w-full border-b border-zinc-200 py-2 outline-none font-bold uppercase focus:border-black transition-colors" onChange={(e) => setProduct({...product, name: e.target.value})} required />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-black tracking-widest text-zinc-400 uppercase">Final Price (IDR)</label>
-                <input type="number" value={product.price} className="w-full border-b border-zinc-200 py-2 outline-none font-bold focus:border-black transition-colors" 
-                  onChange={(e) => setProduct({...product, price: e.target.value})} required />
+                <input type="number" value={product.price} className="w-full border-b border-zinc-200 py-2 outline-none font-bold focus:border-black transition-colors" onChange={(e) => setProduct({...product, price: e.target.value})} required />
               </div>
               <div>
                 <label className="text-xs font-black tracking-widest text-red-400 uppercase">Original Price (Coret)</label>
-                <input type="number" value={product.original_price || ''} className="w-full border-b border-zinc-200 py-2 outline-none font-bold focus:border-black transition-colors" 
-                  onChange={(e) => setProduct({...product, original_price: e.target.value})} />
+                <input type="number" value={product.original_price || ''} className="w-full border-b border-zinc-200 py-2 outline-none font-bold focus:border-black transition-colors" onChange={(e) => setProduct({...product, original_price: e.target.value})} />
               </div>
             </div>
 
             <div>
               <label className="text-xs font-black tracking-widest text-zinc-400 uppercase">Description</label>
-              <textarea value={product.description || ''} className="w-full border-b border-zinc-200 py-2 outline-none font-bold h-20 resize-none focus:border-black transition-colors" 
-                onChange={(e) => setProduct({...product, description: e.target.value})} />
+              <textarea value={product.description || ''} className="w-full border-b border-zinc-200 py-2 outline-none font-bold h-20 resize-none focus:border-black transition-colors" onChange={(e) => setProduct({...product, description: e.target.value})} />
             </div>
 
-            {/* --- FITUR BARU: LABEL & ORDER STATUS DIBIKIN SEJAJAR --- */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-black tracking-widest text-zinc-400 uppercase">Label (Status)</label>
-                <select value={product.label || ''} className="w-full border-b border-zinc-200 py-2 outline-none font-bold focus:border-black bg-transparent"
-                  onChange={(e) => setProduct({...product, label: e.target.value})}>
+                <select value={product.label || ''} className="w-full border-b border-zinc-200 py-2 outline-none font-bold focus:border-black bg-transparent" onChange={(e) => setProduct({...product, label: e.target.value})}>
                   <option value="">Normal</option>
                   <option value="COMING SOON">COMING SOON</option>
                   <option value="PRE-ORDER">PRE-ORDER</option>
@@ -131,46 +108,24 @@ const UpdateProduct = ({ isOpen, onClose, productData, refreshData }) => {
 
               <div>
                 <label className="text-xs font-black tracking-widest text-zinc-400 uppercase mb-2 block">Order Status</label>
-                <button
-                  type="button"
-                  onClick={() => setProduct({ ...product, is_open: !product.is_open })}
-                  className={`w-full py-2 px-4 rounded-lg font-bold tracking-widest text-xs transition-all uppercase border 
-                    ${product.is_open 
-                      ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' 
-                      : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'}`}
-                >
+                <button type="button" onClick={() => setProduct({ ...product, is_open: !product.is_open })} className={`w-full py-2 px-4 rounded-lg font-bold tracking-widest text-xs transition-all uppercase border ${product.is_open ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'}`}>
                   {product.is_open ? '● OPEN ORDER' : '■ CLOSED ORDER'}
                 </button>
               </div>
             </div>
           </div>
 
-          {/* KOLOM KANAN: LINKS & MEDIA */}
           <div className="space-y-4">
-            <div className="bg-zinc-50 p-6 rounded-[1.5rem] space-y-4 shadow-inner">
-               <label className="text-xs font-black tracking-widest text-zinc-800 uppercase block">Marketplace & Forms</label>
-               <input type="url" value={product.shopee || ''} placeholder="SHOPEE LINK" className="w-full bg-transparent border-b border-zinc-200 py-1 text-sm outline-none focus:border-black" 
-                onChange={(e) => setProduct({...product, shopee: e.target.value})} />
-               <input type="url" value={product.tokopedia || ''} placeholder="TOKOPEDIA LINK" className="w-full bg-transparent border-b border-zinc-200 py-1 text-sm outline-none focus:border-black" 
-                onChange={(e) => setProduct({...product, tokopedia: e.target.value})} />
-               <input type="url" value={product.gform || ''} placeholder="G-FORM LINK (FOR MANUAL)" className="w-full bg-transparent border-b border-zinc-200 py-1 text-sm outline-none focus:border-black text-purple-600 font-bold" 
-                onChange={(e) => setProduct({...product, gform: e.target.value})} />
-               <input type="url" value={product.instagram || ''} placeholder="INSTAGRAM LINK" className="w-full bg-transparent border-b border-zinc-200 py-1 text-sm outline-none focus:border-black text-purple-600 font-bold" 
-                onChange={(e) => setProduct({...product, instagram: e.target.value})} />
-            </div>
-
             <div>
                 <label className="text-xs font-black tracking-widest text-red-600 uppercase">Flash Sale End Date (WIB)</label>
-                <input type="datetime-local" value={product.sale_end_date} className="w-full border-b border-zinc-200 py-2 outline-none font-mono text-sm focus:border-red-600" 
-                  onChange={(e) => setProduct({...product, sale_end_date: e.target.value})} />
+                <input type="datetime-local" value={product.sale_end_date} className="w-full border-b border-zinc-200 py-2 outline-none font-mono text-sm focus:border-red-600" onChange={(e) => setProduct({...product, sale_end_date: e.target.value})} />
             </div>
 
             <div className="bg-zinc-50 p-6 rounded-[1.5rem] border border-zinc-100 flex items-center gap-6">
                <img src={product.image_url} className="w-24 h-24 object-contain bg-white rounded-xl p-2 border shadow-sm" alt="Current" />
                <div className="flex-1">
                  <label className="text-xs font-black text-zinc-400 uppercase block mb-2">Change Image?</label>
-                 <input type="file" accept="image/*" className="text-[10px] w-full cursor-pointer file:font-bold file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-zinc-200" 
-                    onChange={(e) => setImageFile(e.target.files[0])} />
+                 <input type="file" accept="image/*" className="text-[10px] w-full cursor-pointer file:font-bold file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-zinc-200" onChange={(e) => setImageFile(e.target.files[0])} />
                </div>
             </div>
           </div>

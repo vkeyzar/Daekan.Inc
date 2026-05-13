@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react'
 import { FaInstagram } from "react-icons/fa";
-import { SiShopee, SiGoogleforms } from "react-icons/si";
-import { RiShoppingBag4Fill } from "react-icons/ri";
 import { IoClose } from "react-icons/io5";
 import { motion } from "framer-motion";
 import Countdown from 'react-countdown';
+import { useNavigate } from 'react-router-dom'; // ✅ IMPORT useNavigate
 
 const ProductModal = ({ product, close }) => {
+  const navigate = useNavigate(); // ✅ PANGGIL HOOK-NYA
+
   // AMANIN NAMA PRODUK
   const productName = product.name || product.title || 'UNKNOWN GEAR';
 
-  const hasAnyLink = product.instagram || product.tokopedia || product.shopee || product.gform;
   const isComingSoon = !product.price || product.price === 0;
   const isSale = product.original_price && Number(product.original_price) > Number(product.price);
   const isClosed = product.is_open === false;
@@ -94,7 +94,6 @@ const ProductModal = ({ product, close }) => {
             </div>
 
             {/* CONTENT SECTION */}
-            {/* ✅ BUG FIX: Hapus md:justify-center, biarin flex-col justify-start biar gak kedorong ke atas kalau teks panjang */}
             <div className="w-full md:w-[40%] p-6 md:p-10 flex flex-col justify-start bg-white overflow-y-auto max-h-[50vh] md:max-h-[85vh]">
                 <h2 className={`text-3xl md:text-4xl font-black uppercase tracking-tighter mb-2 shrink-0 ${isClosed ? 'text-zinc-400' : 'text-black'}`}>
                   {productName}
@@ -124,6 +123,7 @@ const ProductModal = ({ product, close }) => {
                 </div>
 
                 <div className="flex flex-col gap-2 md:gap-3 mt-auto shrink-0">
+                  {/* --- LOGIC TOMBOL BARU --- */}
                   {isClosed ? (
                     <button 
                       disabled
@@ -131,38 +131,24 @@ const ProductModal = ({ product, close }) => {
                     >
                       <IoClose className="w-5 h-5"/> CLOSE ORDER
                     </button>
-                  ) : hasAnyLink && !isComingSoon ? (
-                    <>
-                      {product.instagram && (
-                        <a href={product.instagram} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-3 w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-bold uppercase text-xs md:text-sm tracking-widest hover:opacity-90 transition shadow-md">
-                          <FaInstagram className="w-5 h-5"/> Order via Instagram
-                        </a>
-                      )}
-                      {product.tokopedia && (
-                        <a href={product.tokopedia} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-3 w-full bg-[#42b549] text-white py-3 rounded-lg font-bold uppercase text-xs md:text-sm tracking-widest hover:bg-[#36963c] transition shadow-md">
-                          <RiShoppingBag4Fill className="w-5 h-5"/> Order via Tokopedia
-                        </a>
-                      )}
-                      {product.shopee && (
-                        <a href={product.shopee} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-3 w-full bg-[#ee4d2d] text-white py-3 rounded-lg font-bold uppercase text-xs md:text-sm tracking-widest hover:bg-[#d73f1f] transition shadow-md">
-                          <SiShopee className="w-5 h-5"/> Order via Shopee
-                        </a>
-                      )}
-                      {product.gform && (
-                        <a href={product.gform} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-3 w-full bg-[#7248B9] text-white py-3 rounded-lg font-bold uppercase text-xs md:text-sm tracking-widest hover:bg-[#5b3994] transition shadow-md">
-                          <SiGoogleforms className="w-5 h-5"/> Order via Google Form
-                        </a>
-                      )}
-                    </>
-                  ) : (
-                    <a 
-                      href="https://www.instagram.com/daekan.inc" 
-                      target="_blank" 
-                      rel="noreferrer" 
-                      className="flex items-center justify-center gap-3 w-full bg-zinc-900 text-white py-4 rounded-lg font-black uppercase text-xs md:text-sm tracking-[0.2em] hover:bg-black transition shadow-xl border border-white/10"
+                  ) : isComingSoon ? (
+                    <button 
+                      disabled
+                      className="flex items-center justify-center gap-3 w-full bg-zinc-900 text-white py-4 rounded-lg font-black uppercase text-xs md:text-sm tracking-[0.2em] cursor-not-allowed shadow-xl border border-white/10"
                     >
-                      <FaInstagram className="w-5 h-5 text-pink-500"/> COMING SOON — FOLLOW US
-                    </a>
+                      COMING SOON
+                    </button>
+                  ) : (
+                    // ✅ TOMBOL BUY NOW YANG BARU
+                    <button 
+                      onClick={() => {
+                        close(); // Tutup modal dulu biar gak nyangkut
+                        navigate('/checkout', { state: { product: product } });
+                      }}
+                      className="w-full py-5 bg-black text-white font-black italic uppercase text-sm tracking-[0.2em] hover:bg-zinc-800 transition-all shadow-xl rounded-lg"
+                    >
+                      BUY NOW
+                    </button>
                   )}
                 </div>
             </div>
