@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
-import { FaArrowLeft, FaShieldAlt, FaPlus, FaMinus, FaCheckCircle } from 'react-icons/fa'
+import { FaArrowLeft, FaShieldAlt, FaPlus, FaMinus, FaCheckCircle, FaHandshake, FaTruck, FaChevronDown } from 'react-icons/fa'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const Checkout = () => {
@@ -14,10 +14,14 @@ const Checkout = () => {
     whatsapp: '',
     address: '',
     province: 'JAWA_TENGAH',
-    quantity: 1
+    quantity: 1,
+    deliveryMethod: 'SHIPMENT' 
   })
   const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
+  
+  // ✅ STATE BARU BUAT CUSTOM DROPDOWN
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
   const uniqueCode = useMemo(() => Math.floor(Math.random() * 900) + 100, [])
 
@@ -35,6 +39,8 @@ const Checkout = () => {
     if (formData.quantity > 1) setFormData({ ...formData, quantity: Number(formData.quantity) - 1 })
   }
 
+  const isCOD = formData.deliveryMethod === 'COD'
+
   const shippingRates = { 
     'JAWA_TENGAH': 15000, 
     'JAWA_TIMUR': 17000,
@@ -42,9 +48,19 @@ const Checkout = () => {
     'JABODETABEK': 20000, 
     'LUAR_JAWA': 30000 
   }
-  const shippingCost = shippingRates[formData.province] || 20000
+  
+  const provinceOptions = [
+    { value: 'JAWA_TENGAH', label: 'JAWA TENGAH' },
+    { value: 'JAWA_TIMUR', label: 'JAWA TIMUR' },
+    { value: 'JABODETABEK', label: 'JABODETABEK' },
+    { value: 'JAWA_BARAT', label: 'JAWA BARAT' },
+    { value: 'LUAR_JAWA', label: 'LUAR JAWA / OTHERS' }
+  ]
+
+  const shippingCost = isCOD ? 0 : (shippingRates[formData.province] || 20000)
+  const activeUniqueCode = isCOD ? 0 : uniqueCode
   const basePrice = product.price * (Number(formData.quantity) || 1)
-  const totalPrice = basePrice + shippingCost + uniqueCode
+  const totalPrice = basePrice + shippingCost + activeUniqueCode
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -56,11 +72,12 @@ const Checkout = () => {
         full_name: formData.full_name,
         whatsapp: formData.whatsapp,
         address: formData.address,
-        province: formData.province,
+        province: isCOD ? 'KUDUS' : formData.province,
         city: '-', 
         product_name: product.name || product.title,
         quantity: Number(formData.quantity),
-        shipping_method: `REGULER (${formData.province})`,
+        shipping_method: isCOD ? 'COD (KUDUS ONLY)' : `REGULER (${formData.province})`,
+        delivery_method: formData.deliveryMethod, 
         total_price: totalPrice,
         status: 'pending'
       }])
@@ -104,20 +121,59 @@ const Checkout = () => {
                 <label className="text-xs font-bold tracking-[0.2em] uppercase text-zinc-400 mb-1 block">WhatsApp Number</label>
                 <input required type="tel" placeholder="081234567890" className="w-full border-b-2 border-zinc-200 py-2 outline-none focus:border-black font-black uppercase text-base transition-colors" onChange={(e) => setFormData({...formData, whatsapp: e.target.value})} />
               </div>
+              
               <div>
-                <label className="text-xs font-bold tracking-[0.2em] uppercase text-zinc-400 mb-1 block">Shipping Address</label>
-                <textarea required placeholder="STREET NAME NO. 12, CITY..." rows="2" className="w-full border-b-2 border-zinc-200 py-2 outline-none focus:border-black font-medium text-base transition-colors resize-none" onChange={(e) => setFormData({...formData, address: e.target.value})}></textarea>
+                <label className="text-xs font-bold tracking-[0.2em] uppercase text-zinc-400 mb-2 block">Delivery Method</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <button type="button" onClick={() => setFormData({...formData, deliveryMethod: 'SHIPMENT'})} className={`flex items-center justify-center gap-2 py-3 font-black text-[10px] md:text-xs uppercase tracking-widest border-2 transition-all rounded-xl ${!isCOD ? 'border-black bg-black text-white shadow-xl shadow-black/20' : 'border-zinc-200 text-zinc-400 hover:border-black hover:text-black'}`}>
+                    <FaTruck size={14} /> REGULAR SHIPMENT
+                  </button>
+                  <button type="button" onClick={() => setFormData({...formData, deliveryMethod: 'COD'})} className={`flex items-center justify-center gap-2 py-3 font-black text-[10px] md:text-xs uppercase tracking-widest border-2 transition-all rounded-xl ${isCOD ? 'border-black bg-black text-white shadow-xl shadow-black/20' : 'border-zinc-200 text-zinc-400 hover:border-black hover:text-black'}`}>
+                    <FaHandshake size={14} /> COD (KUDUS ONLY)
+                  </button>
+                </div>
               </div>
+
+              <div>
+                <label className="text-xs font-bold tracking-[0.2em] uppercase text-zinc-400 mb-1 block">
+                  {isCOD ? 'Meetup Location (Area Kudus)' : 'Shipping Address'}
+                </label>
+                <textarea required placeholder={isCOD ? "ALUN-ALUN KUDUS / UMK / DLL..." : "STREET NAME NO. 12, CITY..."} rows="2" className="w-full border-b-2 border-zinc-200 py-2 outline-none focus:border-black font-medium text-base transition-colors resize-none" onChange={(e) => setFormData({...formData, address: e.target.value})}></textarea>
+              </div>
+
               <div className="grid grid-cols-2 gap-4 md:gap-6">
-                <div>
+                <div className={`transition-opacity duration-300 relative ${isCOD ? 'opacity-40 pointer-events-none' : ''}`}>
                   <label className="text-xs font-bold tracking-[0.2em] uppercase text-zinc-400 mb-1 block">Province</label>
-                  <select className="w-full border-b-2 border-zinc-200 py-2 outline-none focus:border-black font-black text-sm uppercase cursor-pointer bg-transparent" onChange={(e) => setFormData({...formData, province: e.target.value})}>
-                    <option value="JAWA_TENGAH">JAWA TENGAH</option>
-                    <option value="JAWA_TIMUR">JAWA TIMUR</option>
-                    <option value="JABODETABEK">JABODETABEK</option>
-                    <option value="JAWA_BARAT">JAWA BARAT</option>
-                    <option value="LUAR_JAWA">LUAR JAWA / OTHERS</option>
-                  </select>
+                  
+                  {/* ✅ CUSTOM ELEGAN DROPDOWN PROVINCE */}
+                  <button 
+                    type="button" 
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)} 
+                    className="w-full border-b-2 border-zinc-200 py-2 outline-none flex items-center justify-between font-black text-xs md:text-sm uppercase text-black"
+                  >
+                    {provinceOptions.find(opt => opt.value === formData.province)?.label}
+                    <FaChevronDown className={`text-zinc-400 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  <AnimatePresence>
+                    {isDropdownOpen && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                        className="absolute z-50 top-full left-0 w-full mt-2 bg-white border border-zinc-100 rounded-2xl shadow-2xl overflow-hidden py-2"
+                      >
+                        {provinceOptions.map((opt) => (
+                          <div 
+                            key={opt.value} 
+                            onClick={() => { setFormData({...formData, province: opt.value}); setIsDropdownOpen(false); }}
+                            className={`px-5 py-3 text-xs md:text-sm font-black uppercase cursor-pointer transition-colors ${formData.province === opt.value ? 'bg-zinc-100 text-black' : 'text-zinc-400 hover:bg-zinc-50 hover:text-black'}`}
+                          >
+                            {opt.label}
+                          </div>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                 </div>
                 <div>
                   <label className="text-xs font-bold tracking-[0.2em] uppercase text-zinc-400 mb-1 block">Quantity</label>
@@ -146,12 +202,17 @@ const Checkout = () => {
               </div>
               <div className="space-y-3 mb-4 text-left">
                 <div className="flex justify-between items-center text-sm"><span className="text-zinc-500 font-bold uppercase tracking-widest text-xs">Subtotal</span><span className="font-black text-base">Rp {basePrice.toLocaleString('id-ID')}</span></div>
-                <div className="flex justify-between items-center text-sm"><span className="text-zinc-500 font-bold uppercase tracking-widest text-xs">Shipping</span><span className="font-black text-base">Rp {shippingCost.toLocaleString('id-ID')}</span></div>
-                <div className="flex justify-between items-center text-sm"><span className="text-zinc-500 font-bold uppercase tracking-widest text-xs text-green-600">Unique Code</span><span className="font-black text-base text-green-600">+ Rp {uniqueCode}</span></div>
+                <div className="flex justify-between items-center text-sm"><span className="text-zinc-500 font-bold uppercase tracking-widest text-xs">Shipping {isCOD ? '(COD)' : ''}</span><span className="font-black text-base">Rp {shippingCost.toLocaleString('id-ID')}</span></div>
+                
+                {!isCOD && (
+                  <div className="flex justify-between items-center text-sm"><span className="text-zinc-500 font-bold uppercase tracking-widest text-xs text-green-600">Unique Code</span><span className="font-black text-base text-green-600">+ Rp {activeUniqueCode}</span></div>
+                )}
               </div>
               <div className="border-t border-zinc-100 pt-4 mt-auto text-left">
                 <div className="flex justify-between items-end mb-1"><span className="font-black text-base md:text-lg uppercase tracking-widest text-zinc-400">Total</span><span className="text-3xl md:text-4xl font-black italic tracking-tighter text-black">Rp {totalPrice.toLocaleString('id-ID')}</span></div>
-                <p className="text-[10px] text-right font-bold text-red-500 uppercase tracking-widest">*Please transfer EXACTLY this amount.</p>
+                <p className="text-[10px] text-right font-bold text-red-500 uppercase tracking-widest">
+                  {isCOD ? "*Please prepare exact cash amount." : "*Please transfer EXACTLY this amount."}
+                </p>
               </div>
             </div>
 
@@ -162,36 +223,47 @@ const Checkout = () => {
         </div>
       </div>
 
-      {/* --- UPGRADED CUSTOM POPUP MODAL (BIGGER TEXT) --- */}
+      {/* --- UPGRADED CUSTOM POPUP MODAL --- */}
       <AnimatePresence>
         {showModal && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
             <motion.div initial={{ scale: 0.9, y: 30 }} animate={{ scale: 1, y: 0 }} className="bg-white w-full max-w-2xl rounded-3xl p-10 md:p-12 shadow-2xl text-center relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-3 bg-green-500"></div>
-              <FaCheckCircle className="text-green-500 text-6xl mx-auto mb-6" />
+              
+              {isCOD ? <FaHandshake className="text-green-500 text-6xl mx-auto mb-6" /> : <FaCheckCircle className="text-green-500 text-6xl mx-auto mb-6" />}
+              
               <h2 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter mb-4">ORDER PLACED!</h2>
               <p className="text-lg font-medium text-zinc-600 mb-10">Your order has been recorded in our secure system.</p>
               
               <div className="bg-zinc-50 border border-zinc-200 p-8 rounded-3xl mb-10">
-                <p className="text-xs font-bold uppercase tracking-[0.3em] text-zinc-400 mb-3">TOTAL TO TRANSFER</p>
+                <p className="text-xs font-bold uppercase tracking-[0.3em] text-zinc-400 mb-3">
+                  {isCOD ? "TOTAL CASH TO PREPARE" : "TOTAL TO TRANSFER"}
+                </p>
                 <p className="text-5xl md:text-6xl font-black italic text-black mb-8">Rp {totalPrice.toLocaleString('id-ID')}</p>
                 
-                <div className="space-y-6 border-t border-zinc-200 pt-8 text-left max-w-md mx-auto">
-                  <div className="flex flex-col gap-1">
-                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-400">BANK MANDIRI</p>
-                    <p className="font-black text-xl md:text-2xl tracking-widest text-black">1840001454113</p>
-                    <p className="font-bold text-sm text-zinc-500 uppercase tracking-widest">A/N VALZA ANANTA PERMADY</p>
+                {!isCOD ? (
+                  <div className="space-y-6 border-t border-zinc-200 pt-8 text-left max-w-md mx-auto">
+                    <div className="flex flex-col gap-1">
+                      <p className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-400">BANK MANDIRI</p>
+                      <p className="font-black text-xl md:text-2xl tracking-widest text-black">1840001454113</p>
+                      <p className="font-bold text-sm text-zinc-500 uppercase tracking-widest">A/N VALZA ANANTA PERMADY</p>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <p className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-400">E-WALLET (DANA/OVO/GOPAY)</p>
+                      <p className="font-black text-xl md:text-2xl tracking-widest text-black">085695999703</p>
+                      <p className="font-bold text-sm text-zinc-500 uppercase tracking-widest">A/N DAEKAN INC</p>
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-400">E-WALLET (DANA/OVO/GOPAY)</p>
-                    <p className="font-black text-xl md:text-2xl tracking-widest text-black">085695999703</p>
-                    <p className="font-bold text-sm text-zinc-500 uppercase tracking-widest">A/N DAEKAN INC</p>
+                ) : (
+                  <div className="border-t border-zinc-200 pt-8 text-center max-w-md mx-auto">
+                    <p className="font-black text-lg md:text-xl uppercase tracking-widest text-black mb-2">🤝 CASH ON DELIVERY</p>
+                    <p className="font-bold text-sm text-zinc-500 uppercase tracking-widest leading-relaxed">Admin akan menghubungi anda via WhatsApp untuk menentukan jadwal dan titik temu (Area Kudus).</p>
                   </div>
-                </div>
+                )}
               </div>
 
               <p className="text-sm text-zinc-400 mb-10 font-medium italic leading-relaxed">
-                *Please save your transfer receipt. Our admin will contact you via WhatsApp shortly to confirm your order.
+                {!isCOD ? "*Please save your transfer receipt. Our admin will contact you via WhatsApp shortly to confirm your order." : "*Pastikan nomor WhatsApp yang kamu masukkan aktif ya!"}
               </p>
 
               <button onClick={() => navigate('/')} className="w-full bg-black text-white py-6 font-black italic uppercase text-base tracking-[0.3em] hover:bg-zinc-800 transition-all rounded-2xl shadow-xl">
