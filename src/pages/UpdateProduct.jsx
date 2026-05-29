@@ -13,8 +13,9 @@ const UpdateProduct = ({ isOpen, onClose, productData, refreshData }) => {
     description: '',
     label: '',
     sale_end_date: '',
-    category: 'Merch',
-    is_open: true 
+    category: 'MERCH',
+    is_open: true,
+    has_size: true
   })
 
   useEffect(() => {
@@ -22,12 +23,25 @@ const UpdateProduct = ({ isOpen, onClose, productData, refreshData }) => {
       setProduct({
         ...productData,
         sale_end_date: productData.sale_end_date ? productData.sale_end_date.substring(0, 16) : '',
+        category: productData.category || 'MERCH',
+        has_size: productData.has_size !== undefined ? productData.has_size : true
       })
     }
   }, [productData])
 
   const handleUpdate = async (e) => {
     e.preventDefault()
+
+    // ✅ Validasi Formal menggunakan SweetAlert2
+    if (!product.name || !product.price) {
+      return Swal.fire({
+        title: 'PERHATIAN',
+        text: 'Mohon lengkapi Nama Produk dan Harga sebelum menyimpan perubahan.',
+        icon: 'warning',
+        confirmButtonColor: '#000'
+      })
+    }
+
     setLoading(true)
 
     try {
@@ -37,7 +51,9 @@ const UpdateProduct = ({ isOpen, onClose, productData, refreshData }) => {
         const fileExt = imageFile.name.split('.').pop()
         const fileName = `${Date.now()}.${fileExt}`
         const { error: uploadError } = await supabase.storage.from('product-images').upload(fileName, imageFile)
+        
         if (uploadError) throw uploadError
+        
         const { data } = supabase.storage.from('product-images').getPublicUrl(fileName)
         publicImageUrl = data.publicUrl
       }
@@ -52,11 +68,24 @@ const UpdateProduct = ({ isOpen, onClose, productData, refreshData }) => {
 
       if (updateError) throw updateError
 
-      Swal.fire({ title: 'SUCCESS!', text: 'Gear updated successfully!', icon: 'success', confirmButtonColor: '#000' })
+      // ✅ Notifikasi Sukses Formal
+      Swal.fire({ 
+        title: 'PEMBARUAN BERHASIL', 
+        text: 'Data produk telah berhasil diperbarui ke dalam sistem.', 
+        icon: 'success', 
+        confirmButtonColor: '#000' 
+      })
+
       onClose()
       refreshData()
     } catch (error) {
-      Swal.fire({ title: 'FAILED!', text: error.message, icon: 'error' })
+      // ✅ Notifikasi Error Formal
+      Swal.fire({ 
+        title: 'GAGAL MEMPROSES DATA', 
+        text: `Terjadi kendala pada sistem: ${error.message}`, 
+        icon: 'error',
+        confirmButtonColor: '#000'
+      })
     } finally {
       setLoading(false)
     }
@@ -73,6 +102,7 @@ const UpdateProduct = ({ isOpen, onClose, productData, refreshData }) => {
         
         <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
           
+          {/* KOLOM KIRI */}
           <div className="space-y-4">
             <div>
               <label className="text-xs font-black tracking-widest text-zinc-400 uppercase">Product Name</label>
@@ -97,8 +127,37 @@ const UpdateProduct = ({ isOpen, onClose, productData, refreshData }) => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
+                <label className="text-xs font-bold tracking-widest text-zinc-400 uppercase mb-2 block">Theme Category</label>
+                <select 
+                  className="w-full border-b-2 border-zinc-200 py-2 font-black text-black uppercase outline-none bg-transparent cursor-pointer" 
+                  value={product.category}
+                  onChange={(e) => setProduct({...product, category: e.target.value})}
+                >
+                  <option value="MERCH">DAEKAN MERCH</option>
+                  <option value="COLLAB">VTUBER COLLAB</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold tracking-[0.2em] uppercase text-zinc-400 mb-2 block">Item Type</label>
+                <button 
+                  type="button" 
+                  onClick={() => setProduct({ ...product, has_size: !product.has_size })} 
+                  className={`w-full py-2 rounded-lg font-black text-[10px] md:text-xs transition-all uppercase border ${
+                    product.has_size 
+                      ? 'bg-black text-white border-black shadow-lg shadow-black/20' 
+                      : 'bg-zinc-100 text-zinc-400 border-zinc-200 hover:border-black hover:text-black'
+                  }`}
+                >
+                  {product.has_size ? '👕 APPAREL (NEEDS SIZE)' : '🎒 ACCESSORY (NO SIZE)'}
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
                 <label className="text-xs font-black tracking-widest text-zinc-400 uppercase">Label (Status)</label>
-                <select value={product.label || ''} className="w-full border-b border-zinc-200 py-2 outline-none font-bold focus:border-black bg-transparent" onChange={(e) => setProduct({...product, label: e.target.value})}>
+                <select value={product.label || ''} className="w-full border-b border-zinc-200 py-2 outline-none font-bold focus:border-black bg-transparent cursor-pointer" onChange={(e) => setProduct({...product, label: e.target.value})}>
                   <option value="">Normal</option>
                   <option value="COMING SOON">COMING SOON</option>
                   <option value="PRE-ORDER">PRE-ORDER</option>
@@ -115,10 +174,11 @@ const UpdateProduct = ({ isOpen, onClose, productData, refreshData }) => {
             </div>
           </div>
 
+          {/* KOLOM KANAN */}
           <div className="space-y-4">
             <div>
                 <label className="text-xs font-black tracking-widest text-red-600 uppercase">Flash Sale End Date (WIB)</label>
-                <input type="datetime-local" value={product.sale_end_date} className="w-full border-b border-zinc-200 py-2 outline-none font-mono text-sm focus:border-red-600" onChange={(e) => setProduct({...product, sale_end_date: e.target.value})} />
+                <input type="datetime-local" value={product.sale_end_date} className="w-full border-b border-zinc-200 py-2 outline-none font-mono text-sm focus:border-red-600 cursor-pointer" onChange={(e) => setProduct({...product, sale_end_date: e.target.value})} />
             </div>
 
             <div className="bg-zinc-50 p-6 rounded-[1.5rem] border border-zinc-100 flex items-center gap-6">
@@ -130,12 +190,16 @@ const UpdateProduct = ({ isOpen, onClose, productData, refreshData }) => {
             </div>
           </div>
 
+          {/* ACTION BUTTONS */}
           <div className="md:col-span-2 flex items-center gap-6 mt-6">
-            <button type="submit" disabled={loading} className="flex-1 bg-black text-white py-5 rounded-2xl font-black italic uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-xl">
-              {loading ? 'SAVING CHANGES...' : 'UPDATE MERCH'}
+            <button type="submit" disabled={loading} className="flex-1 bg-black text-white py-5 rounded-2xl font-black italic uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-xl shadow-black/10">
+              {loading ? 'MENYIMPAN PERUBAHAN...' : 'UPDATE MERCH'}
             </button>
-            <button type="button" onClick={onClose} className="px-6 font-bold uppercase text-xs text-zinc-400 hover:text-black transition-colors">Cancel</button>
+            <button type="button" onClick={onClose} className="px-6 font-bold uppercase text-xs text-zinc-400 hover:text-black transition-colors tracking-widest">
+              Batalkan
+            </button>
           </div>
+
         </form>
       </div>
     </div>
