@@ -4,13 +4,14 @@ import { supabase } from '../lib/supabaseClient'
 import { FaArrowLeft, FaShieldAlt, FaCheckCircle, FaHandshake, FaTruck, FaChevronDown } from 'react-icons/fa'
 import { motion, AnimatePresence } from 'framer-motion'
 import Swal from 'sweetalert2'
+import useCartStore from '../store/useCartStore' 
 
 const Checkout = () => {
   const location = useLocation()
   const navigate = useNavigate()
   
-  // ✅ NERIMA DATA KERANJANG (Bentuknya Array)
-  // Untuk saat ini kita pakai fallback array kosong kalau belum ada state
+  const clearCart = useCartStore((state) => state.clearCart)
+  
   const { cartItems } = location.state || { cartItems: [] }
 
   const [formData, setFormData] = useState({
@@ -46,7 +47,6 @@ const Checkout = () => {
     { value: 'LUAR_JAWA', label: 'LUAR JAWA / OTHERS' }
   ]
 
-  // ✅ LOGIC NGITUNG TOTAL SEMUA BARANG DI KERANJANG
   const basePrice = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0)
   const shippingCost = isCOD ? 0 : (shippingRates[formData.province] || 20000)
   const activeUniqueCode = isCOD ? 0 : uniqueCode
@@ -57,13 +57,32 @@ const Checkout = () => {
     setLoading(true)
     
     try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+
+      if (sessionError || !userId) {
+        throw new Error("Sesi login tidak valid. Silakan kembali dan login ulang.");
+      }
+
+      // ✅ BIKIN SUMMARY BARANG BUAT NGAKALIN KOLOM LAMA YANG "NOT NULL"
+      const productSummary = cartItems.map(item => item.name).join(' + ');
+      const totalQty = cartItems.reduce((acc, curr) => acc + curr.quantity, 0);
+      const sizeSummary = cartItems.map(item => item.size || '-').join(', ');
+
       const { error } = await supabase.from('transactions').insert([{
+        user_id: userId, 
         full_name: formData.full_name,
         whatsapp: formData.whatsapp,
         address: formData.address,
         province: isCOD ? 'KUDUS' : formData.province,
         city: '-', 
-        items: cartItems, // ✅ MASUKIN SEMUA LIST BARANG DALAM BENTUK JSON
+        items: cartItems, 
+        
+        // 👇 FIX: NGISI KOLOM LAMA PAKE DATA GABUNGAN BIAR GA NULL ERROR
+        product_name: productSummary, 
+        quantity: totalQty,           
+        size: sizeSummary,            
+
         shipping_method: isCOD ? 'COD (KUDUS ONLY)' : `REGULER (${formData.province})`,
         delivery_method: formData.deliveryMethod, 
         total_price: totalPrice,
@@ -71,6 +90,8 @@ const Checkout = () => {
       }])
 
       if (error) throw error
+      
+      clearCart();
       setShowModal(true)
     } catch (err) {
       Swal.fire({
@@ -97,7 +118,7 @@ const Checkout = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
           
-          {/* LEFT: FORM (Tanpa Opsi Size & Quantity) */}
+          {/* LEFT: FORM */}
           <div className="lg:col-span-7 bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-zinc-100">
             <div className="flex items-center gap-3 mb-5 md:mb-6 border-b border-zinc-100 pb-4 text-green-600">
               <FaShieldAlt className="text-lg" />
@@ -154,12 +175,11 @@ const Checkout = () => {
             </form>
           </div>
 
-          {/* RIGHT: SUMMARY (Looping Data Keranjang) */}
+          {/* RIGHT: SUMMARY */}
           <div className="lg:col-span-5 space-y-6">
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-zinc-100 flex flex-col">
               <h3 className="font-black italic uppercase text-xl mb-4 tracking-tighter border-b border-zinc-100 pb-3">Ringkasan Pesanan</h3>
               
-              {/* ✅ LOOPING ITEM DARI KERANJANG */}
               <div className="max-h-60 overflow-y-auto pr-2 mb-4 space-y-4 scrollbar-thin scrollbar-thumb-zinc-200">
                 {cartItems.map((item, index) => (
                   <div key={index} className="flex items-center gap-4">

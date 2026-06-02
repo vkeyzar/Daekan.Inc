@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
-import { FaFileExcel, FaCheckCircle, FaExclamationTriangle, FaTrash, FaFilter, FaChevronDown } from 'react-icons/fa'
+import { FaFileExcel, FaCheckCircle, FaExclamationTriangle, FaTrash, FaFilter, FaChevronDown, FaBoxOpen } from 'react-icons/fa'
 import { motion, AnimatePresence } from 'framer-motion'
+import Swal from 'sweetalert2'
 
 const TransactionList = ({ transactions, refreshData }) => {
   const [confirmModal, setConfirmModal] = useState(null)
@@ -9,7 +10,6 @@ const TransactionList = ({ transactions, refreshData }) => {
   const [isUpdating, setIsUpdating] = useState(false)
   
   const [filterMethod, setFilterMethod] = useState('ALL') 
-  // ✅ STATE BARU BUAT CUSTOM FILTER DROPDOWN
   const [isFilterOpen, setIsFilterOpen] = useState(false)
 
   const filterOptions = [
@@ -18,23 +18,95 @@ const TransactionList = ({ transactions, refreshData }) => {
     { value: 'COD', label: 'COD ONLY' }
   ]
 
-  const handleToggleClick = (id, currentStatus) => {
-    const newStatus = currentStatus === 'pending' ? 'verified' : 'pending'
-    setConfirmModal({ id, newStatus })
+  // ✅ 1. URUTAN STATUS WORKFLOW
+  const STATUS_FLOW = ['pending', 'paid', 'production', 'sending', 'success']
+
+  // ✅ 2. WARNA BADGE DINAMIS
+  const getStatusBadge = (status) => {
+    switch(status) {
+      case 'pending': return 'bg-zinc-100 text-zinc-600 border-zinc-200'
+      case 'paid': return 'bg-blue-100 text-blue-700 border-blue-200'
+      case 'production': return 'bg-purple-100 text-purple-700 border-purple-200'
+      case 'sending': return 'bg-orange-100 text-orange-700 border-orange-200'
+      case 'success': return 'bg-green-100 text-green-700 border-green-200'
+      default: return 'bg-zinc-100 text-zinc-700 border-zinc-200'
+    }
+  }
+
+  // ✅ 3. LOGIC NEXT STEP
+  const handleNextStepClick = (id, currentStatus, user_id) => {
+    // Toleransi kalau ada data lama yang statusnya 'verified'
+    const normalizedStatus = currentStatus === 'verified' ? 'paid' : currentStatus;
+    const currentIndex = STATUS_FLOW.indexOf(normalizedStatus);
+    
+    if (currentIndex < STATUS_FLOW.length - 1) {
+      const newStatus = STATUS_FLOW[currentIndex + 1];
+      setConfirmModal({ id, currentStatus: normalizedStatus, newStatus, user_id });
+    }
   }
 
   const executeUpdateStatus = async () => {
     if (!confirmModal) return
     setIsUpdating(true)
-    const { id, newStatus } = confirmModal
-    const { error } = await supabase.from('transactions').update({ status: newStatus }).eq('id', id)
-    if (!error) {
-      refreshData()
+    const { id, newStatus, user_id } = confirmModal
+
+    try {
+      // JIKA NAIK KE PAID, KIRIM EMAIL INVOICE
+      if (newStatus === 'paid') {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('id', user_id)
+          .single()
+
+        if (profileError || !profileData?.email) {
+          throw new Error('Gagal menemukan email pembeli.')
+        }
+
+        const userEmail = profileData.email
+        const transactionToApprove = transactions.find(t => t.id === id)
+
+        const response = await fetch('/api/send-invoice', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: userEmail, transaction: transactionToApprove }),
+        })
+
+        if (!response.ok) {
+          throw new Error('Gagal mengirim email melalui server Vercel. Pastikan test di Vercel atau pakai vercel dev.')
+        }
+      }
+
+      // UPDATE STATUS DATABASE 
+      const { error } = await supabase.from('transactions').update({ status: newStatus }).eq('id', id)
+      if (error) throw error
+
       setConfirmModal(null)
-    } else {
-      alert("Gagal update status: " + error.message)
+
+      setTimeout(() => {
+        Swal.fire({
+          title: newStatus === 'paid' ? 'INVOICE TERKIRIM!' : 'STATUS NAIK TAHAP!',
+          text: newStatus === 'paid' ? `Invoice dikirim dan status menjadi PAID.` : `Status pesanan berhasil diubah menjadi ${newStatus.toUpperCase()}.`,
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        })
+        refreshData()
+      }, 300)
+
+    } catch (error) {
+      setConfirmModal(null)
+      setTimeout(() => {
+        Swal.fire({
+          title: 'GAGAL PROSES',
+          text: error.message,
+          icon: 'error',
+          confirmButtonColor: '#000'
+        })
+      }, 300)
+    } finally {
+      setIsUpdating(false)
     }
-    setIsUpdating(false)
   }
 
   const handleDeleteClick = (id) => {
@@ -63,20 +135,18 @@ const TransactionList = ({ transactions, refreshData }) => {
 
   const handleExportCSV = () => {
     if (filteredTransactions.length === 0) return alert("Tidak ada data untuk di-export!")
-
     const headers = ['Date', 'Order ID', 'Full Name', 'WhatsApp', 'Address', 'Province', 'Delivery Method', 'Product', 'Qty', 'Total Price', 'Status']
     const csvRows = [headers.join(',')] 
     
     filteredTransactions.forEach(trx => {
       const date = new Date(trx.created_at).toLocaleDateString('id-ID')
       const address = `"${(trx.address || '').replace(/"/g, '""')}"` 
-      const product = `"${trx.product_name || ''}"`
+      const productText = trx.items && trx.items.length > 0 ? trx.items.map(i => `${i.name} (x${i.quantity})`).join(' | ') : trx.product_name || ''
+      const product = `"${productText}"`
+      const totalQty = trx.items && trx.items.length > 0 ? trx.items.reduce((acc, curr) => acc + curr.quantity, 0) : trx.quantity || 1
       const phone = `="` + trx.whatsapp + `"` 
       const devMethod = trx.delivery_method || 'SHIPMENT'
-
-      const row = [
-        date, trx.id, `"${trx.full_name}"`, phone, address, trx.province, devMethod, product, trx.quantity, trx.total_price, trx.status
-      ]
+      const row = [date, trx.id, `"${trx.full_name}"`, phone, address, trx.province, devMethod, product, totalQty, trx.total_price, trx.status]
       csvRows.push(row.join(','))
     })
 
@@ -84,7 +154,6 @@ const TransactionList = ({ transactions, refreshData }) => {
     const csvContent = BOM + csvRows.join('\n')
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
-    
     const link = document.createElement('a')
     link.href = url
     link.setAttribute('download', `Daekan_${filterMethod}_Report_${new Date().getTime()}.csv`)
@@ -104,8 +173,6 @@ const TransactionList = ({ transactions, refreshData }) => {
         </div>
         
         <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto relative">
-          
-          {/* ✅ CUSTOM ELEGAN FILTER DROPDOWN */}
           <div className="relative">
             <button 
               onClick={() => setIsFilterOpen(!isFilterOpen)}
@@ -182,17 +249,44 @@ const TransactionList = ({ transactions, refreshData }) => {
                       {trx.delivery_method || 'SHIPMENT'}
                     </span>
                   </td>
-                  <td className="p-4 font-bold text-xs uppercase">{trx.product_name}</td>
-                  <td className="p-4 font-black">{trx.quantity}</td>
+                  <td className="p-4 font-bold text-xs uppercase max-w-[200px] truncate" title={trx.items?.map(i => i.name).join(', ')}>
+                    {trx.items && trx.items.length > 0 
+                      ? (trx.items.length === 1 ? trx.items[0].name : `${trx.items.length} Items (Mixed)`) 
+                      : trx.product_name}
+                  </td>
+                  <td className="p-4 font-black">
+                    {trx.items && trx.items.length > 0 
+                      ? trx.items.reduce((acc, curr) => acc + curr.quantity, 0) 
+                      : trx.quantity}
+                  </td>
                   <td className="p-4 font-black italic">Rp {(trx.total_price || 0).toLocaleString('id-ID')}</td>
+                  
+                  {/* ✅ BADGE STATUS DINAMIS */}
                   <td className="p-4">
-                    <span className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full ${trx.status === 'verified' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                      {trx.status}
+                    <span className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-full border ${getStatusBadge(trx.status)}`}>
+                      {trx.status === 'verified' ? 'PAID' : trx.status}
                     </span>
                   </td>
+                  
+                  {/* ✅ TOMBOL ACTION */}
                   <td className="p-4 pr-6 text-center flex justify-center gap-2 mt-1.5">
-                    <button onClick={() => handleToggleClick(trx.id, trx.status)} className="inline-flex items-center justify-center p-3 rounded-xl bg-zinc-100 hover:bg-black hover:text-white transition-all text-zinc-400"><FaCheckCircle size={14} /></button>
-                    <button onClick={() => handleDeleteClick(trx.id)} className="inline-flex items-center justify-center p-3 rounded-xl bg-red-50 hover:bg-red-600 hover:text-white transition-all text-red-400"><FaTrash size={14} /></button>
+                    {trx.status !== 'success' ? (
+                      <button 
+                        onClick={() => handleNextStepClick(trx.id, trx.status, trx.user_id)} 
+                        className="inline-flex items-center justify-center p-3 rounded-xl bg-zinc-100 hover:bg-black hover:text-white transition-all text-zinc-500 shadow-sm" 
+                        title="Move to Next Step"
+                      >
+                        <FaCheckCircle size={14} />
+                      </button>
+                    ) : (
+                      <div className="inline-flex items-center justify-center p-3 rounded-xl bg-green-50 text-green-500 cursor-default" title="Order Completed">
+                        <FaCheckCircle size={14} />
+                      </div>
+                    )}
+                    
+                    <button onClick={() => handleDeleteClick(trx.id)} className="inline-flex items-center justify-center p-3 rounded-xl bg-red-50 hover:bg-red-600 hover:text-white transition-all text-red-400" title="Delete Data">
+                      <FaTrash size={14} />
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -201,23 +295,38 @@ const TransactionList = ({ transactions, refreshData }) => {
         )}
       </div>
 
+      {/* MODAL KONFIRMASI (CHANGE STATUS DINAMIS) */}
       <AnimatePresence>
         {confirmModal && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
             <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl text-center relative overflow-hidden">
-              <div className={`absolute top-0 left-0 w-full h-2 ${confirmModal.newStatus === 'verified' ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-              <FaExclamationTriangle className="text-zinc-300 text-5xl mx-auto mb-4" />
-              <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2">Change Status?</h2>
-              <p className="text-sm font-medium text-zinc-500 mb-8">Mark order as <span className={`font-black ${confirmModal.newStatus === 'verified' ? 'text-green-600' : 'text-yellow-600'}`}>{confirmModal.newStatus.toUpperCase()}</span>?</p>
+              <div className={`absolute top-0 left-0 w-full h-2 bg-black`}></div>
+              
+              {/* IKON BERUBAH SESUAI STEP */}
+              {confirmModal.newStatus === 'success' ? <FaCheckCircle className="text-green-500 text-5xl mx-auto mb-4" /> : <FaBoxOpen className="text-zinc-300 text-5xl mx-auto mb-4" />}
+              
+              <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2">Update Status?</h2>
+              
+              {/* TEKS BERUBAH SESUAI STEP SELANJUTNYA */}
+              <div className="text-sm font-medium text-zinc-500 mb-8 leading-relaxed">
+                {confirmModal.newStatus === 'paid' && <p>Mark order as <span className="font-black text-blue-600">PAID</span>. System will auto-send the email invoice.</p>}
+                {confirmModal.newStatus === 'production' && <p>Mark order as <span className="font-black text-purple-600">IN PRODUCTION</span>. Start preparing the items.</p>}
+                {confirmModal.newStatus === 'sending' && <p>Mark order as <span className="font-black text-orange-600">SENDING</span>. Confirm that the package is out for delivery.</p>}
+                {confirmModal.newStatus === 'success' && <p>Mark order as <span className="font-black text-green-600">SUCCESS</span>. Transaction will be fully completed.</p>}
+              </div>
+
               <div className="flex gap-4">
                 <button onClick={() => setConfirmModal(null)} disabled={isUpdating} className="w-1/2 bg-zinc-100 text-zinc-600 py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl">CANCEL</button>
-                <button onClick={executeUpdateStatus} disabled={isUpdating} className={`w-1/2 text-white py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl shadow-lg ${confirmModal.newStatus === 'verified' ? 'bg-green-500 hover:bg-green-600' : 'bg-yellow-500 hover:bg-yellow-600'}`}>{isUpdating ? "WAIT..." : "CONFIRM"}</button>
+                <button onClick={executeUpdateStatus} disabled={isUpdating} className="w-1/2 bg-black text-white hover:bg-zinc-800 py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl shadow-lg">
+                  {isUpdating ? "WAIT..." : "CONFIRM"}
+                </button>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* MODAL HAPUS */}
       <AnimatePresence>
         {deleteModal && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
