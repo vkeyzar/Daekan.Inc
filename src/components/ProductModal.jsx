@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react'
 import { IoClose } from "react-icons/io5";
 import { motion } from "framer-motion";
 import Countdown from 'react-countdown';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import useCartStore from '../store/useCartStore'; 
-import { supabase } from '../lib/supabaseClient'; // ✅ IMPORT SUPABASE UNTUK CEK SESSION
+import { supabase } from '../lib/supabaseClient'; 
 import Swal from 'sweetalert2'; 
 
 const ProductModal = ({ product, close }) => {
   const navigate = useNavigate();
+  const location = useLocation(); // ✅ WAJIB ADA BUAT CEK POSISI SEKARANG
   const addToCart = useCartStore((state) => state.addToCart);
 
   const productName = product.name || product.title || 'UNKNOWN GEAR';
@@ -42,23 +43,42 @@ const ProductModal = ({ product, close }) => {
 
   const showSaleBadge = isSale && !isComingSoon && !isSaleExpired && !isClosed;
 
-  // ✅ FUNGSI UTK CEK APAKAH USER SUDAH LOGIN
+  // ✅ LOGIC HARGA DINAMIS (Kalo XXL nambah 10.000)
+  const getActivePrice = () => {
+    let basePrice = Number(product.price);
+    if (selectedSize === 'XXL') {
+      basePrice += 10000;
+    }
+    return basePrice;
+  };
+
+  const activePrice = getActivePrice();
+
+  // ✅ LOGIC REDIRECT LOGIN YANG LEBIH SMART
   const checkUserSession = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-      Swal.fire({
+      const result = await Swal.fire({
         title: 'OTENTIKASI DIPERLUKAN',
         text: 'Silakan masuk ke akun Anda atau mendaftar terlebih dahulu untuk dapat melanjutkan proses pembelanjaan.',
         icon: 'warning',
-        confirmButtonColor: '#000'
+        showCancelButton: true,
+        confirmButtonColor: '#000',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'KE HALAMAN LOGIN',
+        cancelButtonText: 'BATAL'
       });
+
+      if (result.isConfirmed) {
+        close(); // Tutup modal biar rapi
+        navigate('/login', { state: { returnTo: '/#shop' } }); 
+      }
       return false;
     }
     return true;
   };
 
   const handleAddToCart = async () => {
-    // ✅ Jalankan pemeriksaan keamanan session
     const isLoggedIn = await checkUserSession();
     if (!isLoggedIn) return;
 
@@ -72,7 +92,10 @@ const ProductModal = ({ product, close }) => {
     }
     
     const finalQuantity = Math.max(1, Number(quantity) || 1);
-    addToCart(product, needsSize ? selectedSize : '-', finalQuantity);
+    
+    // ✅ Lempar harga yang udah disesuaikan (activePrice) ke keranjang
+    const productToCart = { ...product, price: activePrice };
+    addToCart(productToCart, needsSize ? selectedSize : '-', finalQuantity);
     
     Swal.fire({
       title: 'BERHASIL',
@@ -86,7 +109,6 @@ const ProductModal = ({ product, close }) => {
   };
 
   const handleBuyNow = async () => {
-    // ✅ Jalankan pemeriksaan keamanan session
     const isLoggedIn = await checkUserSession();
     if (!isLoggedIn) return;
 
@@ -102,8 +124,10 @@ const ProductModal = ({ product, close }) => {
     const finalQuantity = Math.max(1, Number(quantity) || 1);
     close();
     
+    // ✅ Lempar harga yang udah disesuaikan juga buat Buy Now
     const directCheckoutItem = [{
       ...product,
+      price: activePrice,
       size: needsSize ? selectedSize : '-',
       quantity: finalQuantity
     }];
@@ -150,13 +174,24 @@ const ProductModal = ({ product, close }) => {
             <div className="w-full md:w-[40%] p-6 md:p-10 flex flex-col justify-start bg-white overflow-y-auto max-h-[50vh] md:max-h-[85vh]">
                 <h2 className={`text-3xl md:text-4xl font-black uppercase tracking-tighter mb-2 shrink-0 ${isClosed ? 'text-zinc-400' : 'text-black'}`}>{productName}</h2>
                 
-                <div className="flex items-baseline gap-3 mb-6 shrink-0">
+                {/* ✅ LAYOUT HARGA DIPERBAIKI (items-center) */}
+                <div className="flex items-center gap-3 mb-6 shrink-0 flex-wrap">
                   {isComingSoon ? (
                     <p className="text-3xl text-gray-400 font-black italic tracking-tighter">COMING SOON</p>
                   ) : (
                     <>
-                      <p className={`text-3xl font-black ${isClosed ? 'text-zinc-400' : 'text-gray-900'}`}>{formatIDR(product.price)}</p>
-                      {showSaleBadge && <p className="text-lg text-red-500 line-through font-bold opacity-60">{formatIDR(product.original_price)}</p>}
+                      <p className={`text-3xl font-black transition-colors ${isClosed ? 'text-zinc-400' : 'text-gray-900'}`}>
+                        {formatIDR(activePrice)}
+                      </p>
+                      {/* ✅ BADGE EXTRA XXL LEBIH RAPI */}
+                      {selectedSize === 'XXL' && (
+                        <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest bg-red-50 border border-red-100 px-2.5 py-1 rounded-md">
+                          (+ Biaya Extra XXL)
+                        </p>
+                      )}
+                      {showSaleBadge && selectedSize !== 'XXL' && (
+                        <p className="text-lg text-red-500 line-through font-bold opacity-60">{formatIDR(product.original_price)}</p>
+                      )}
                     </>
                   )}
                 </div>
@@ -175,7 +210,20 @@ const ProductModal = ({ product, close }) => {
                         </div>
                         <div className="flex gap-2">
                           {['M', 'L', 'XL', 'XXL'].map((sz) => (
-                            <button key={sz} type="button" onClick={() => setSelectedSize(sz)} className={`flex-1 py-2 md:py-3 border-2 font-black text-xs md:text-sm transition-all rounded-xl ${selectedSize === sz ? 'border-black bg-black text-white' : 'border-zinc-200 text-zinc-400 hover:border-black'}`}>{sz}</button>
+                            <button 
+                              key={sz} 
+                              type="button" 
+                              onClick={() => setSelectedSize(sz)} 
+                              className={`flex-1 py-2 md:py-3 border-2 font-black text-xs md:text-sm transition-all rounded-xl relative ${selectedSize === sz ? 'border-black bg-black text-white' : 'border-zinc-200 text-zinc-400 hover:border-black'}`}
+                            >
+                              {sz}
+                              {/* Indikator kecil buat XXL */}
+                              {sz === 'XXL' && (
+                                <span className="absolute -top-2 -right-1 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full">
+                                  +10K
+                                </span>
+                              )}
+                            </button>
                           ))}
                         </div>
                       </div>

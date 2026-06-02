@@ -1,12 +1,14 @@
 import React, { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
-import { useNavigate, Link } from 'react-router-dom'
-import Swal from 'sweetalert2' // Pastikan Swal sudah di-import
+import { useNavigate, Link, useLocation } from 'react-router-dom' // ✅ Tambah useLocation
+import Swal from 'sweetalert2' 
 
 const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  
   const navigate = useNavigate()
+  const location = useLocation() // ✅ Panggil hook untuk baca 'state' yang dilempar
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -44,18 +46,21 @@ const Login = () => {
       return;
     }
 
-    // 3. Notif Sukses & Redirect
+    // 3. Notif Sukses & Smart Redirect
     if (data.session) {
       Swal.fire({
         title: 'WELCOME BACK!',
-        text: 'Autentikasi berhasil, mengalihkan ke Dashboard...',
+        text: 'Autentikasi berhasil, mengalihkan...',
         icon: 'success',
         timer: 1500,
         showConfirmButton: false
       });
 
+      // ✅ Cek apakah ada request kembali ke halaman spesifik
+      const redirectTo = location.state?.returnTo || '/';
+
       setTimeout(() => {
-        navigate('/'); // Menggunakan navigate sesuai import lo
+        navigate(redirectTo); // Arahkan sesuai riwayat atau ke Home
       }, 1500);
     }
   };
