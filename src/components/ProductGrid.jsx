@@ -1,21 +1,42 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import ProductCard from './ProductCard'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaSearch, FaFilter, FaSortAmountDown } from 'react-icons/fa'
+import { useSearchParams } from 'react-router-dom' 
 
-const ProductGrid = ({ products, onOpenModal, selectedProduct }) => {
-  const [mainTab, setMainTab] = useState('collab') 
+const ProductGrid = ({ products, categories, onOpenModal, selectedProduct }) => {
+  const [searchParams] = useSearchParams();
+
+  const [mainTab, setMainTab] = useState(searchParams.get('tab') || 'collab') 
+  const [selectedGenre, setSelectedGenre] = useState(searchParams.get('genre') || 'ALL')
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('type') || 'ALL')
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('ALL')
   const [sortBy, setSortBy] = useState('sale-first')
+
+  // ✅ FIX: PAKSA UPDATE STATE KALAU URL BERUBAH
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    const genre = searchParams.get('genre');
+    const type = searchParams.get('type');
+
+    if (tab) setMainTab(tab);
+    if (genre) setSelectedGenre(genre); else setSelectedGenre('ALL');
+    if (type) setSelectedCategory(type); else setSelectedCategory('ALL');
+  }, [searchParams]);
 
   const fadeUp = { hidden: { opacity: 0, y: 100 }, visible: { opacity: 1, y: 0 } }
 
-  // ✅ LOGIC FILTERING TINGKAT TINGGI DENGAN DATABASE BARU
+  const handleTabChange = (tab) => {
+    setMainTab(tab)
+    setSelectedGenre('ALL')
+    setSelectedCategory('ALL')
+    setSearchTerm('')
+  }
+
   const processedProducts = useMemo(() => {
     let result = [...products]
 
-    // 1. Filter TABS (Berdasarkan kolom product_line)
+    // 1. Filter TABS 
     result = result.filter(p => {
       const line = (p.product_line || '').toUpperCase()
       const isCollab = line.includes('COLLAB')
@@ -25,10 +46,13 @@ const ProductGrid = ({ products, onOpenModal, selectedProduct }) => {
     // 2. Search Text
     if (searchTerm) result = result.filter(p => (p.name || p.title || '').toLowerCase().includes(searchTerm.toLowerCase()))
     
-    // 3. Filter Jenis Barang (Berdasarkan kolom category: T-shirt, Deskmat, dll)
+    // 3. Filter Genre 
+    if (selectedGenre !== 'ALL') result = result.filter(p => p.category_id === selectedGenre)
+
+    // 4. Filter Jenis Barang
     if (selectedCategory !== 'ALL') result = result.filter(p => (p.category || '').toUpperCase() === selectedCategory)
 
-    // 4. Sorting
+    // 5. Sorting
     result.sort((a, b) => {
       if (sortBy === 'sale-first') return (b.original_price > b.price) - (a.original_price > a.price); 
       if (sortBy === 'newest') return b.id - a.id
@@ -39,21 +63,17 @@ const ProductGrid = ({ products, onOpenModal, selectedProduct }) => {
     })
 
     return result
-  }, [products, mainTab, searchTerm, selectedCategory, sortBy])
+  }, [products, mainTab, searchTerm, selectedGenre, selectedCategory, sortBy])
 
-  // ✅ UPDATE KATEGORI DINAMIS (Munculin Jenis Barang: T-Shirt, Deskmat, dll)
-  const categories = useMemo(() => {
+  const itemTypes = useMemo(() => {
     const filteredByTab = products.filter(p => {
       const line = (p.product_line || '').toUpperCase()
       const isCollab = line.includes('COLLAB')
       return mainTab === 'collab' ? isCollab : !isCollab
     })
-    const uniqueCats = new Set(filteredByTab.map(p => (p.category || '').toUpperCase()).filter(Boolean))
-    return ['ALL', ...Array.from(uniqueCats)]
+    const uniqueTypes = new Set(filteredByTab.map(p => (p.category || '').toUpperCase()).filter(Boolean))
+    return ['ALL', ...Array.from(uniqueTypes)]
   }, [products, mainTab])
-
-  // RESET KATEGORI & SEARCH KALAU PINDAH TAB
-  React.useEffect(() => { setSelectedCategory('ALL'); setSearchTerm(''); }, [mainTab])
 
   return (
     <div className="w-full bg-transparent text-black pb-20 px-4 md:px-10 relative z-10">
@@ -64,16 +84,15 @@ const ProductGrid = ({ products, onOpenModal, selectedProduct }) => {
           <span className="text-vtuber-pink">PRODUCTS</span>
         </h2>
         
-        {/* TABS COLLAB VS MERCH */}
         <div className="flex bg-white/60 backdrop-blur-md p-1.5 rounded-full border border-vtuber-blue/20 shadow-[0_10px_30px_rgba(164,229,250,0.15)] overflow-x-auto max-w-full">
           <button 
-            onClick={() => setMainTab('collab')}
+            onClick={() => handleTabChange('collab')}
             className={`px-6 md:px-10 py-3 rounded-full font-black text-[10px] md:text-sm tracking-[0.2em] uppercase transition-all duration-500 whitespace-nowrap ${mainTab === 'collab' ? 'bg-gradient-to-r from-vtuber-cyan to-vtuber-blue text-white shadow-[0_5px_15px_rgba(164,229,250,0.5)]' : 'text-vtuber-purple hover:text-vtuber-cyan'}`}
           >
-            DAEKAN X ASUKA JETTO
+            VTUBER COLLABS
           </button>
           <button 
-            onClick={() => setMainTab('merch')}
+            onClick={() => handleTabChange('merch')}
             className={`px-6 md:px-10 py-3 rounded-full font-black text-[10px] md:text-sm tracking-[0.2em] uppercase transition-all duration-500 whitespace-nowrap ${mainTab === 'merch' ? 'bg-gradient-to-r from-vtuber-cyan to-vtuber-blue text-white shadow-[0_5px_15px_rgba(164,229,250,0.5)]' : 'text-vtuber-purple hover:text-vtuber-cyan'}`}
           >
             DAEKAN MERCH
@@ -82,25 +101,37 @@ const ProductGrid = ({ products, onOpenModal, selectedProduct }) => {
       </div>
 
       <div className="max-w-7xl mx-auto w-full">
-        {/* CONTROL PANEL FILTER */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-10 pb-6 border-b border-vtuber-pink/20">
-          <div className="relative w-full md:w-1/3 z-20 group">
+          
+          <div className="relative w-full md:w-1/4 z-20 group">
             <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-vtuber-purple group-focus-within:text-vtuber-cyan transition-colors" />
-            <input type="text" placeholder="SEARCH GEAR..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-white/60 backdrop-blur-md border border-vtuber-blue/30 pl-12 pr-4 py-3 rounded-2xl text-xs font-bold tracking-widest uppercase focus:outline-none focus:border-vtuber-cyan focus:shadow-[0_0_15px_rgba(164,229,250,0.4)] transition-all text-vtuber-purple placeholder:text-vtuber-purple/50" />
+            <input type="text" placeholder="SEARCH..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-white/60 backdrop-blur-md border border-vtuber-blue/30 pl-11 pr-4 py-3 rounded-2xl text-xs font-bold tracking-widest uppercase focus:outline-none focus:border-vtuber-cyan focus:shadow-[0_0_15px_rgba(164,229,250,0.4)] transition-all text-vtuber-purple placeholder:text-vtuber-purple/50" />
           </div>
-          <div className="flex w-full md:w-auto gap-4 z-20">
-            <div className="relative w-1/2 md:w-auto group">
+          
+          <div className="flex flex-wrap w-full md:w-auto gap-3 md:gap-4 z-20 justify-center">
+            
+            <div className="relative w-[48%] md:w-auto group">
               <FaFilter className="absolute left-4 top-1/2 -translate-y-1/2 text-vtuber-purple group-hover:text-vtuber-cyan transition-colors" size={12} />
-              <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="w-full appearance-none bg-white/60 backdrop-blur-md border border-vtuber-blue/30 pl-10 pr-10 py-3 rounded-2xl text-xs font-bold tracking-widest uppercase focus:outline-none focus:border-vtuber-cyan focus:shadow-[0_0_15px_rgba(164,229,250,0.4)] hover:border-vtuber-cyan transition-all text-vtuber-purple cursor-pointer">
-                {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+              <select value={selectedGenre} onChange={(e) => setSelectedGenre(e.target.value)} className="w-full appearance-none bg-white/60 backdrop-blur-md border border-vtuber-blue/30 pl-10 pr-8 py-3 rounded-2xl text-[10px] md:text-xs font-bold tracking-widest uppercase focus:outline-none focus:border-vtuber-cyan focus:shadow-[0_0_15px_rgba(164,229,250,0.4)] hover:border-vtuber-cyan transition-all text-vtuber-purple cursor-pointer">
+                <option value="ALL">ALL GENRES</option>
+                {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
               </select>
             </div>
-            <div className="relative w-1/2 md:w-auto group">
+
+            <div className="relative w-[48%] md:w-auto group">
+              <FaFilter className="absolute left-4 top-1/2 -translate-y-1/2 text-vtuber-purple group-hover:text-vtuber-cyan transition-colors" size={12} />
+              <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="w-full appearance-none bg-white/60 backdrop-blur-md border border-vtuber-blue/30 pl-10 pr-8 py-3 rounded-2xl text-[10px] md:text-xs font-bold tracking-widest uppercase focus:outline-none focus:border-vtuber-cyan focus:shadow-[0_0_15px_rgba(164,229,250,0.4)] hover:border-vtuber-cyan transition-all text-vtuber-purple cursor-pointer">
+                {itemTypes.map(type => <option key={type} value={type}>{type}</option>)}
+              </select>
+            </div>
+
+            <div className="relative w-full md:w-auto group mt-3 md:mt-0">
               <FaSortAmountDown className="absolute left-4 top-1/2 -translate-y-1/2 text-vtuber-purple group-hover:text-vtuber-cyan transition-colors" size={12} />
-              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full appearance-none bg-white/60 backdrop-blur-md border border-vtuber-blue/30 pl-10 pr-10 py-3 rounded-2xl text-xs font-bold tracking-widest uppercase focus:outline-none focus:border-vtuber-cyan focus:shadow-[0_0_15px_rgba(164,229,250,0.4)] hover:border-vtuber-cyan transition-all text-vtuber-purple cursor-pointer">
+              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full appearance-none bg-white/60 backdrop-blur-md border border-vtuber-blue/30 pl-10 pr-8 py-3 rounded-2xl text-[10px] md:text-xs font-bold tracking-widest uppercase focus:outline-none focus:border-vtuber-cyan focus:shadow-[0_0_15px_rgba(164,229,250,0.4)] hover:border-vtuber-cyan transition-all text-vtuber-purple cursor-pointer">
                 <option value="sale-first">SALE FIRST</option><option value="newest">NEWEST</option><option value="az">A - Z</option><option value="price-low">LOW - HIGH</option><option value="price-high">HIGH - LOW</option>
               </select>
             </div>
+
           </div>
         </div>
 

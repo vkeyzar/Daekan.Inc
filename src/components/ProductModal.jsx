@@ -18,6 +18,9 @@ const ProductModal = ({ product, close }) => {
   const isClosed = product.is_open === false;
   const needsSize = product.has_size !== false; 
 
+  // ✅ FIX SIZE CHART: Kita cek product_line nya, bukan category nya
+  const sizeChartCat = (product.product_line || '').toUpperCase().includes('COLLAB') ? 'COLLAB' : 'MERCH';
+
   const [isSaleExpired, setIsSaleExpired] = useState(false);
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(1);
@@ -95,7 +98,6 @@ const ProductModal = ({ product, close }) => {
                   ) : (
                     <>
                       <p className={`text-3xl font-black transition-colors ${isClosed ? 'text-zinc-400' : 'text-vtuber-purple'}`}>{formatIDR(activePrice)}</p>
-                      {/* ✅ FIX: WARNA HITAM, BG PINK, FONT LEBIH GEDE */}
                       {selectedSize === 'XXL' && <p className="text-[10px] font-black text-black uppercase tracking-widest bg-vtuber-pink px-2.5 py-1 rounded-lg drop-shadow-sm">(+ Biaya Extra XXL)</p>}
                       {showSaleBadge && selectedSize !== 'XXL' && <p className="text-lg text-vtuber-pink line-through font-bold opacity-70">{formatIDR(product.original_price)}</p>}
                     </>
@@ -112,13 +114,13 @@ const ProductModal = ({ product, close }) => {
                       <div>
                         <div className="flex items-center justify-between mb-2">
                           <label className="text-xs font-bold tracking-[0.2em] uppercase text-vtuber-purple">Pilih Ukuran</label>
-                          <button type="button" onClick={() => window.open(`/size-chart?cat=${product.category || 'MERCH'}`, '_blank')} className="text-[10px] font-bold text-vtuber-cyan uppercase underline tracking-[0.1em] hover:text-vtuber-pink">Panduan Ukuran</button>
+                          {/* ✅ FIX LINK SIZE CHART NYA: */}
+                          <button type="button" onClick={() => window.open(`/size-chart?cat=${sizeChartCat}`, '_blank')} className="text-[10px] font-bold text-vtuber-cyan uppercase underline tracking-[0.1em] hover:text-vtuber-pink">Panduan Ukuran</button>
                         </div>
                         <div className="flex gap-2">
                           {['M', 'L', 'XL', 'XXL'].map((sz) => (
                             <button key={sz} type="button" onClick={() => setSelectedSize(sz)} className={`flex-1 py-2 md:py-3 border-2 font-black text-xs md:text-sm transition-all rounded-xl relative ${selectedSize === sz ? 'border-vtuber-pink bg-vtuber-pink text-white shadow-[0_0_10px_rgba(225,174,207,0.5)]' : 'border-vtuber-blue/20 text-vtuber-purple hover:border-vtuber-cyan hover:text-vtuber-cyan'}`}>
                               {sz}
-                              {/* ✅ FIX: BADGE +10K DI TOMBOL XXL DIBIKIN TEXT BLACK & LEBIH GEDE */}
                               {sz === 'XXL' && <span className="absolute -top-2.5 -right-2 bg-vtuber-pink text-black font-black text-[10px] px-2 py-0.5 rounded-full drop-shadow-sm border border-black/5">+10K</span>}
                             </button>
                           ))}
@@ -129,14 +131,7 @@ const ProductModal = ({ product, close }) => {
                       <label className="text-xs font-bold tracking-[0.2em] uppercase text-vtuber-purple mb-2 block">Kuantitas</label>
                       <div className="flex items-center justify-between border-2 border-vtuber-blue/20 rounded-xl overflow-hidden w-full max-w-[130px] h-12 text-vtuber-purple">
                         <button type="button" onClick={() => setQuantity(Math.max(1, Number(quantity) - 1))} className="w-10 h-full flex items-center justify-center hover:bg-vtuber-cyan/10 font-black text-lg transition-colors">-</button>
-                        <input 
-                          type="number" 
-                          min="1" 
-                          value={quantity} 
-                          onChange={(e) => setQuantity(e.target.value)} 
-                          onBlur={() => setQuantity(Math.max(1, Number(quantity) || 1))} 
-                          className="w-12 h-full text-center font-black text-base outline-none bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
-                        />
+                        <input type="number" min="1" value={quantity} onChange={(e) => setQuantity(e.target.value)} onBlur={() => setQuantity(Math.max(1, Number(quantity) || 1))} className="w-12 h-full text-center font-black text-base outline-none bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                         <button type="button" onClick={() => setQuantity(Number(quantity) + 1)} className="w-10 h-full flex items-center justify-center hover:bg-vtuber-cyan/10 font-black text-lg transition-colors">+</button>
                       </div>
                     </div>

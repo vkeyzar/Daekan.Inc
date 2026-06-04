@@ -61,28 +61,28 @@ const Home = () => {
   const highlightProducts = latestCategory ? products.filter(p => p.category_id === latestCategory.id) : []
 
   // ==========================================
-  // 🧠 LOGIC 2: GENRE CARDS & PRODUCT TYPES
+  // 🧠 LOGIC 2: GENRE CARDS & DETEKSI TAB
   // ==========================================
-  
-  // A. Bikin kartu dari SISA genre (Banned dari New Arrivals)
   const remainingCategories = categories.filter(cat => cat.id !== latestCategory?.id);
   const dbCategoryCards = remainingCategories.map(cat => {
       const catProds = products.filter(p => p.category_id === cat.id);
       if (catProds.length === 0) return null; 
       const randomProd = catProds[Math.floor(Math.random() * catProds.length)];
-      return { id: cat.id, name: cat.name, image: randomProd.image_url }
+      // ✅ Cek dia masuk Collab atau Merch buat dikirim ke URL
+      const targetTab = (randomProd.product_line || '').toUpperCase().includes('COLLAB') ? 'collab' : 'merch';
+      return { id: cat.id, name: cat.name, image: randomProd.image_url, isGenre: true, targetTab }
   }).filter(Boolean);
 
-  // B. Bikin kartu tambahan dari JENIS BARANG (T-shirt, Deskmat, dll dari kolom 'category')
   const uniqueProductTypes = [...new Set(products.map(p => (p.category || '').toUpperCase()).filter(Boolean))];
   const itemTypeCards = uniqueProductTypes.map(type => {
       const typeProds = products.filter(p => (p.category || '').toUpperCase() === type);
       if (typeProds.length === 0) return null;
       const randomProd = typeProds[Math.floor(Math.random() * typeProds.length)];
-      return { id: `type-${type}`, name: type, image: randomProd.image_url }
+      // ✅ Sama, cek tab nya
+      const targetTab = (randomProd.product_line || '').toUpperCase().includes('COLLAB') ? 'collab' : 'merch';
+      return { id: type, name: type, image: randomProd.image_url, isGenre: false, targetTab }
   }).filter(Boolean);
 
-  // C. Gabungin keduanya buat ditampilin
   const allCollectionCards = [...dbCategoryCards, ...itemTypeCards];
 
   return (
@@ -134,8 +134,8 @@ const Home = () => {
                 allCollectionCards.map(collection => (
                   <Link 
                     key={collection.id} 
-                    to={`/products`} 
-                    // ✅ FIX SIZE GENRE CARD BIAR MENGKOTAK JUGA SEPERTI SQUARE CARD
+                    // ✅ PENGIRIMAN PARAMETER URL (Tab + Genre / Type)
+                    to={`/products?tab=${collection.targetTab}&${collection.isGenre ? 'genre' : 'type'}=${collection.id}`} 
                     className="group relative w-[200px] md:w-[240px] shrink-0 aspect-square rounded-[2rem] overflow-hidden border border-vtuber-blue/20 hover:border-vtuber-pink shadow-lg transition-all duration-300 block bg-white"
                   >
                     <img 
