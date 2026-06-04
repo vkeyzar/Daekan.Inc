@@ -1,49 +1,35 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaBars, FaTimes, FaUser, FaShoppingBag } from 'react-icons/fa' // ✅ TAMBAH FaShoppingBag
+import { FaBars, FaTimes, FaUser, FaShoppingBag } from 'react-icons/fa' 
 import { supabase } from '../lib/supabaseClient'
-import useCartStore from '../store/useCartStore' // ✅ IMPORT ZUSTAND STORE
-import SidebarCart from './SidebarCart' // ✅ IMPORT COMPONENT SIDEBAR CART
+import useCartStore from '../store/useCartStore' 
+import SidebarCart from './SidebarCart' 
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [session, setSession] = useState(null)
   const [role, setRole] = useState(null) 
-  
-  // ✅ STATE BARU UNTUK BUKA/TUTUP SIDEBAR KERANJANG
   const [isCartOpen, setIsCartOpen] = useState(false)
 
-  // ✅ AMBIL DATA CART UNTUK MENGHITUNG TOTAL BARANG (BADGE)
   const cart = useCartStore((state) => state.cart)
   const totalItems = cart.reduce((total, item) => total + item.quantity, 0)
-
   const location = useLocation()
 
-  const isWhitePage = location.pathname === '/' || location.pathname === '/profile' || location.pathname === '/admin-dashboard';
+  const isWhitePage = location.pathname === '/' || location.pathname === '/profile' || location.pathname === '/admin-dashboard' || location.pathname === '/products';
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register'
 
   const getUserRole = async (user) => {
     if (!user) return;
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-    
+    const { data } = await supabase.from('profiles').select('role').eq('id', user.id).single();
     if (data) setRole(data.role);
   };
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    setIsOpen(false);
-  };
+  const scrollToTop = () => { window.scrollTo({ top: 0, behavior: 'smooth' }); setIsOpen(false); };
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50)
-    }
+    const handleScroll = () => setScrolled(window.scrollY > 50)
     window.addEventListener('scroll', handleScroll)
 
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -53,108 +39,81 @@ const Navbar = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
-      if (session) {
-        getUserRole(session.user);
-      } else {
-        setRole(null);
-      }
+      if (session) getUserRole(session.user);
+      else setRole(null);
     })
 
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      subscription.unsubscribe();
-    };
+    return () => { window.removeEventListener('scroll', handleScroll); subscription.unsubscribe(); };
   }, [])
 
-  // Menentukan warna badge angka pembungkus berdasarkan kondisi background navbar
   const isNavbarLight = scrolled || isOpen || isWhitePage || isAuthPage;
 
   return (
     <>
       <nav 
         className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 max-w-[100vw] overflow-x-hidden ${
-        isNavbarLight 
-            ? 'bg-white shadow-sm py-4 text-black' 
-            : 'bg-transparent py-6 text-white'
+        isNavbarLight ? 'bg-white/90 backdrop-blur-md shadow-sm py-4 text-vtuber-purple font-black' : 'bg-transparent py-6 text-white'
         }`}
       >
         <div className="w-full px-6 md:px-12 flex justify-between items-center relative">
           
-          {/* LOGO */}
-          <Link to="/" onClick={scrollToTop} className="font-black text-2xl tracking-tighter italic z-10 relative shrink-0 flex items-center">
-              <span>DAEKAN</span>
-              <span className="font-light ml-0.5">INC.</span>
+          {/* ✅ FIX: Logo dikecilin (h-6 md:h-8) & Ditambahin mt-1 biar sejajar sama teks */}
+          <Link to="/" onClick={scrollToTop} className="z-10 relative shrink-0 flex items-center mt-1 md:mt-1.5">
+              <img 
+                src="https://corhxzcsgvcckigxleeo.supabase.co/storage/v1/object/public/asset/daekan%20new%20logo.png" 
+                alt="Daekan Inc." 
+                className="h-6 md:h-8 object-contain transition-transform hover:scale-105"
+              />
           </Link>
 
-          {/* MENU DESKTOP: HOME | MERCH | REVIEWS */}
           <div className="hidden md:flex gap-10 font-bold text-sm tracking-widest absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
-              <Link to="/" onClick={scrollToTop} className="hover:opacity-50 transition-all">HOME</Link>
-              <Link to="/#shop" className="hover:opacity-50 transition-all">MERCH</Link>
-              <Link to="/#reviews" className="hover:opacity-50 transition-all">REVIEWS</Link>
-              
+              <Link to="/" onClick={scrollToTop} className="hover:text-vtuber-cyan transition-colors duration-300">HOME</Link>
+              <Link to="/products" onClick={scrollToTop} className="hover:text-vtuber-cyan transition-colors duration-300">PRODUCTS</Link>
+              <Link to="/#reviews" className="hover:text-vtuber-cyan transition-colors duration-300">REVIEWS</Link>
               {session && role === 'admin' && (
-                  <Link to="/admin-dashboard" className="text-red-600 hover:opacity-70 transition-all italic tracking-tighter">ADMIN</Link>
+                  <Link to="/admin-dashboard" className="text-red-600 hover:text-vtuber-pink transition-colors duration-300 italic tracking-tighter">ADMIN</Link>
               )}
           </div>
 
-          {/* ICONS & BURGER */}
-          <div className="flex items-center gap-3 md:gap-6 z-10 relative shrink-0">
-              
-              {/* ✅ TOMBOL KERANJANG BELANJA (DESKTOP & MOBILE ACESSIBLE) */}
-              <button 
-                onClick={() => setIsCartOpen(true)}
-                className="relative p-2.5 hover:scale-110 transition-transform focus:outline-none"
-                title="Buka Keranjang Belanja"
-              >
+          <div className="flex items-center gap-3 md:gap-6 z-10 relative shrink-0 mt-1">
+              <button onClick={() => setIsCartOpen(true)} className="relative p-2.5 hover:scale-110 hover:text-vtuber-pink transition-all focus:outline-none">
                 <FaShoppingBag size={18} className="cursor-pointer" />
-                
-                {/* Indikator Badge Jumlah Item */}
                 {totalItems > 0 && (
                   <span className={`absolute -top-0.5 -right-0.5 font-mono text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 transition-colors ${
-                    isNavbarLight 
-                      ? 'bg-black text-white border-white' 
-                      : 'bg-white text-black border-black/10'
+                    isNavbarLight ? 'bg-vtuber-pink text-white border-white' : 'bg-vtuber-pink text-white border-black/10'
                   }`}>
                     {totalItems}
                   </span>
                 )}
               </button>
 
-              <Link to={session ? "/profile" : "/login"} className="hidden md:flex hover:scale-110 transition-transform">
-                  <FaUser size={18} className={`cursor-pointer ${session ? 'text-green-500' : ''}`} />
+              <Link to={session ? "/profile" : "/login"} className="hidden md:flex hover:scale-110 hover:text-vtuber-cyan transition-all">
+                  <FaUser size={18} className={`cursor-pointer ${session ? 'text-vtuber-cyan' : ''}`} />
               </Link>
 
-              <button onClick={() => setIsOpen(!isOpen)} className="md:hidden focus:outline-none p-2">
+              <button onClick={() => setIsOpen(!isOpen)} className="md:hidden focus:outline-none p-2 hover:text-vtuber-pink transition-colors">
                   {isOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
               </button>
           </div>
         </div>
 
-        {/* MOBILE MENU */}
         <AnimatePresence>
           {isOpen && (
-            <motion.div className="md:hidden fixed inset-0 bg-white z-40 flex flex-col items-center justify-center gap-8 text-3xl font-black italic uppercase tracking-tighter text-black">
-                <Link to="/" onClick={() => setIsOpen(false)}>HOME</Link>
-                <Link to="/#shop" onClick={() => setIsOpen(false)}>MERCH</Link>
-                <Link to="/#reviews" onClick={() => setIsOpen(false)}>REVIEWS</Link>
-                
+            <motion.div className="md:hidden fixed inset-0 bg-white/95 backdrop-blur-lg z-40 flex flex-col items-center justify-center gap-8 text-3xl font-black italic uppercase tracking-tighter text-vtuber-purple">
+                <Link to="/" onClick={() => setIsOpen(false)} className="hover:text-vtuber-cyan">HOME</Link>
+                <Link to="/products" onClick={() => setIsOpen(false)} className="hover:text-vtuber-cyan">PRODUCTS</Link>
+                <Link to="/#reviews" onClick={() => setIsOpen(false)} className="hover:text-vtuber-cyan">REVIEWS</Link>
                 {session && role === 'admin' && (
-                  <Link to="/admin-dashboard" onClick={() => setIsOpen(false)} className="text-red-600">ADMIN</Link>
+                  <Link to="/admin-dashboard" onClick={() => setIsOpen(false)} className="text-red-600 hover:text-vtuber-pink">ADMIN</Link>
                 )}
-                
-                <hr className="w-1/2 border-zinc-200" />
+                <hr className="w-1/2 border-vtuber-pink/20" />
                 <Link to={session ? "/profile" : "/login"} onClick={() => setIsOpen(false)}>
-                    <FaUser size={30} className={session ? 'text-green-500' : ''} />
+                    <FaUser size={30} className={`hover:text-vtuber-cyan transition-colors ${session ? 'text-vtuber-cyan' : ''}`} />
                 </Link>
-                <div className="mt-4 text-[10px] font-normal not-italic text-zinc-400 tracking-[0.3em] uppercase">
-                    &copy; 2026 DAEKAN INC.
-                </div>
             </motion.div>
           )}
         </AnimatePresence>
       </nav>
-
-      {/* ✅ SIDEBAR DRAWER KERANJANG BELANJA */}
       <SidebarCart isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </>
   )

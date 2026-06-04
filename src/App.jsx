@@ -9,6 +9,7 @@ import AdminDashboard from './pages/AdminDashboard'
 import ScrollToHash from './components/ScrollToHash';
 import Checkout from './pages/Checkout'
 import SizeChart from './pages/SizeChart'
+import Products from './pages/Products'
 
 const App = () => {
   return (
@@ -24,6 +25,7 @@ const App = () => {
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/size-chart" element={<SizeChart />} />
+        <Route path="/products" element={<Products />} />
       </Routes>
     </Router>
   )

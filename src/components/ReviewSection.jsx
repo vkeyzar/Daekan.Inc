@@ -14,11 +14,7 @@ const ReviewSection = ({ session }) => {
   const fetchReviews = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
-        .from('reviews')
-        .select('*')
-        .order('created_at', { ascending: false })
-      
+      const { data, error } = await supabase.from('reviews').select('*').order('created_at', { ascending: false })
       if (error) throw error
       setReviews(data || [])
     } catch (error) {
@@ -28,16 +24,11 @@ const ReviewSection = ({ session }) => {
     }
   }
 
-  useEffect(() => {
-    fetchReviews()
-  }, [])
+  useEffect(() => { fetchReviews() }, [])
 
   const handleWriteReview = () => {
-    if (!session) {
-      navigate('/login')
-    } else {
-      setIsModalOpen(true)
-    }
+    if (!session) navigate('/login')
+    else setIsModalOpen(true)
   }
 
   return (
@@ -45,17 +36,20 @@ const ReviewSection = ({ session }) => {
       <div className="max-w-screen-2xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
           <div className="text-left">
-            <h2 className="text-4xl md:text-5xl font-black uppercase text-black tracking-tighter mb-2">
-              CUSTOMER <span className="text-gray-400">REVIEWS</span>
+            {/* ✅ HEADER REVIEWS GRADIENT */}
+            <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-2 drop-shadow-sm">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-vtuber-cyan to-vtuber-blue pr-2">CUSTOMER</span> 
+              <span className="text-vtuber-pink">REVIEWS</span>
             </h2>
-            <p className="text-zinc-500 font-bold text-sm tracking-widest uppercase flex items-center gap-2">
-              From {reviews.length} total reviews <FaCheckCircle className="text-green-500" />
+            <p className="text-vtuber-purple font-bold text-sm tracking-widest uppercase flex items-center gap-2 drop-shadow-sm">
+              From {reviews.length} total reviews <FaCheckCircle className="text-vtuber-cyan drop-shadow-[0_0_5px_rgba(164,229,250,0.8)]" />
             </p>
           </div>
 
+          {/* ✅ TOMBOL WRITE REVIEW GRADIENT */}
           <button 
             onClick={handleWriteReview}
-            className="flex items-center gap-2 px-8 py-4 bg-black text-white text-xs font-bold tracking-[0.2em] uppercase hover:bg-zinc-800 transition-all shadow-xl"
+            className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-vtuber-cyan to-vtuber-blue text-white text-xs font-black tracking-[0.2em] uppercase hover:from-vtuber-pink hover:to-vtuber-purple transition-all duration-500 shadow-[0_10px_20px_rgba(164,229,250,0.4)] hover:shadow-[0_10px_30px_rgba(225,174,207,0.6)] rounded-full hover:scale-105"
           >
             <FaPlus size={12} /> Write A Review
           </button>
@@ -63,7 +57,7 @@ const ReviewSection = ({ session }) => {
 
         {loading ? (
           <div className="flex justify-center py-20">
-            <p className="animate-pulse font-bold tracking-widest text-zinc-400">LOADING FEEDBACK...</p>
+            <p className="animate-pulse font-bold tracking-widest text-vtuber-pink uppercase">LOADING FEEDBACK...</p>
           </div>
         ) : (
           <div className="flex md:grid md:grid-cols-3 lg:grid-cols-4 gap-6 overflow-x-auto pb-10 no-scrollbar snap-x">
@@ -72,38 +66,33 @@ const ReviewSection = ({ session }) => {
                 key={rev.id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                className="min-w-[300px] md:min-w-full bg-white/80 backdrop-blur-sm border border-zinc-100 p-5 snap-center shadow-sm"
+                className="min-w-[300px] md:min-w-full bg-white/80 backdrop-blur-md border border-vtuber-blue/20 p-5 snap-center shadow-lg rounded-3xl hover:border-vtuber-pink/50 transition-colors duration-500"
               >
                 {rev.image_url && (
-                  <div className="w-full h-80 mb-5 overflow-hidden rounded-md bg-zinc-100">
-                    <img src={rev.image_url} alt="Review" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" />
+                  <div className="w-full h-80 mb-5 overflow-hidden rounded-2xl bg-vtuber-purple/10">
+                    <img src={rev.image_url} alt="Review" className="w-full h-full object-cover transition-all duration-700 hover:scale-110" />
                   </div>
                 )}
                 
-                <div className="flex gap-1 mb-4">
+                {/* ✅ BINTANG JADI CYAN */}
+                <div className="flex gap-1 mb-4 drop-shadow-sm">
                   {[...Array(5)].map((_, i) => (
-                    <FaStar key={i} size={14} className={i < rev.rating ? "text-black" : "text-zinc-200"} />
+                    <FaStar key={i} size={14} className={i < rev.rating ? "text-vtuber-cyan" : "text-zinc-200"} />
                   ))}
                 </div>
 
-                <p className="font-bold text-[10px] text-zinc-400 uppercase tracking-[0.2em] mb-1">
-                  {rev.user_name} {rev.is_verified && <span className="text-green-500 ml-1">✓</span>}
+                <p className="font-bold text-[10px] text-vtuber-purple uppercase tracking-[0.2em] mb-1">
+                  {rev.user_name} {rev.is_verified && <span className="text-vtuber-cyan ml-1 drop-shadow-md">✓</span>}
                 </p>
-                <h4 className="font-black italic uppercase text-xl mb-2 tracking-tighter">{rev.title}</h4>
-                <p className="text-zinc-600 text-sm leading-relaxed font-medium italic">"{rev.comment}"</p>
+                <h4 className="font-black italic uppercase text-xl mb-2 tracking-tighter text-zinc-800">{rev.title}</h4>
+                <p className="text-zinc-500 text-sm leading-relaxed font-medium italic">"{rev.comment}"</p>
               </motion.div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Modal dapet prop onSuccess buat refresh data pas abis submit */}
-      <ReviewFormModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        session={session}
-        onSuccess={fetchReviews}
-      />
+      <ReviewFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} session={session} onSuccess={fetchReviews} />
     </section>
   )
 }

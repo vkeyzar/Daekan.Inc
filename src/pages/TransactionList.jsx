@@ -18,10 +18,8 @@ const TransactionList = ({ transactions, refreshData }) => {
     { value: 'COD', label: 'COD ONLY' }
   ]
 
-  // ✅ 1. URUTAN STATUS WORKFLOW
   const STATUS_FLOW = ['pending', 'paid', 'production', 'sending', 'success']
 
-  // ✅ 2. WARNA BADGE DINAMIS
   const getStatusBadge = (status) => {
     switch(status) {
       case 'pending': return 'bg-zinc-100 text-zinc-600 border-zinc-200'
@@ -33,9 +31,7 @@ const TransactionList = ({ transactions, refreshData }) => {
     }
   }
 
-  // ✅ 3. LOGIC NEXT STEP
   const handleNextStepClick = (id, currentStatus, user_id) => {
-    // Toleransi kalau ada data lama yang statusnya 'verified'
     const normalizedStatus = currentStatus === 'verified' ? 'paid' : currentStatus;
     const currentIndex = STATUS_FLOW.indexOf(normalizedStatus);
     
@@ -51,17 +47,9 @@ const TransactionList = ({ transactions, refreshData }) => {
     const { id, newStatus, user_id } = confirmModal
 
     try {
-      // JIKA NAIK KE PAID, KIRIM EMAIL INVOICE
       if (newStatus === 'paid') {
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('email')
-          .eq('id', user_id)
-          .single()
-
-        if (profileError || !profileData?.email) {
-          throw new Error('Gagal menemukan email pembeli.')
-        }
+        const { data: profileData, error: profileError } = await supabase.from('profiles').select('email').eq('id', user_id).single()
+        if (profileError || !profileData?.email) throw new Error('Gagal menemukan email pembeli.')
 
         const userEmail = profileData.email
         const transactionToApprove = transactions.find(t => t.id === id)
@@ -72,13 +60,19 @@ const TransactionList = ({ transactions, refreshData }) => {
           body: JSON.stringify({ email: userEmail, transaction: transactionToApprove }),
         })
 
-        if (!response.ok) {
-          throw new Error('Gagal mengirim email melalui server Vercel. Pastikan test di Vercel atau pakai vercel dev.')
-        }
+        if (!response.ok) throw new Error('Gagal mengirim email melalui server Vercel.')
       }
 
-      // UPDATE STATUS DATABASE 
-      const { error } = await supabase.from('transactions').update({ status: newStatus }).eq('id', id)
+      // ✅ AUTO LOG WAKTU KE DATABASE SESUAI STATUS
+      const now = new Date().toISOString();
+      let updatePayload = { status: newStatus };
+
+      if (newStatus === 'paid') updatePayload.paid_at = now;
+      if (newStatus === 'production') updatePayload.production_at = now;
+      if (newStatus === 'sending') updatePayload.shipped_at = now;
+      if (newStatus === 'success') updatePayload.success_at = now;
+
+      const { error } = await supabase.from('transactions').update(updatePayload).eq('id', id)
       if (error) throw error
 
       setConfirmModal(null)
@@ -97,40 +91,27 @@ const TransactionList = ({ transactions, refreshData }) => {
     } catch (error) {
       setConfirmModal(null)
       setTimeout(() => {
-        Swal.fire({
-          title: 'GAGAL PROSES',
-          text: error.message,
-          icon: 'error',
-          confirmButtonColor: '#000'
-        })
+        Swal.fire({ title: 'GAGAL PROSES', text: error.message, icon: 'error', confirmButtonColor: '#000' })
       }, 300)
     } finally {
       setIsUpdating(false)
     }
   }
 
-  const handleDeleteClick = (id) => {
-    setDeleteModal({ id })
-  }
+  const handleDeleteClick = (id) => { setDeleteModal({ id }) }
 
   const executeDelete = async () => {
     if (!deleteModal) return
     setIsUpdating(true)
-    const { id } = deleteModal
-    const { error } = await supabase.from('transactions').delete().eq('id', id)
-    if (!error) {
-      refreshData()
-      setDeleteModal(null)
-    } else {
-      alert("Gagal hapus transaksi: " + error.message)
-    }
+    const { error } = await supabase.from('transactions').delete().eq('id', deleteModal.id)
+    if (!error) { refreshData(); setDeleteModal(null); } 
+    else { alert("Gagal hapus transaksi: " + error.message) }
     setIsUpdating(false)
   }
 
   const filteredTransactions = transactions.filter(trx => {
     if (filterMethod === 'ALL') return true
-    const method = trx.delivery_method || 'SHIPMENT'
-    return method.toUpperCase() === filterMethod.toUpperCase()
+    return (trx.delivery_method || 'SHIPMENT').toUpperCase() === filterMethod.toUpperCase()
   })
 
   const handleExportCSV = () => {
@@ -164,8 +145,6 @@ const TransactionList = ({ transactions, refreshData }) => {
 
   return (
     <div className="bg-white rounded-3xl border border-zinc-100 shadow-sm overflow-hidden relative">
-      
-      {/* TOOLBAR */}
       <div className="p-6 border-b border-zinc-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-zinc-50">
         <div>
           <h3 className="font-black italic uppercase text-lg leading-tight">Order Records</h3>
@@ -174,27 +153,16 @@ const TransactionList = ({ transactions, refreshData }) => {
         
         <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto relative">
           <div className="relative">
-            <button 
-              onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className="flex items-center gap-3 bg-white border border-zinc-200 px-5 py-3.5 rounded-xl shadow-sm text-xs font-black uppercase tracking-wider cursor-pointer hover:border-black transition-colors"
-            >
+            <button onClick={() => setIsFilterOpen(!isFilterOpen)} className="flex items-center gap-3 bg-white border border-zinc-200 px-5 py-3.5 rounded-xl shadow-sm text-xs font-black uppercase tracking-wider cursor-pointer hover:border-black transition-colors">
               <FaFilter className="text-zinc-400" />
               {filterOptions.find(opt => opt.value === filterMethod)?.label}
               <FaChevronDown className={`text-zinc-400 transition-transform duration-300 ${isFilterOpen ? 'rotate-180' : ''}`} />
             </button>
-
             <AnimatePresence>
               {isFilterOpen && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute z-50 top-full mt-3 right-0 sm:left-0 w-48 bg-white border border-zinc-100 rounded-2xl shadow-2xl overflow-hidden py-2"
-                >
+                <motion.div initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.95 }} className="absolute z-50 top-full mt-3 right-0 sm:left-0 w-48 bg-white border border-zinc-100 rounded-2xl shadow-2xl overflow-hidden py-2">
                   {filterOptions.map((opt) => (
-                    <div 
-                      key={opt.value}
-                      onClick={() => { setFilterMethod(opt.value); setIsFilterOpen(false); }}
-                      className={`px-5 py-3 text-xs font-black uppercase cursor-pointer transition-colors ${filterMethod === opt.value ? 'bg-zinc-100 text-black' : 'text-zinc-400 hover:bg-zinc-50 hover:text-black'}`}
-                    >
+                    <div key={opt.value} onClick={() => { setFilterMethod(opt.value); setIsFilterOpen(false); }} className={`px-5 py-3 text-xs font-black uppercase cursor-pointer transition-colors ${filterMethod === opt.value ? 'bg-zinc-100 text-black' : 'text-zinc-400 hover:bg-zinc-50 hover:text-black'}`}>
                       {opt.label}
                     </div>
                   ))}
@@ -202,17 +170,12 @@ const TransactionList = ({ transactions, refreshData }) => {
               )}
             </AnimatePresence>
           </div>
-
-          <button 
-            onClick={handleExportCSV}
-            className="flex items-center gap-3 bg-black text-white px-6 py-3.5 rounded-xl font-black uppercase text-xs tracking-[0.15em] hover:bg-zinc-800 transition-all shadow-md"
-          >
+          <button onClick={handleExportCSV} className="flex items-center gap-3 bg-black text-white px-6 py-3.5 rounded-xl font-black uppercase text-xs tracking-[0.15em] hover:bg-zinc-800 transition-all shadow-md">
             <FaFileExcel size={14} /> EXPORT EXCEL
           </button>
         </div>
       </div>
 
-      {/* TABLE */}
       <div className="overflow-x-auto">
         {filteredTransactions.length === 0 ? (
           <div className="p-20 text-center font-bold uppercase tracking-widest text-zinc-400 text-xs">No orders match this filter.</div>
@@ -243,39 +206,25 @@ const TransactionList = ({ transactions, refreshData }) => {
                     </a>
                   </td>
                   <td className="p-4">
-                    <span className={`px-2 py-1 text-[9px] font-black uppercase tracking-wider rounded border ${
-                      (trx.delivery_method || 'SHIPMENT') === 'COD' ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-blue-50 text-blue-700 border-blue-200'
-                    }`}>
+                    <span className={`px-2 py-1 text-[9px] font-black uppercase tracking-wider rounded border ${(trx.delivery_method || 'SHIPMENT') === 'COD' ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
                       {trx.delivery_method || 'SHIPMENT'}
                     </span>
                   </td>
                   <td className="p-4 font-bold text-xs uppercase max-w-[200px] truncate" title={trx.items?.map(i => i.name).join(', ')}>
-                    {trx.items && trx.items.length > 0 
-                      ? (trx.items.length === 1 ? trx.items[0].name : `${trx.items.length} Items (Mixed)`) 
-                      : trx.product_name}
+                    {trx.items && trx.items.length > 0 ? (trx.items.length === 1 ? trx.items[0].name : `${trx.items.length} Items (Mixed)`) : trx.product_name}
                   </td>
                   <td className="p-4 font-black">
-                    {trx.items && trx.items.length > 0 
-                      ? trx.items.reduce((acc, curr) => acc + curr.quantity, 0) 
-                      : trx.quantity}
+                    {trx.items && trx.items.length > 0 ? trx.items.reduce((acc, curr) => acc + curr.quantity, 0) : trx.quantity}
                   </td>
                   <td className="p-4 font-black italic">Rp {(trx.total_price || 0).toLocaleString('id-ID')}</td>
-                  
-                  {/* ✅ BADGE STATUS DINAMIS */}
                   <td className="p-4">
                     <span className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-full border ${getStatusBadge(trx.status)}`}>
                       {trx.status === 'verified' ? 'PAID' : trx.status}
                     </span>
                   </td>
-                  
-                  {/* ✅ TOMBOL ACTION */}
                   <td className="p-4 pr-6 text-center flex justify-center gap-2 mt-1.5">
                     {trx.status !== 'success' ? (
-                      <button 
-                        onClick={() => handleNextStepClick(trx.id, trx.status, trx.user_id)} 
-                        className="inline-flex items-center justify-center p-3 rounded-xl bg-zinc-100 hover:bg-black hover:text-white transition-all text-zinc-500 shadow-sm" 
-                        title="Move to Next Step"
-                      >
+                      <button onClick={() => handleNextStepClick(trx.id, trx.status, trx.user_id)} className="inline-flex items-center justify-center p-3 rounded-xl bg-zinc-100 hover:bg-black hover:text-white transition-all text-zinc-500 shadow-sm" title="Move to Next Step">
                         <FaCheckCircle size={14} />
                       </button>
                     ) : (
@@ -283,7 +232,6 @@ const TransactionList = ({ transactions, refreshData }) => {
                         <FaCheckCircle size={14} />
                       </div>
                     )}
-                    
                     <button onClick={() => handleDeleteClick(trx.id)} className="inline-flex items-center justify-center p-3 rounded-xl bg-red-50 hover:bg-red-600 hover:text-white transition-all text-red-400" title="Delete Data">
                       <FaTrash size={14} />
                     </button>
@@ -295,19 +243,14 @@ const TransactionList = ({ transactions, refreshData }) => {
         )}
       </div>
 
-      {/* MODAL KONFIRMASI (CHANGE STATUS DINAMIS) */}
       <AnimatePresence>
         {confirmModal && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
             <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl text-center relative overflow-hidden">
               <div className={`absolute top-0 left-0 w-full h-2 bg-black`}></div>
-              
-              {/* IKON BERUBAH SESUAI STEP */}
               {confirmModal.newStatus === 'success' ? <FaCheckCircle className="text-green-500 text-5xl mx-auto mb-4" /> : <FaBoxOpen className="text-zinc-300 text-5xl mx-auto mb-4" />}
-              
               <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2">Update Status?</h2>
               
-              {/* TEKS BERUBAH SESUAI STEP SELANJUTNYA */}
               <div className="text-sm font-medium text-zinc-500 mb-8 leading-relaxed">
                 {confirmModal.newStatus === 'paid' && <p>Mark order as <span className="font-black text-blue-600">PAID</span>. System will auto-send the email invoice.</p>}
                 {confirmModal.newStatus === 'production' && <p>Mark order as <span className="font-black text-purple-600">IN PRODUCTION</span>. Start preparing the items.</p>}
@@ -326,7 +269,6 @@ const TransactionList = ({ transactions, refreshData }) => {
         )}
       </AnimatePresence>
 
-      {/* MODAL HAPUS */}
       <AnimatePresence>
         {deleteModal && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">

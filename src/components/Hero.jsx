@@ -1,45 +1,43 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { FaArrowRight } from 'react-icons/fa'
+import { Link } from 'react-router-dom'
 
 const Hero = () => {
   return (
-    <div name="home" className="w-full h-screen bg-transparent text-black flex flex-col justify-center items-center px-4 relative"> 
+    <div name="home" className="w-full h-screen bg-transparent text-black flex flex-col justify-center items-center px-4 relative overflow-hidden"> 
 
-      {/* Teks Utama */}
+      {/* JETTO BACKGROUND */}
+      <img 
+        src="https://corhxzcsgvcckigxleeo.supabase.co/storage/v1/object/public/asset/Freebies_Sticker.png" 
+        className="absolute top-1/2 -translate-y-1/2 -left-40 md:-left-20 h-[110vh] md:h-[130vh] w-auto max-w-none opacity-90 pointer-events-none z-[1]"
+        alt="VTuber Jetto Background"
+      />
+
+      {/* ✅ KONTEN KANAN: Ditambahin pt-12 md:pt-16 biar agak turun ke bawah */}
       <motion.div 
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.8 }}
-        className="text-center z-10"
+        className="z-10 relative flex flex-col items-center justify-center w-full md:w-[55%] lg:w-[45%] ml-auto md:pr-12 lg:pr-24 pt-12 md:pt-16"
       >
-        <p className="text-xl md:text-2xl font-bold text-gray-500 tracking-[0.5em] mb-4">
-          EST. 2025
-        </p>
-        <h1 className="text-6xl md:text-9xl font-black tracking-tighter italic uppercase mb-6 drop-shadow-sm">
-          <span>DAEKAN</span>
-          <span className="font-light ml-0.5">INC.</span>
-        </h1>
-        <p className="max-w-xl mx-auto text-gray-600 text-lg md:text-xl mb-10 leading-relaxed font-medium">
-           Designed to be Willing.
-        </p>
+        
+        {/* ✅ LOGO CLICKABLE & KASIH JARAK EKSTRA (mb-12) */}
+        <Link to="/" className="w-full flex justify-center mb-12 cursor-pointer transition-transform duration-300 hover:scale-[1.02]">
+          <img 
+            src="https://corhxzcsgvcckigxleeo.supabase.co/storage/v1/object/public/asset/daekan%20x%20jetto.png" 
+            alt="Daekan x Jetto" 
+            className="w-full max-w-[350px] md:max-w-[450px] lg:max-w-[500px] object-contain drop-shadow-[0_15px_30px_rgba(225,174,207,0.4)]"
+          />
+        </Link>
 
-        {/* Tombol CTA (Responsive flex-col to sm:flex-row) */}
-        <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6 px-4">
-            {/*}
+        {/* TOMBOL BUY NOW */}
+        <div className="flex justify-center w-full px-4 md:px-0">
             <a 
-              href="#talents" 
-              className="group px-8 py-4 bg-black text-white font-bold tracking-widest hover:bg-zinc-800 transition-all flex items-center justify-center gap-2 border border-black shadow-[0_10px_20px_rgba(0,0,0,0.1)]"
+              href="#new-arrivals" 
+              className="group px-10 py-4 md:py-5 bg-gradient-to-r from-vtuber-cyan to-vtuber-blue text-white font-black text-sm md:text-base tracking-[0.2em] hover:from-vtuber-pink hover:to-vtuber-purple transition-all duration-500 flex items-center justify-center gap-3 rounded-full shadow-[0_10px_30px_rgba(164,229,250,0.5)] hover:shadow-[0_10px_40px_rgba(225,174,207,0.8)] border-2 border-white/50 hover:scale-105"
             >
-              OUR TALENTS
-              <FaArrowRight className="group-hover:translate-x-1 duration-200"/>
-            </a>
-            */}
-            <a 
-              href="#shop" 
-              className="group px-8 py-4 bg-black backdrop-blur-md text-white font-bold tracking-widest hover:bg-zinc-800 transition-all flex items-center justify-center gap-2 border border-black shadow-[0_10px_20px_rgba(0,0,0,0.05)]"
-            >
-              OUR PRODUCTS
+              BUY NOW
               <FaArrowRight className="group-hover:translate-x-1 duration-200"/>
             </a>
         </div>

@@ -2,20 +2,13 @@ import React, { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import Swal from 'sweetalert2'
 
-const UpdateProduct = ({ isOpen, onClose, productData, refreshData }) => {
+const UpdateProduct = ({ isOpen, onClose, productData, refreshData, categories = [] }) => {
   const [loading, setLoading] = useState(false)
   const [imageFile, setImageFile] = useState(null)
   
   const [product, setProduct] = useState({
-    name: '',
-    price: '',
-    original_price: '',
-    description: '',
-    label: '',
-    sale_end_date: '',
-    category: 'MERCH',
-    is_open: true,
-    has_size: true
+    name: '', price: '', original_price: '', description: '', label: '',
+    sale_end_date: '', category_id: '', product_line: 'DAEKAN MERCH', category: '', is_open: true, has_size: true
   })
 
   useEffect(() => {
@@ -23,7 +16,9 @@ const UpdateProduct = ({ isOpen, onClose, productData, refreshData }) => {
       setProduct({
         ...productData,
         sale_end_date: productData.sale_end_date ? productData.sale_end_date.substring(0, 16) : '',
-        category: productData.category || 'MERCH',
+        category_id: productData.category_id || '',
+        product_line: productData.product_line || 'DAEKAN MERCH',
+        category: productData.category || '',
         has_size: productData.has_size !== undefined ? productData.has_size : true
       })
     }
@@ -32,14 +27,8 @@ const UpdateProduct = ({ isOpen, onClose, productData, refreshData }) => {
   const handleUpdate = async (e) => {
     e.preventDefault()
 
-    // ✅ Validasi Formal menggunakan SweetAlert2
-    if (!product.name || !product.price) {
-      return Swal.fire({
-        title: 'PERHATIAN',
-        text: 'Mohon lengkapi Nama Produk dan Harga sebelum menyimpan perubahan.',
-        icon: 'warning',
-        confirmButtonColor: '#000'
-      })
+    if (!product.name || !product.price || !product.category_id || !product.category) {
+      return Swal.fire({ title: 'PERHATIAN', text: 'Mohon lengkapi Nama, Harga, Genre, dan Jenis Barang.', icon: 'warning', confirmButtonColor: '#000' })
     }
 
     setLoading(true)
@@ -68,24 +57,12 @@ const UpdateProduct = ({ isOpen, onClose, productData, refreshData }) => {
 
       if (updateError) throw updateError
 
-      // ✅ Notifikasi Sukses Formal
-      Swal.fire({ 
-        title: 'PEMBARUAN BERHASIL', 
-        text: 'Data produk telah berhasil diperbarui ke dalam sistem.', 
-        icon: 'success', 
-        confirmButtonColor: '#000' 
-      })
+      Swal.fire({ title: 'PEMBARUAN BERHASIL', text: 'Data produk telah diperbarui.', icon: 'success', confirmButtonColor: '#000' })
 
       onClose()
       refreshData()
     } catch (error) {
-      // ✅ Notifikasi Error Formal
-      Swal.fire({ 
-        title: 'GAGAL MEMPROSES DATA', 
-        text: `Terjadi kendala pada sistem: ${error.message}`, 
-        icon: 'error',
-        confirmButtonColor: '#000'
-      })
+      Swal.fire({ title: 'GAGAL MEMPROSES DATA', text: error.message, icon: 'error', confirmButtonColor: '#000' })
     } finally {
       setLoading(false)
     }
@@ -102,7 +79,6 @@ const UpdateProduct = ({ isOpen, onClose, productData, refreshData }) => {
         
         <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
           
-          {/* KOLOM KIRI */}
           <div className="space-y-4">
             <div>
               <label className="text-xs font-black tracking-widest text-zinc-400 uppercase">Product Name</label>
@@ -125,39 +101,64 @@ const UpdateProduct = ({ isOpen, onClose, productData, refreshData }) => {
               <textarea value={product.description || ''} className="w-full border-b border-zinc-200 py-2 outline-none font-bold h-20 resize-none focus:border-black transition-colors" onChange={(e) => setProduct({...product, description: e.target.value})} />
             </div>
 
+            {/* ✅ ROW 1: THEME GENRE & PRODUCT LINE */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-bold tracking-widest text-zinc-400 uppercase mb-2 block">Theme Category</label>
+                <label className="text-xs font-bold tracking-widest text-zinc-400 uppercase mb-2 block">Theme / Genre</label>
                 <select 
                   className="w-full border-b-2 border-zinc-200 py-2 font-black text-black uppercase outline-none bg-transparent cursor-pointer" 
-                  value={product.category}
-                  onChange={(e) => setProduct({...product, category: e.target.value})}
+                  value={product.category_id}
+                  onChange={(e) => setProduct({...product, category_id: e.target.value})}
+                  required
                 >
-                  <option value="MERCH">DAEKAN MERCH</option>
-                  <option value="COLLAB">VTUBER COLLAB</option>
+                  <option value="" disabled>-- PILIH GENRE --</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
                 </select>
               </div>
 
               <div>
-                <label className="text-xs font-bold tracking-[0.2em] uppercase text-zinc-400 mb-2 block">Item Type</label>
-                <button 
-                  type="button" 
-                  onClick={() => setProduct({ ...product, has_size: !product.has_size })} 
-                  className={`w-full py-2 rounded-lg font-black text-[10px] md:text-xs transition-all uppercase border ${
-                    product.has_size 
-                      ? 'bg-black text-white border-black shadow-lg shadow-black/20' 
-                      : 'bg-zinc-100 text-zinc-400 border-zinc-200 hover:border-black hover:text-black'
-                  }`}
+                <label className="text-xs font-bold tracking-widest text-zinc-400 uppercase mb-2 block">Product Line</label>
+                <select 
+                  className="w-full border-b-2 border-zinc-200 py-2 font-black text-black uppercase outline-none bg-transparent cursor-pointer" 
+                  value={product.product_line}
+                  onChange={(e) => setProduct({...product, product_line: e.target.value})}
+                  required
                 >
+                  <option value="DAEKAN MERCH">DAEKAN MERCH</option>
+                  <option value="VTUBER COLLAB">VTUBER COLLAB</option>
+                </select>
+              </div>
+            </div>
+
+            {/* ✅ ROW 2: PRODUCT TYPE & SIZE REQUIREMENT */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-bold tracking-widest text-zinc-400 uppercase mb-2 block">Product Type (Filter)</label>
+                <input 
+                  type="text" 
+                  value={product.category}
+                  placeholder="E.g. T-shirt, Deskmat" 
+                  className="w-full border-b border-zinc-200 py-2 outline-none font-bold uppercase focus:border-black transition-colors" 
+                  onChange={(e) => setProduct({...product, category: e.target.value})} 
+                  required 
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold tracking-[0.2em] uppercase text-zinc-400 mb-2 block">Size Requirement</label>
+                <button type="button" onClick={() => setProduct({ ...product, has_size: !product.has_size })} className={`w-full py-2 rounded-lg font-black text-[10px] md:text-xs transition-all uppercase border ${product.has_size ? 'bg-black text-white border-black shadow-lg shadow-black/20' : 'bg-zinc-100 text-zinc-400 border-zinc-200 hover:border-black hover:text-black'}`}>
                   {product.has_size ? '👕 APPAREL (NEEDS SIZE)' : '🎒 ACCESSORY (NO SIZE)'}
                 </button>
               </div>
             </div>
-
+            
+            {/* ✅ ROW 3: STATUS */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-black tracking-widest text-zinc-400 uppercase">Label (Status)</label>
-                <select value={product.label || ''} className="w-full border-b border-zinc-200 py-2 outline-none font-bold focus:border-black bg-transparent cursor-pointer" onChange={(e) => setProduct({...product, label: e.target.value})}>
+                <select value={product.label || ''} className="w-full border-b border-zinc-200 py-2 outline-none font-bold focus:border-black bg-transparent mt-1 cursor-pointer" onChange={(e) => setProduct({...product, label: e.target.value})}>
                   <option value="">Normal</option>
                   <option value="COMING SOON">COMING SOON</option>
                   <option value="PRE-ORDER">PRE-ORDER</option>
@@ -172,9 +173,9 @@ const UpdateProduct = ({ isOpen, onClose, productData, refreshData }) => {
                 </button>
               </div>
             </div>
+
           </div>
 
-          {/* KOLOM KANAN */}
           <div className="space-y-4">
             <div>
                 <label className="text-xs font-black tracking-widest text-red-600 uppercase">Flash Sale End Date (WIB)</label>
@@ -190,7 +191,6 @@ const UpdateProduct = ({ isOpen, onClose, productData, refreshData }) => {
             </div>
           </div>
 
-          {/* ACTION BUTTONS */}
           <div className="md:col-span-2 flex items-center gap-6 mt-6">
             <button type="submit" disabled={loading} className="flex-1 bg-black text-white py-5 rounded-2xl font-black italic uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-xl shadow-black/10">
               {loading ? 'MENYIMPAN PERUBAHAN...' : 'UPDATE MERCH'}

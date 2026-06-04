@@ -1,97 +1,73 @@
 import React from 'react'
-import { FaInstagram, FaTiktok, FaYoutube, FaEnvelope, FaWhatsapp } from 'react-icons/fa'
+import { FaInstagram, FaEnvelope, FaWhatsapp } from 'react-icons/fa'
 import { FaXTwitter } from "react-icons/fa6"
 
 const Footer = () => {
   return (
-        // --- KUNCI FIX: bg-white diganti jadi bg-transparent, ditambah relative z-10 ---
-        // Garis atasnya (border) gue bikin agak transparan biar makin elegan
-        <footer className="bg-transparent pt-20 pb-10 border-t border-zinc-200/50 relative z-10">
+    <footer className="bg-transparent pt-20 pb-10 border-t border-zinc-200/50 relative z-10">
         <div className="max-w-screen-xl mx-auto px-6">
             <div className="flex flex-col md:flex-row justify-between items-start gap-12 mb-16">
                 
-                {/* KOLOM 1: DESKRIPSI (Gedhe & Rapi) */}
+                {/* KOLOM KIRI: LOGO & DESKRIPSI */}
                 <div className="md:col-span-6 lg:col-span-5">
-                    <div className="font-black text-2xl tracking-tighter italic mb-6 text-black drop-shadow-sm">
-                        DAEKAN<span className="font-light ml-0.5">INC.</span>
+                    
+                    {/* ✅ LOGO FOOTER BARU PAKE ASET */}
+                    <div className="mb-6">
+                        <img 
+                          src="https://corhxzcsgvcckigxleeo.supabase.co/storage/v1/object/public/asset/daekan%20new%20logo.png" 
+                          alt="Daekan Inc." 
+                          className="h-8 md:h-10 object-contain drop-shadow-sm"
+                        />
                     </div>
-                    <p className="text-zinc-600 font-medium text-sm leading-relaxed max-w-md text-justify">
+                    
+                    <p className="text-zinc-500 font-medium text-sm leading-relaxed max-w-md text-justify">
                         At its core, we believe that true design shouldn't just look good, it should be 'Daekan.' 
                         Borrowed from local philosophy of being instinctively helpful and versatile, 
                         our products are crafted to adapt to your every need.
                     </p>
-                    <div className="mt-6 flex items-center gap-2 text-[10px] font-bold tracking-widest text-green-600 uppercase">
-                        <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.8)]"></span>
-                        Open for Partnership
-                    </div>
                 </div>
 
-                {/* KOLOM 2: CONTACT & SOCIALS */}
+                {/* KOLOM KANAN: SOCIALS, CONTACT US, & PARTNERSHIP */}
                 <div className="flex flex-col items-start md:items-end text-left md:text-right">
-                    <h4 className="font-bold text-sm uppercase tracking-[0.2em] mb-6 text-zinc-400">Socials</h4>
-                    <div className="flex gap-5 mb-8 text-zinc-800">
-                        <a 
-                            href="https://instagram.com/daekan.inc" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="hover:text-zinc-400 hover:-translate-y-1 transition-all duration-300"
-                            >
-                            <FaInstagram size={20} className="cursor-pointer" />
-                        </a>
-                        <a 
-                            href="mailto:daekan.inc@gmail.com" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="hover:text-zinc-400 hover:-translate-y-1 transition-all duration-300"
-                            >
-                            <FaEnvelope size={20} className="cursor-pointer" />
-                        </a>
-
-                        <a 
-                            href="https://x.com/DaekanInc" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="hover:text-zinc-400 hover:-translate-y-1 transition-all duration-300"
-                        >
-                            <FaXTwitter size={20} className="cursor-pointer" />
-                        </a>{/*
-                        <a 
-                            href="https://youtube.com" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="hover:text-zinc-400 transition-colors"
-                        >
-                            <FaYoutube size={20} className="cursor-pointer" />
-                        </a> 
-                        */}
-
-                        <a 
-                            href="https://wa.me/+6285695999703" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="hover:text-zinc-400 hover:-translate-y-1 transition-all duration-300"
-                        >
-                            <FaWhatsapp size={20} className="cursor-pointer" />
-                        </a>
-                        
+                    
+                    {/* SOCIALS */}
+                    <div className="mb-8 flex flex-col md:items-end">
+                        <h4 className="font-bold text-sm uppercase tracking-[0.2em] mb-4 text-vtuber-purple">Socials</h4>
+                        <div className="flex gap-5 text-zinc-400">
+                            <a href="https://instagram.com/daekan.inc" target="_blank" rel="noopener noreferrer" className="hover:text-vtuber-pink hover:-translate-y-1 transition-all duration-300">
+                                <FaInstagram size={20} className="cursor-pointer" />
+                            </a>
+                            <a href="https://x.com/DaekanInc" target="_blank" rel="noopener noreferrer" className="hover:text-vtuber-pink hover:-translate-y-1 transition-all duration-300">
+                                <FaXTwitter size={20} className="cursor-pointer" />
+                            </a>
+                        </div>
                     </div>
-                    <div className="text-sm text-zinc-500 space-y-1">
-                        <a 
-                        href="mailto:daekan.inc@gmail.com" 
-                        className="font-black text-zinc-500 tracking-[0.1em] uppercase hover:text-black transition-colors duration-300 block"
-                        >
-                        CONTACT US
-                        </a>
-                        
-                        <p className="font-medium">+62 8569-5999-703</p>                    
+
+                    {/* CONTACT US */}
+                    <div className="flex flex-col md:items-end">
+                        <h4 className="font-black text-sm uppercase tracking-[0.1em] mb-4 text-zinc-400">Contact Us</h4>
+                        <div className="flex gap-5 mb-6 text-zinc-400">
+                            <a href="mailto:daekan.inc@gmail.com" target="_blank" rel="noopener noreferrer" className="hover:text-vtuber-pink hover:-translate-y-1 transition-all duration-300">
+                                <FaEnvelope size={20} className="cursor-pointer" />
+                            </a>
+                            <a href="https://wa.me/+6285695999703" target="_blank" rel="noopener noreferrer" className="hover:text-vtuber-pink hover:-translate-y-1 transition-all duration-300">
+                                <FaWhatsapp size={20} className="cursor-pointer" />
+                            </a>                    
+                        </div>
+
+                        {/* ✅ OPEN FOR PARTNERSHIP PINDAH KE SINI */}
+                        <div className="flex items-center gap-2 text-[10px] font-bold tracking-widest text-vtuber-blue uppercase">
+                            <span className="w-2 h-2 bg-vtuber-pink rounded-full animate-pulse shadow-[0_0_8px_rgba(225,174,207,0.8)]"></span>
+                            Open for Partnership
+                        </div>
                     </div>
+
                 </div>
             </div>
 
-            {/* BOTTOM BAR: COPYRIGHT & LEGAL */}
             <div className="pt-8 border-t border-zinc-200/50 flex md:flex-row justify-center items-center gap-4">
                 <p className="text-[10px] text-zinc-400 tracking-[0.1em] uppercase font-bold">
-                    &copy; 2025 DAEKAN INC. All Rights Reserved.
+                    &copy; 2026 DAEKAN INC. All Rights Reserved.
                 </p>
             </div>
         </div>
