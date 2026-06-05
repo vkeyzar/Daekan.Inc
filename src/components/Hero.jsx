@@ -25,7 +25,7 @@ const Hero = () => {
         {/* ✅ LOGO CLICKABLE & KASIH JARAK EKSTRA (mb-12) */}
         <Link to="/" className="w-full flex justify-center mb-12 cursor-pointer transition-transform duration-300 hover:scale-[1.02]">
           <img 
-            src="https://corhxzcsgvcckigxleeo.supabase.co/storage/v1/object/public/asset/daekan%20x%20jetto.png" 
+            src="https://corhxzcsgvcckigxleeo.supabase.co/storage/v1/object/public/asset/Logo_Daekan_X_Jetto.png" 
             alt="Daekan x Jetto" 
             className="w-full max-w-[350px] md:max-w-[450px] lg:max-w-[500px] object-contain drop-shadow-[0_15px_30px_rgba(225,174,207,0.4)]"
           />
