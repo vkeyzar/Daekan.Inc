@@ -108,14 +108,15 @@ const Home = () => {
           </div>
 
           <div className="relative group/slider">
-            <div ref={collabScrollRef} className="flex justify-center overflow-x-auto gap-6 snap-x pb-8 px-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-              {highlightProducts.length > 0 ? (
-                highlightProducts.map(p => <SquareProductCard key={p.id} product={p} onOpenModal={setSelectedProduct} />)
-              ) : (
-                <p className="text-center w-full text-vtuber-pink font-bold text-sm tracking-widest">NO NEW GEAR FOUND.</p>
-              )}
-            </div>
-          </div>
+            {/* ✅ Hapus "justify-center" biar natural dari kiri di HP */}
+              <div ref={collabScrollRef} className="flex overflow-x-auto gap-6 snap-x pb-8 px-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                  {highlightProducts.length > 0 ? (
+                        highlightProducts.map(p => <SquareProductCard key={p.id} product={p} onOpenModal={setSelectedProduct} />)
+                            ) : (
+                                  <p className="text-center w-full text-vtuber-pink font-bold text-sm tracking-widest">NO NEW GEAR FOUND.</p>
+                                      )}
+                                        </div>
+                                        </div>
 
           <div className="flex justify-between items-end mt-24 mb-8 border-b border-vtuber-blue/10 pb-4 px-2">
             <h3 className="text-xl md:text-2xl font-black uppercase text-vtuber-purple tracking-tighter">More Daekan Goods</h3>

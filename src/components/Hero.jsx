@@ -10,7 +10,7 @@ const Hero = () => {
       {/* JETTO BACKGROUND */}
       <img 
         src="https://corhxzcsgvcckigxleeo.supabase.co/storage/v1/object/public/asset/Freebies_Sticker.png" 
-        className="absolute top-1/2 -translate-y-1/2 -left-40 md:-left-20 h-[110vh] md:h-[130vh] w-auto max-w-none opacity-90 pointer-events-none z-[1]"
+        className="absolute top-1/2 -translate-y-1/2 -left-40 md:-left-20 h-[110vh] md:h-[130vh] w-auto max-w-none opacity-50 pointer-events-none z-[1]"
         alt="VTuber Jetto Background"
       />
 
