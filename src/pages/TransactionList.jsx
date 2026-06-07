@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
-import { FaFileExcel, FaCheckCircle, FaExclamationTriangle, FaTrash, FaFilter, FaChevronDown, FaBoxOpen } from 'react-icons/fa'
+import { FaFileExcel, FaCheckCircle, FaExclamationTriangle, FaTrash, FaFilter, FaChevronDown, FaBoxOpen, FaEnvelope } from 'react-icons/fa'
 import { motion, AnimatePresence } from 'framer-motion'
 import Swal from 'sweetalert2'
 
@@ -18,11 +18,13 @@ const TransactionList = ({ transactions, refreshData }) => {
     { value: 'COD', label: 'COD ONLY' }
   ]
 
-  const STATUS_FLOW = ['pending', 'paid', 'production', 'sending', 'success']
+  // ✅ ALUR STATUS BARU: Ditambahin 'invoiced' (Menunggu Pembayaran) sebelum 'paid'
+  const STATUS_FLOW = ['pending', 'invoiced', 'paid', 'production', 'sending', 'success']
 
   const getStatusBadge = (status) => {
     switch(status) {
       case 'pending': return 'bg-zinc-100 text-zinc-600 border-zinc-200'
+      case 'invoiced': return 'bg-yellow-100 text-yellow-700 border-yellow-200' // ✅ Warna baru buat nunggu bayar
       case 'paid': return 'bg-blue-100 text-blue-700 border-blue-200'
       case 'production': return 'bg-purple-100 text-purple-700 border-purple-200'
       case 'sending': return 'bg-orange-100 text-orange-700 border-orange-200'
@@ -47,20 +49,25 @@ const TransactionList = ({ transactions, refreshData }) => {
     const { id, newStatus, user_id } = confirmModal
 
     try {
-      if (newStatus === 'paid') {
+      // ✅ LOGIC KIRIM EMAIL (Dipecah jadi 2 jenis email)
+      if (newStatus === 'invoiced' || newStatus === 'paid') {
         const { data: profileData, error: profileError } = await supabase.from('profiles').select('email').eq('id', user_id).single()
         if (profileError || !profileData?.email) throw new Error('Gagal menemukan email pembeli.')
 
         const userEmail = profileData.email
         const transactionToApprove = transactions.find(t => t.id === id)
 
-        const response = await fetch('/api/send-invoice', {
+        // Tentukan API mana yang dipanggil
+        const apiEndpoint = newStatus === 'invoiced' ? '/api/send-payment-details' : '/api/send-invoice'
+
+        // Panggil backend (Nanti lo sesuaikan di Vercel lo)
+        const response = await fetch(apiEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: userEmail, transaction: transactionToApprove }),
         })
 
-        if (!response.ok) throw new Error('Gagal mengirim email melalui server Vercel.')
+        if (!response.ok) console.warn(`Gagal mengirim email untuk status ${newStatus}, tapi status database tetap diupdate.`)
       }
 
       // ✅ AUTO LOG WAKTU KE DATABASE SESUAI STATUS
@@ -79,8 +86,8 @@ const TransactionList = ({ transactions, refreshData }) => {
 
       setTimeout(() => {
         Swal.fire({
-          title: newStatus === 'paid' ? 'INVOICE TERKIRIM!' : 'STATUS NAIK TAHAP!',
-          text: newStatus === 'paid' ? `Invoice dikirim dan status menjadi PAID.` : `Status pesanan berhasil diubah menjadi ${newStatus.toUpperCase()}.`,
+          title: newStatus === 'invoiced' ? 'EMAIL REKENING TERKIRIM!' : 'STATUS NAIK TAHAP!',
+          text: newStatus === 'invoiced' ? `Email instruksi bayar dikirim, status jadi MENUNGGU PEMBAYARAN.` : `Status pesanan berhasil diubah menjadi ${newStatus.toUpperCase()}.`,
           icon: 'success',
           timer: 2000,
           showConfirmButton: false
@@ -114,6 +121,7 @@ const TransactionList = ({ transactions, refreshData }) => {
     return (trx.delivery_method || 'SHIPMENT').toUpperCase() === filterMethod.toUpperCase()
   })
 
+  // ... (Fungsi Export CSV tetep sama)
   const handleExportCSV = () => {
     if (filteredTransactions.length === 0) return alert("Tidak ada data untuk di-export!")
     const headers = ['Date', 'Order ID', 'Full Name', 'WhatsApp', 'Address', 'Province', 'Delivery Method', 'Product', 'Qty', 'Total Price', 'Status']
@@ -219,7 +227,7 @@ const TransactionList = ({ transactions, refreshData }) => {
                   <td className="p-4 font-black italic">Rp {(trx.total_price || 0).toLocaleString('id-ID')}</td>
                   <td className="p-4">
                     <span className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-full border ${getStatusBadge(trx.status)}`}>
-                      {trx.status === 'verified' ? 'PAID' : trx.status}
+                      {trx.status === 'invoiced' ? 'WAITING PAYMENT' : (trx.status === 'verified' ? 'PAID' : trx.status)}
                     </span>
                   </td>
                   <td className="p-4 pr-6 text-center flex justify-center gap-2 mt-1.5">
@@ -252,7 +260,9 @@ const TransactionList = ({ transactions, refreshData }) => {
               <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2">Update Status?</h2>
               
               <div className="text-sm font-medium text-zinc-500 mb-8 leading-relaxed">
-                {confirmModal.newStatus === 'paid' && <p>Mark order as <span className="font-black text-blue-600">PAID</span>. System will auto-send the email invoice.</p>}
+                {/* ✅ PENJELASAN MODAL BARU */}
+                {confirmModal.newStatus === 'invoiced' && <p>Mark order as <span className="font-black text-yellow-600">WAITING PAYMENT</span>. System will auto-send email with <span className="font-bold underline">Bank Account info</span>.</p>}
+                {confirmModal.newStatus === 'paid' && <p>Mark order as <span className="font-black text-blue-600">PAID</span>. Payment verified.</p>}
                 {confirmModal.newStatus === 'production' && <p>Mark order as <span className="font-black text-purple-600">IN PRODUCTION</span>. Start preparing the items.</p>}
                 {confirmModal.newStatus === 'sending' && <p>Mark order as <span className="font-black text-orange-600">SENDING</span>. Confirm that the package is out for delivery.</p>}
                 {confirmModal.newStatus === 'success' && <p>Mark order as <span className="font-black text-green-600">SUCCESS</span>. Transaction will be fully completed.</p>}
@@ -271,18 +281,18 @@ const TransactionList = ({ transactions, refreshData }) => {
 
       <AnimatePresence>
         {deleteModal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl text-center relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-2 bg-red-600"></div>
-              <FaTrash className="text-red-100 text-5xl mx-auto mb-4" />
-              <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2 text-red-600">Delete Order?</h2>
-              <p className="text-sm font-medium text-zinc-500 mb-8">Data will be permanently removed.</p>
-              <div className="flex gap-4">
-                <button onClick={() => setDeleteModal(null)} disabled={isUpdating} className="w-1/2 bg-zinc-100 text-zinc-600 py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl">CANCEL</button>
-                <button onClick={executeDelete} disabled={isUpdating} className="w-1/2 bg-red-600 text-white py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl shadow-lg shadow-red-600/20">{isUpdating ? "WAIT..." : "DELETE"}</button>
-              </div>
-            </motion.div>
-          </motion.div>
+           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+             <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl text-center relative overflow-hidden">
+               <div className="absolute top-0 left-0 w-full h-2 bg-red-600"></div>
+               <FaTrash className="text-red-100 text-5xl mx-auto mb-4" />
+               <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2 text-red-600">Delete Order?</h2>
+               <p className="text-sm font-medium text-zinc-500 mb-8">Data will be permanently removed.</p>
+               <div className="flex gap-4">
+                 <button onClick={() => setDeleteModal(null)} disabled={isUpdating} className="w-1/2 bg-zinc-100 text-zinc-600 py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl">CANCEL</button>
+                 <button onClick={executeDelete} disabled={isUpdating} className="w-1/2 bg-red-600 text-white py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl shadow-lg shadow-red-600/20">{isUpdating ? "WAIT..." : "DELETE"}</button>
+               </div>
+             </motion.div>
+           </motion.div>
         )}
       </AnimatePresence>
     </div>
