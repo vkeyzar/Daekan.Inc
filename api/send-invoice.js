@@ -16,8 +16,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing required fields: email or transaction' });
     }
 
-    // Ngeracik Desain Email HTML 
-    // Lo bisa custom warna, teks, dan layout di sini
+    // Ngeracik Desain Email HTML dengan Copywriting Baru dari PR
     const htmlInvoice = `
       <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e4e4e7; border-radius: 16px; overflow: hidden; color: #000;">
         
@@ -27,9 +26,14 @@ export default async function handler(req, res) {
         </div>
 
         <div style="padding: 40px 30px;">
-          <h2 style="margin-top: 0; font-size: 22px; font-weight: 900; text-transform: uppercase; letter-spacing: -0.5px;">Halo, ${transaction.full_name}</h2>
+          <h2 style="margin-top: 0; font-size: 22px; font-weight: 900; text-transform: uppercase; letter-spacing: -0.5px;">Halo Kak ${transaction.full_name},</h2>
+          
           <p style="color: #52525b; line-height: 1.6; font-size: 15px;">
-            Pembayaran untuk pesanan Anda telah berhasil diverifikasi oleh Admin Daekan. Pesanan Anda saat ini berstatus <strong style="color: #16a34a; font-weight: 900;">PAID & VERIFIED</strong> dan sedang dipersiapkan untuk pengiriman.
+            Terima kasih banyak atas pesanannya!
+          </p>
+
+          <p style="color: #52525b; line-height: 1.6; font-size: 15px;">
+            Pembayaran sebesar <strong style="color: #16a34a;">Rp ${transaction.total_price.toLocaleString('id-ID')}</strong> untuk pesanan <strong>${transaction.product_name || 'Daekan Gear'}</strong> telah berhasil diterima. Pesanan akan segera kami proses dan kirim.
           </p>
 
           <div style="margin: 32px 0; border: 1px solid #e4e4e7; border-radius: 12px; overflow: hidden;">
@@ -74,7 +78,12 @@ export default async function handler(req, res) {
           </div>
 
           <p style="color: #52525b; line-height: 1.6; font-size: 14px;">
-            Detail resi pengiriman <strong>${transaction.delivery_method || 'REGULER'}</strong> akan diinformasikan kembali jika pesanan sudah diserahkan ke kurir. Simpan email ini sebagai bukti transaksi yang sah.
+            Kami akan mengirimkan nomor resi ketika order Kakak telah kami serahkan ke jasa kirim. Jika ada pertanyaan lebih lanjut, bisa langsung hubungi kami melalui WhatsApp di <a href="https://wa.me/6285695999703" style="color: #0ea5e9; font-weight: bold; text-decoration: none;">+62 856-9599-9703</a> ya.
+          </p>
+
+          <p style="color: #52525b; line-height: 1.6; font-size: 14px; margin-top: 30px;">
+            Terimakasih!<br>
+            <strong style="color: #000; font-size: 16px;">Daekan.Inc</strong>
           </p>
         </div>
 
@@ -89,7 +98,7 @@ export default async function handler(req, res) {
       // 👇 GANTI EMAIL INI DENGAN DOMAIN LO YANG UDAH VERIFIED DI RESEND
       from: 'DAEKAN INC. <admin@daekan.store>', 
       to: email,
-      subject: `Invoice & Konfirmasi Pesanan Daekan - PAID ✅`,
+      subject: `Pembayaran Diterima - Pesanan Daekan #${transaction.id} ✅`,
       html: htmlInvoice,
     });
 
