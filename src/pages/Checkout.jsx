@@ -17,7 +17,6 @@ const Checkout = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const uniqueCode = useMemo(() => Math.floor(Math.random() * 900) + 100, [])
 
-  // ✅ FIX: FUNGSI FORMAT RUPIAH DITAMBAHIN DI SINI
   const formatIDR = (price) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency', currency: 'IDR', maximumFractionDigits: 0,
@@ -66,6 +65,37 @@ const Checkout = () => {
     } catch (err) {
       Swal.fire({ title: 'GAGAL MEMPROSES', text: `Terjadi kendala pada sistem: ${err.message}`, icon: 'error', confirmButtonColor: '#e1aecf' })
     } finally { setLoading(false) }
+  }
+
+  // ✅ LOGIC BARU: Konfirmasi sebelum kembali ke beranda
+  const handleReturnHome = () => {
+    if (isCOD) {
+      Swal.fire({
+        title: 'KEMBALI KE BERANDA?',
+        text: 'Pastikan nomor WhatsApp Anda aktif agar admin dapat menghubungi Anda.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#77cbf0',
+        cancelButtonColor: '#e1aecf',
+        confirmButtonText: 'YA, KEMBALI',
+        cancelButtonText: 'BATAL'
+      }).then((result) => {
+        if (result.isConfirmed) navigate('/')
+      })
+    } else {
+      Swal.fire({
+        title: 'PERHATIAN!',
+        text: 'Apakah Anda sudah men-screenshot atau mencatat Nomor Rekening Pembayaran?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#77cbf0',
+        cancelButtonColor: '#e1aecf',
+        confirmButtonText: 'SUDAH DICATAT',
+        cancelButtonText: 'KEMBALI KE INFO'
+      }).then((result) => {
+        if (result.isConfirmed) navigate('/')
+      })
+    }
   }
 
   return (
@@ -202,9 +232,12 @@ const Checkout = () => {
                 )}
               </div>
 
-              <p className="text-sm text-vtuber-pink mb-10 font-bold italic leading-relaxed">{!isCOD ? "*Harap simpan bukti transfer Anda. Admin kami akan segera menghubungi via WhatsApp untuk proses verifikasi." : "*Pastikan nomor WhatsApp yang Anda masukkan aktif untuk proses konfirmasi."}</p>
+              <p className="text-sm text-vtuber-pink mb-10 font-bold italic leading-relaxed">{!isCOD ? "*Harap simpan bukti transfer Anda. Admin kami akan segera memverifikasi setelah pembayaran masuk." : "*Pastikan nomor WhatsApp yang Anda masukkan aktif untuk proses konfirmasi."}</p>
 
-              <button onClick={() => navigate('/')} className="w-full bg-gradient-to-r from-vtuber-cyan to-vtuber-blue text-white py-6 font-black italic uppercase text-base tracking-[0.3em] hover:from-vtuber-pink hover:to-vtuber-purple transition-all rounded-2xl shadow-[0_10px_20px_rgba(164,229,250,0.4)]">SAYA MENGERTI, KEMBALI KE BERANDA</button>
+              {/* ✅ TOMBOL INI SEKARANG MANGGIL FUNGSI HANDLE RETURN HOME */}
+              <button onClick={handleReturnHome} className="w-full bg-gradient-to-r from-vtuber-cyan to-vtuber-blue text-white py-6 font-black italic uppercase text-base tracking-[0.3em] hover:from-vtuber-pink hover:to-vtuber-purple transition-all rounded-2xl shadow-[0_10px_20px_rgba(164,229,250,0.4)]">
+                SAYA MENGERTI, KEMBALI KE BERANDA
+              </button>
             </motion.div>
           </motion.div>
         )}

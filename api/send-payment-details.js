@@ -90,19 +90,18 @@ export default async function handler(req, res) {
             
             <p style="margin: 0 0 5px 0; font-size: 13px; color: #166534; font-weight: bold; text-transform: uppercase;">📱 E-Wallet (DANA / OVO / GOPAY)</p>
             <p style="margin: 0 0 5px 0; font-size: 20px; font-weight: 900; letter-spacing: 1px; color: #14532d;">085695999703</p>
-            <p style="margin: 0; font-size: 13px; color: #166534;">a.n <strong>daekan</strong></p>
+            <p style="margin: 0; font-size: 13px; color: #166534;">a.n <strong>Daekan Inc</strong></p>
           </div>
 
-          <p style="color: #52525b; line-height: 1.6; font-size: 14px;">
-            Anda <strong>tidak perlu mengirimkan bukti transfer atau melakukan konfirmasi pembayaran</strong>. Sistem dan admin kami akan memverifikasi mutasi pembayaran Anda secara berkala.
-          </p>
-
-          <p style="color: #52525b; line-height: 1.6; font-size: 14px; margin-top: 15px;">
-            <em>Abaikan email ini apabila Anda telah melakukan pembayaran.</em> Jika Anda mengalami kendala teknis, silakan hubungi admin kami melalui WhatsApp di: <a href="https://wa.me/6285695999703" style="color: #0ea5e9; font-weight: bold; text-decoration: none;">wa.me/6285695999703</a>
-          </p>
+          <!-- ✅ BAGIAN PENUTUP YANG UDAH DIPERBAIKI SESUAI REQUEST -->
+          <div style="color: #52525b; line-height: 1.6; font-size: 14px; padding-left: 10px; border-left: 4px solid #0ea5e9; margin-bottom: 20px;">
+            <p style="margin: 0 0 8px 0;">Cukup <strong>simpan bukti pembayaran Anda</strong> sebagai dokumentasi pribadi.</p>
+            <p style="margin: 0 0 8px 0;"><strong>Abaikan email ini</strong> apabila Anda telah menyelesaikan proses pembayaran.</p>
+            <p style="margin: 0;">Apabila Anda membutuhkan bantuan atau mengalami kendala teknis, silakan hubungi layanan pelanggan kami melalui WhatsApp: <a href="https://wa.me/6285695999703" style="color: #0ea5e9; font-weight: bold; text-decoration: none;">+62 856-9599-9703</a>.</p>
+          </div>
 
           <p style="background-color: #fffbeb; color: #b45309; padding: 12px; border-radius: 8px; font-size: 12px; font-weight: bold; margin-top: 20px; border: 1px solid #fde68a;">
-            ⚠️ Pesanan otomatis dibatalkan jika tidak ada pembayaran yang masuk dalam waktu 2x24 jam.
+            ⚠️ Pesanan akan otomatis dibatalkan oleh sistem apabila tidak ada pembayaran yang masuk dalam waktu 2x24 jam.
           </p>
         </div>
 
