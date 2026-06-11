@@ -50,7 +50,8 @@ const Checkout = () => {
       const userId = session?.user?.id;
       if (sessionError || !userId) throw new Error("Sesi login tidak valid. Silakan kembali dan login ulang.");
 
-      const productSummary = cartItems.map(item => item.name).join(' + ');
+      // ✅ FIX: Format nama barang biar rapi di Supabase (Nama Barang [Size: XL] (Qty: 2))
+      const productSummary = cartItems.map(item => `${item.name} [Size: ${item.size || '-'}] (Qty: ${item.quantity})`).join(' | ');
       const totalQty = cartItems.reduce((acc, curr) => acc + curr.quantity, 0);
       const sizeSummary = cartItems.map(item => item.size || '-').join(', ');
 
@@ -67,7 +68,6 @@ const Checkout = () => {
     } finally { setLoading(false) }
   }
 
-  // ✅ LOGIC BARU: Konfirmasi sebelum kembali ke beranda
   const handleReturnHome = () => {
     if (isCOD) {
       Swal.fire({
@@ -234,7 +234,6 @@ const Checkout = () => {
 
               <p className="text-sm text-vtuber-pink mb-10 font-bold italic leading-relaxed">{!isCOD ? "*Harap simpan bukti transfer Anda. Admin kami akan segera memverifikasi setelah pembayaran masuk." : "*Pastikan nomor WhatsApp yang Anda masukkan aktif untuk proses konfirmasi."}</p>
 
-              {/* ✅ TOMBOL INI SEKARANG MANGGIL FUNGSI HANDLE RETURN HOME */}
               <button onClick={handleReturnHome} className="w-full bg-gradient-to-r from-vtuber-cyan to-vtuber-blue text-white py-6 font-black italic uppercase text-base tracking-[0.3em] hover:from-vtuber-pink hover:to-vtuber-purple transition-all rounded-2xl shadow-[0_10px_20px_rgba(164,229,250,0.4)]">
                 SAYA MENGERTI, KEMBALI KE BERANDA
               </button>

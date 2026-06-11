@@ -18,13 +18,12 @@ const TransactionList = ({ transactions, refreshData }) => {
     { value: 'COD', label: 'COD ONLY' }
   ]
 
-  // ✅ ALUR STATUS BARU: Ditambahin 'invoiced' (Menunggu Pembayaran) sebelum 'paid'
   const STATUS_FLOW = ['pending', 'invoiced', 'paid', 'production', 'sending', 'success']
 
   const getStatusBadge = (status) => {
     switch(status) {
       case 'pending': return 'bg-zinc-100 text-zinc-600 border-zinc-200'
-      case 'invoiced': return 'bg-yellow-100 text-yellow-700 border-yellow-200' // ✅ Warna baru buat nunggu bayar
+      case 'invoiced': return 'bg-yellow-100 text-yellow-700 border-yellow-200'
       case 'paid': return 'bg-blue-100 text-blue-700 border-blue-200'
       case 'production': return 'bg-purple-100 text-purple-700 border-purple-200'
       case 'sending': return 'bg-orange-100 text-orange-700 border-orange-200'
@@ -49,7 +48,6 @@ const TransactionList = ({ transactions, refreshData }) => {
     const { id, newStatus, user_id } = confirmModal
 
     try {
-      // ✅ LOGIC KIRIM EMAIL (Dipecah jadi 2 jenis email)
       if (newStatus === 'invoiced' || newStatus === 'paid') {
         const { data: profileData, error: profileError } = await supabase.from('profiles').select('email').eq('id', user_id).single()
         if (profileError || !profileData?.email) throw new Error('Gagal menemukan email pembeli.')
@@ -57,10 +55,8 @@ const TransactionList = ({ transactions, refreshData }) => {
         const userEmail = profileData.email
         const transactionToApprove = transactions.find(t => t.id === id)
 
-        // Tentukan API mana yang dipanggil
         const apiEndpoint = newStatus === 'invoiced' ? '/api/send-payment-details' : '/api/send-invoice'
 
-        // Panggil backend (Nanti lo sesuaikan di Vercel lo)
         const response = await fetch(apiEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -70,7 +66,6 @@ const TransactionList = ({ transactions, refreshData }) => {
         if (!response.ok) console.warn(`Gagal mengirim email untuk status ${newStatus}, tapi status database tetap diupdate.`)
       }
 
-      // ✅ AUTO LOG WAKTU KE DATABASE SESUAI STATUS
       const now = new Date().toISOString();
       let updatePayload = { status: newStatus };
 
@@ -121,7 +116,7 @@ const TransactionList = ({ transactions, refreshData }) => {
     return (trx.delivery_method || 'SHIPMENT').toUpperCase() === filterMethod.toUpperCase()
   })
 
-  // ... (Fungsi Export CSV tetep sama)
+  // ✅ FIX EXPORT EXCEL: Tampilan barang akan lebih jelas dipecah per-Size & per-Qty
   const handleExportCSV = () => {
     if (filteredTransactions.length === 0) return alert("Tidak ada data untuk di-export!")
     const headers = ['Date', 'Order ID', 'Full Name', 'WhatsApp', 'Address', 'Province', 'Delivery Method', 'Product', 'Qty', 'Total Price', 'Status']
@@ -130,7 +125,11 @@ const TransactionList = ({ transactions, refreshData }) => {
     filteredTransactions.forEach(trx => {
       const date = new Date(trx.created_at).toLocaleDateString('id-ID')
       const address = `"${(trx.address || '').replace(/"/g, '""')}"` 
-      const productText = trx.items && trx.items.length > 0 ? trx.items.map(i => `${i.name} (x${i.quantity})`).join(' | ') : trx.product_name || ''
+      
+      const productText = trx.items && trx.items.length > 0 
+        ? trx.items.map(i => `${i.name} [Size: ${i.size || '-'}] (Qty: ${i.quantity})`).join(' || ') 
+        : trx.product_name || ''
+        
       const product = `"${productText}"`
       const totalQty = trx.items && trx.items.length > 0 ? trx.items.reduce((acc, curr) => acc + curr.quantity, 0) : trx.quantity || 1
       const phone = `="` + trx.whatsapp + `"` 
@@ -218,8 +217,22 @@ const TransactionList = ({ transactions, refreshData }) => {
                       {trx.delivery_method || 'SHIPMENT'}
                     </span>
                   </td>
-                  <td className="p-4 font-bold text-xs uppercase max-w-[200px] truncate" title={trx.items?.map(i => i.name).join(', ')}>
-                    {trx.items && trx.items.length > 0 ? (trx.items.length === 1 ? trx.items[0].name : `${trx.items.length} Items (Mixed)`) : trx.product_name}
+                  {/* ✅ FIX TAMPILAN ADMIN UI: Barang lebih dari 1 akan dijabarkan listnya dengan cantik */}
+                  <td className="p-4 font-bold text-xs uppercase max-w-[250px]">
+                    {trx.items && trx.items.length > 0 ? (
+                      <div className="flex flex-col gap-1.5">
+                        {trx.items.map((i, idx) => (
+                          <div key={idx} className="flex flex-col leading-tight pb-1 border-b border-zinc-100 last:border-0 last:pb-0">
+                            <span className="truncate" title={i.name}>{i.name}</span>
+                            <span className="text-[9px] text-zinc-400 tracking-widest mt-0.5">
+                              SIZE: <span className="text-blue-500">{i.size || '-'}</span> | QTY: <span className="text-blue-500">{i.quantity}</span>
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="truncate block" title={trx.product_name}>{trx.product_name}</span>
+                    )}
                   </td>
                   <td className="p-4 font-black">
                     {trx.items && trx.items.length > 0 ? trx.items.reduce((acc, curr) => acc + curr.quantity, 0) : trx.quantity}
@@ -260,7 +273,6 @@ const TransactionList = ({ transactions, refreshData }) => {
               <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2">Update Status?</h2>
               
               <div className="text-sm font-medium text-zinc-500 mb-8 leading-relaxed">
-                {/* ✅ PENJELASAN MODAL BARU */}
                 {confirmModal.newStatus === 'invoiced' && <p>Mark order as <span className="font-black text-yellow-600">WAITING PAYMENT</span>. System will auto-send email with <span className="font-bold underline">Bank Account info</span>.</p>}
                 {confirmModal.newStatus === 'paid' && <p>Mark order as <span className="font-black text-blue-600">PAID</span>. Payment verified.</p>}
                 {confirmModal.newStatus === 'production' && <p>Mark order as <span className="font-black text-purple-600">IN PRODUCTION</span>. Start preparing the items.</p>}

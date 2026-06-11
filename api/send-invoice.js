@@ -75,7 +75,7 @@ export default async function handler(req, res) {
                 </tr>
               </tfoot>
             </table>
-          </div>
+          </div> 
 
           <p style="color: #52525b; line-height: 1.6; font-size: 14px;">
             Kami akan mengirimkan nomor resi ketika order Kakak telah kami serahkan ke jasa kirim. Jika ada pertanyaan lebih lanjut, bisa langsung hubungi kami melalui WhatsApp di <a href="https://wa.me/6285695999703" style="color: #0ea5e9; font-weight: bold; text-decoration: none;">+62 856-9599-9703</a> ya.
