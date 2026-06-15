@@ -102,13 +102,55 @@ const TransactionList = ({ transactions, refreshData }) => {
 
   const handleDeleteClick = (id) => { setDeleteModal({ id }) }
 
+  // ✅ FIX: Fungsi Delete sekarang ngebalikin stok (Rollback) kalau order dicancel
   const executeDelete = async () => {
     if (!deleteModal) return
     setIsUpdating(true)
-    const { error } = await supabase.from('transactions').delete().eq('id', deleteModal.id)
-    if (!error) { refreshData(); setDeleteModal(null); } 
-    else { alert("Gagal hapus transaksi: " + error.message) }
-    setIsUpdating(false)
+
+    try {
+      const trxToDelete = transactions.find(t => t.id === deleteModal.id);
+
+      // 1. Balikin stok dulu kalau ada barang LIMITED GEAR
+      if (trxToDelete && trxToDelete.items) {
+        for (const item of trxToDelete.items) {
+          if (item.label === 'LIMITED GEAR') {
+            const itemSize = item.size || '-';
+            
+            // Cek stok reserved yang sekarang
+            const { data: stockData } = await supabase
+              .from('product_stocks')
+              .select('stock_reserved')
+              .eq('product_id', item.id)
+              .eq('size', itemSize)
+              .single();
+
+            // Kalau ketemu, kurangi reserved-nya biar stok aslinya nongol lagi di web
+            if (stockData) {
+              const newReserved = Math.max(0, stockData.stock_reserved - item.quantity);
+              await supabase
+                .from('product_stocks')
+                .update({ stock_reserved: newReserved })
+                .eq('product_id', item.id)
+                .eq('size', itemSize);
+            }
+          }
+        }
+      }
+
+      // 2. Habis stok aman, baru hapus datanya dari tabel transaksi
+      const { error } = await supabase.from('transactions').delete().eq('id', deleteModal.id)
+      
+      if (error) throw error;
+      
+      refreshData(); 
+      setDeleteModal(null);
+      Swal.fire({ title: 'ORDER DIBATALKAN', text: 'Data dihapus dan stok barang berhasil dikembalikan ke etalase.', icon: 'success', timer: 2000, showConfirmButton: false });
+
+    } catch (error) {
+      Swal.fire({ title: 'GAGAL MENGHAPUS', text: error.message, icon: 'error' });
+    } finally {
+      setIsUpdating(false)
+    }
   }
 
   const filteredTransactions = transactions.filter(trx => {
@@ -116,7 +158,6 @@ const TransactionList = ({ transactions, refreshData }) => {
     return (trx.delivery_method || 'SHIPMENT').toUpperCase() === filterMethod.toUpperCase()
   })
 
-  // ✅ FIX EXPORT EXCEL: Tampilan barang akan lebih jelas dipecah per-Size & per-Qty
   const handleExportCSV = () => {
     if (filteredTransactions.length === 0) return alert("Tidak ada data untuk di-export!")
     const headers = ['Date', 'Order ID', 'Full Name', 'WhatsApp', 'Address', 'Province', 'Delivery Method', 'Product', 'Qty', 'Total Price', 'Status']
@@ -217,7 +258,6 @@ const TransactionList = ({ transactions, refreshData }) => {
                       {trx.delivery_method || 'SHIPMENT'}
                     </span>
                   </td>
-                  {/* ✅ FIX TAMPILAN ADMIN UI: Barang lebih dari 1 akan dijabarkan listnya dengan cantik */}
                   <td className="p-4 font-bold text-xs uppercase max-w-[250px]">
                     {trx.items && trx.items.length > 0 ? (
                       <div className="flex flex-col gap-1.5">
@@ -297,11 +337,11 @@ const TransactionList = ({ transactions, refreshData }) => {
              <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl text-center relative overflow-hidden">
                <div className="absolute top-0 left-0 w-full h-2 bg-red-600"></div>
                <FaTrash className="text-red-100 text-5xl mx-auto mb-4" />
-               <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2 text-red-600">Delete Order?</h2>
-               <p className="text-sm font-medium text-zinc-500 mb-8">Data will be permanently removed.</p>
+               <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2 text-red-600">Cancel Order?</h2>
+               <p className="text-sm font-medium text-zinc-500 mb-8">Data akan dihapus dan stok barang (LIMITED GEAR) akan dikembalikan ke etalase secara otomatis.</p>
                <div className="flex gap-4">
-                 <button onClick={() => setDeleteModal(null)} disabled={isUpdating} className="w-1/2 bg-zinc-100 text-zinc-600 py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl">CANCEL</button>
-                 <button onClick={executeDelete} disabled={isUpdating} className="w-1/2 bg-red-600 text-white py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl shadow-lg shadow-red-600/20">{isUpdating ? "WAIT..." : "DELETE"}</button>
+                 <button onClick={() => setDeleteModal(null)} disabled={isUpdating} className="w-1/2 bg-zinc-100 text-zinc-600 py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl">BACK</button>
+                 <button onClick={executeDelete} disabled={isUpdating} className="w-1/2 bg-red-600 text-white py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl shadow-lg shadow-red-600/20">{isUpdating ? "WAIT..." : "DELETE & RESTORE"}</button>
                </div>
              </motion.div>
            </motion.div>

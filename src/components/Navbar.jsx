@@ -28,6 +28,16 @@ const Navbar = () => {
 
   const scrollToTop = () => { window.scrollTo({ top: 0, behavior: 'smooth' }); setIsOpen(false); };
 
+  // ✅ FIX 2: Kunci scroll body pas menu mobile kebuka biar ga bocor
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => { document.body.style.overflow = 'unset' }
+  }, [isOpen])
+
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50)
     window.addEventListener('scroll', handleScroll)
@@ -50,14 +60,14 @@ const Navbar = () => {
 
   return (
     <>
+      {/* ✅ FIX 3: Hapus max-w-[100vw] dan overflow-x-hidden */}
       <nav 
-        className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 max-w-[100vw] overflow-x-hidden ${
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
         isNavbarLight ? 'bg-white/90 backdrop-blur-md shadow-sm py-4 text-vtuber-purple font-black' : 'bg-transparent py-6 text-white'
         }`}
       >
         <div className="w-full px-6 md:px-12 flex justify-between items-center relative">
           
-          {/* ✅ FIX: Logo dikecilin (h-6 md:h-8) & Ditambahin mt-1 biar sejajar sama teks */}
           <Link to="/" onClick={scrollToTop} className="z-10 relative shrink-0 flex items-center mt-1 md:mt-1.5">
               <img 
                 src="https://corhxzcsgvcckigxleeo.supabase.co/storage/v1/object/public/asset/daekan%20new%20logo.png" 
@@ -96,24 +106,32 @@ const Navbar = () => {
               </button>
           </div>
         </div>
-
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div className="md:hidden fixed inset-0 bg-white/95 backdrop-blur-lg z-40 flex flex-col items-center justify-center gap-8 text-3xl font-black italic uppercase tracking-tighter text-vtuber-purple">
-                <Link to="/" onClick={() => setIsOpen(false)} className="hover:text-vtuber-cyan">HOME</Link>
-                <Link to="/products" onClick={() => setIsOpen(false)} className="hover:text-vtuber-cyan">PRODUCTS</Link>
-                <Link to="/#reviews" onClick={() => setIsOpen(false)} className="hover:text-vtuber-cyan">REVIEWS</Link>
-                {session && role === 'admin' && (
-                  <Link to="/admin-dashboard" onClick={() => setIsOpen(false)} className="text-red-600 hover:text-vtuber-pink">ADMIN</Link>
-                )}
-                <hr className="w-1/2 border-vtuber-pink/20" />
-                <Link to={session ? "/profile" : "/login"} onClick={() => setIsOpen(false)}>
-                    <FaUser size={30} className={`hover:text-vtuber-cyan transition-colors ${session ? 'text-vtuber-cyan' : ''}`} />
-                </Link>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </nav>
+
+      {/* ✅ FIX 1: Tambahin properti initial, animate, exit di motion.div */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2 }}
+            className="md:hidden fixed inset-0 bg-white/95 backdrop-blur-lg z-40 flex flex-col items-center justify-center gap-8 text-3xl font-black italic uppercase tracking-tighter text-vtuber-purple"
+          >
+              <Link to="/" onClick={() => setIsOpen(false)} className="hover:text-vtuber-cyan">HOME</Link>
+              <Link to="/products" onClick={() => setIsOpen(false)} className="hover:text-vtuber-cyan">PRODUCTS</Link>
+              <Link to="/#reviews" onClick={() => setIsOpen(false)} className="hover:text-vtuber-cyan">REVIEWS</Link>
+              {session && role === 'admin' && (
+                <Link to="/admin-dashboard" onClick={() => setIsOpen(false)} className="text-red-600 hover:text-vtuber-pink">ADMIN</Link>
+              )}
+              <hr className="w-1/2 border-vtuber-pink/20" />
+              <Link to={session ? "/profile" : "/login"} onClick={() => setIsOpen(false)}>
+                  <FaUser size={30} className={`hover:text-vtuber-cyan transition-colors ${session ? 'text-vtuber-cyan' : ''}`} />
+              </Link>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <SidebarCart isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </>
   )

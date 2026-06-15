@@ -50,7 +50,49 @@ const Checkout = () => {
       const userId = session?.user?.id;
       if (sessionError || !userId) throw new Error("Sesi login tidak valid. Silakan kembali dan login ulang.");
 
-      // ✅ FIX: Format nama barang biar rapi di Supabase (Nama Barang [Size: XL] (Qty: 2))
+      // ✅ 1. SISTEM GEMBOK STOK (ANTI-REBUTAN)
+      const reservedItems = []; // Nyimpen history kalau tiba-tiba harus di-rollback
+
+      for (const item of cartItems) {
+        if (item.label === 'LIMITED GEAR') {
+          const sizeToReserve = item.size || '-';
+          
+          // Tembak fungsi database buat ngunci stok
+          const { data: isSuccess, error: rpcError } = await supabase.rpc('reserve_stock', {
+            p_product_id: item.id,
+            p_size: sizeToReserve,
+            p_qty: item.quantity
+          });
+
+          if (rpcError) throw new Error(`Gagal memproses stok: ${rpcError.message}`);
+
+          if (isSuccess) {
+            // Berhasil gembok stok
+            reservedItems.push({ id: item.id, size: sizeToReserve, qty: item.quantity });
+          } else {
+            // GAGAL! Stok abis keduluan orang lain.
+            
+            // Rollback manual barang yang udah terlanjur digembok di loop sebelumnya
+            for (const resItem of reservedItems) {
+               const { data: stockData } = await supabase.from('product_stocks').select('stock_reserved').eq('product_id', resItem.id).eq('size', resItem.size).single();
+               if(stockData) {
+                  await supabase.from('product_stocks').update({ stock_reserved: stockData.stock_reserved - resItem.qty }).eq('product_id', resItem.id).eq('size', resItem.size);
+               }
+            }
+
+            Swal.fire({ 
+              title: 'YAHH KEDULUAN!', 
+              text: `Maaf, stok untuk produk "${item.name}" (Size: ${sizeToReserve}) baru saja di-checkout oleh orang lain dan sekarang tidak mencukupi. Silakan kurangi kuantitas atau hapus barang dari keranjang.`, 
+              icon: 'error', 
+              confirmButtonColor: '#000' 
+            });
+            setLoading(false);
+            return; // Hentikan proses checkout seketika!
+          }
+        }
+      }
+
+      // ✅ 2. KALAU LOLOS SEMUA GEMBOK, LANJUT BIKIN TRANSAKSI
       const productSummary = cartItems.map(item => `${item.name} [Size: ${item.size || '-'}] (Qty: ${item.quantity})`).join(' | ');
       const totalQty = cartItems.reduce((acc, curr) => acc + curr.quantity, 0);
       const sizeSummary = cartItems.map(item => item.size || '-').join(', ');
@@ -61,6 +103,7 @@ const Checkout = () => {
         quantity: totalQty, size: sizeSummary, shipping_method: isCOD ? 'COD (KUDUS ONLY)' : `REGULER (${formData.province})`,
         delivery_method: formData.deliveryMethod, total_price: totalPrice, status: 'pending'
       }])
+
       if (error) throw error
       clearCart(); setShowModal(true)
     } catch (err) {

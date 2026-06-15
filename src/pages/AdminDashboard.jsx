@@ -42,10 +42,11 @@ const AdminDashboard = () => {
   const fetchAllData = async () => {
     setLoading(true)
     const [prodResponse, creatorResponse, transResponse, catResponse] = await Promise.all([
-      supabase.from('products').select('*').order('created_at', { ascending: false }),
+      // ✅ FIX: Ditambahin product_stocks(*) di sini nih Bro!
+      supabase.from('products').select('*, product_stocks(*)').order('created_at', { ascending: false }),
       supabase.from('creators').select('*').order('created_at', { ascending: false }),
       supabase.from('transactions').select('*').order('created_at', { ascending: false }),
-      supabase.from('categories').select('*').order('created_at', { ascending: true }) // ✅ FETCH KATEGORI
+      supabase.from('categories').select('*').order('created_at', { ascending: true }) 
     ])
 
     if (!prodResponse.error) setProducts(prodResponse.data)
