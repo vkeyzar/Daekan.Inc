@@ -31,7 +31,7 @@ export default async function handler(req, res) {
 
   try {
     const data = await resend.emails.send({
-      from: 'Daekan Inc <noreply@daekan.com>', // Sesuaikan dengan domain Resend lo
+      from: 'Daekan Inc <noreply@daekan.store>', // Sesuaikan dengan domain Resend lo
       to: email,
       subject: subject,
       html: `

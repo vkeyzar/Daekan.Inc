@@ -11,7 +11,7 @@ export default async function handler(req, res) {
 
   try {
     const data = await resend.emails.send({
-      from: 'Daekan Inc <noreply@daekan.com>', // Sesuaikan
+      from: 'Daekan Inc <noreply@daekan.store>', // Sesuaikan
       to: email,
       subject: 'Pembayaran Diterima - Resi Pemesanan Daekan Inc.',
       html: `
