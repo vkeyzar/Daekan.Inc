@@ -31,7 +31,7 @@ export default async function handler(req, res) {
 
   try {
     const data = await resend.emails.send({
-      from: 'Daekan Inc <noreply@daekan.store>', // Sesuaikan dengan domain Resend lo
+      from: 'DAEKAN INC. <admin@daekan.store>', // Sesuaikan dengan domain Resend lo
       to: email,
       subject: subject,
       html: `
@@ -53,7 +53,7 @@ export default async function handler(req, res) {
             
             <p style="margin-top: 40px; font-size: 14px; color: #6b7280; text-align: center; line-height: 1.6;">
               Salam hangat,<br/>
-              <strong>Daekan Inc.</strong>
+              <strong>DAEKAN INC.</strong>
             </p>
           </div>
         </div>

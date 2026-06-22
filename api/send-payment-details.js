@@ -11,7 +11,7 @@ export default async function handler(req, res) {
 
   try {
     const data = await resend.emails.send({
-      from: 'Daekan Inc <noreply@daekan.store>', // Sesuaikan
+      from: 'DAEKAN INC. <admin@daekan.store>', // Sesuaikan
       to: email,
       subject: 'Instruksi Pembayaran Pesanan Daekan Inc.',
       html: `
@@ -49,7 +49,7 @@ export default async function handler(req, res) {
             </div>
             
             <p style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 13px; color: #dc2626; line-height: 1.6; font-weight: 600;">
-              *Penting: Mohon transfer TEPAT sesuai dengan nominal tagihan di atas. Kirimkan bukti transfer Anda kepada admin kami untuk proses verifikasi.
+              *Penting: Mohon transfer TEPAT sesuai dengan nominal tagihan di atas. Abaikan pesan jika sudah melakukan pembayaran.
             </p>
           </div>
         </div>
