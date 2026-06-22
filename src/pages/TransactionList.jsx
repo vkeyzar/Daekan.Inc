@@ -48,22 +48,26 @@ const TransactionList = ({ transactions, refreshData }) => {
     const { id, newStatus, user_id } = confirmModal
 
     try {
-      if (newStatus === 'invoiced' || newStatus === 'paid') {
+      const needsEmail = ['invoiced', 'paid', 'production', 'sending', 'success'].includes(newStatus);
+      
+      if (needsEmail) {
         const { data: profileData, error: profileError } = await supabase.from('profiles').select('email').eq('id', user_id).single()
         if (profileError || !profileData?.email) throw new Error('Gagal menemukan email pembeli.')
 
         const userEmail = profileData.email
         const transactionToApprove = transactions.find(t => t.id === id)
 
-        const apiEndpoint = newStatus === 'invoiced' ? '/api/send-payment-details' : '/api/send-invoice'
+        let apiEndpoint = '/api/send-status-update'; 
+        if (newStatus === 'invoiced') apiEndpoint = '/api/send-payment-details';
+        else if (newStatus === 'paid') apiEndpoint = '/api/send-invoice';
 
         const response = await fetch(apiEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: userEmail, transaction: transactionToApprove }),
+          body: JSON.stringify({ email: userEmail, transaction: transactionToApprove, status: newStatus }),
         })
 
-        if (!response.ok) console.warn(`Gagal mengirim email untuk status ${newStatus}, tapi status database tetap diupdate.`)
+        if (!response.ok) console.warn(`Gagal mengirim notifikasi email untuk status ${newStatus}.`)
       }
 
       const now = new Date().toISOString();
@@ -81,8 +85,8 @@ const TransactionList = ({ transactions, refreshData }) => {
 
       setTimeout(() => {
         Swal.fire({
-          title: newStatus === 'invoiced' ? 'EMAIL REKENING TERKIRIM!' : 'STATUS NAIK TAHAP!',
-          text: newStatus === 'invoiced' ? `Email instruksi bayar dikirim, status jadi MENUNGGU PEMBAYARAN.` : `Status pesanan berhasil diubah menjadi ${newStatus.toUpperCase()}.`,
+          title: newStatus === 'invoiced' ? 'INFORMASI PEMBAYARAN TERKIRIM' : 'STATUS BERHASIL DIPERBARUI',
+          text: newStatus === 'invoiced' ? `Instruksi pembayaran telah dikirimkan ke email pembeli.` : `Status pesanan dan notifikasi email berhasil diperbarui menjadi ${newStatus.toUpperCase()}.`,
           icon: 'success',
           timer: 2000,
           showConfirmButton: false
@@ -102,7 +106,6 @@ const TransactionList = ({ transactions, refreshData }) => {
 
   const handleDeleteClick = (id) => { setDeleteModal({ id }) }
 
-  // ✅ FIX: Fungsi Delete sekarang ngebalikin stok (Rollback) kalau order dicancel
   const executeDelete = async () => {
     if (!deleteModal) return
     setIsUpdating(true)
@@ -110,41 +113,25 @@ const TransactionList = ({ transactions, refreshData }) => {
     try {
       const trxToDelete = transactions.find(t => t.id === deleteModal.id);
 
-      // 1. Balikin stok dulu kalau ada barang LIMITED GEAR
       if (trxToDelete && trxToDelete.items) {
         for (const item of trxToDelete.items) {
           if (item.label === 'LIMITED GEAR') {
             const itemSize = item.size || '-';
-            
-            // Cek stok reserved yang sekarang
-            const { data: stockData } = await supabase
-              .from('product_stocks')
-              .select('stock_reserved')
-              .eq('product_id', item.id)
-              .eq('size', itemSize)
-              .single();
-
-            // Kalau ketemu, kurangi reserved-nya biar stok aslinya nongol lagi di web
+            const { data: stockData } = await supabase.from('product_stocks').select('stock_reserved').eq('product_id', item.id).eq('size', itemSize).single();
             if (stockData) {
               const newReserved = Math.max(0, stockData.stock_reserved - item.quantity);
-              await supabase
-                .from('product_stocks')
-                .update({ stock_reserved: newReserved })
-                .eq('product_id', item.id)
-                .eq('size', itemSize);
+              await supabase.from('product_stocks').update({ stock_reserved: newReserved }).eq('product_id', item.id).eq('size', itemSize);
             }
           }
         }
       }
 
-      // 2. Habis stok aman, baru hapus datanya dari tabel transaksi
       const { error } = await supabase.from('transactions').delete().eq('id', deleteModal.id)
-      
       if (error) throw error;
       
       refreshData(); 
       setDeleteModal(null);
-      Swal.fire({ title: 'ORDER DIBATALKAN', text: 'Data dihapus dan stok barang berhasil dikembalikan ke etalase.', icon: 'success', timer: 2000, showConfirmButton: false });
+      Swal.fire({ title: 'PESANAN DIBATALKAN', text: 'Data pesanan telah dihapus dan stok berhasil direstorasi.', icon: 'success', timer: 2000, showConfirmButton: false });
 
     } catch (error) {
       Swal.fire({ title: 'GAGAL MENGHAPUS', text: error.message, icon: 'error' });
@@ -226,19 +213,19 @@ const TransactionList = ({ transactions, refreshData }) => {
 
       <div className="overflow-x-auto">
         {filteredTransactions.length === 0 ? (
-          <div className="p-20 text-center font-bold uppercase tracking-widest text-zinc-400 text-xs">No orders match this filter.</div>
+          <div className="p-20 text-center font-bold uppercase tracking-widest text-zinc-400 text-xs">Tidak ada data transaksi.</div>
         ) : (
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-zinc-100 text-[10px] uppercase tracking-[0.2em] text-zinc-500">
-                <th className="p-4 pl-6">Date</th>
-                <th className="p-4">Customer</th>
-                <th className="p-4">Method</th>
-                <th className="p-4">Product</th>
+                <th className="p-4 pl-6">Tanggal</th>
+                <th className="p-4">Pelanggan</th>
+                <th className="p-4">Metode</th>
+                <th className="p-4">Produk</th>
                 <th className="p-4">Qty</th>
-                <th className="p-4">Total Amount</th>
+                <th className="p-4">Nominal</th>
                 <th className="p-4">Status</th>
-                <th className="p-4 pr-6 text-center">Action</th>
+                <th className="p-4 pr-6 text-center">Tindakan</th>
               </tr>
             </thead>
             <tbody className="text-sm">
@@ -310,20 +297,20 @@ const TransactionList = ({ transactions, refreshData }) => {
             <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl text-center relative overflow-hidden">
               <div className={`absolute top-0 left-0 w-full h-2 bg-black`}></div>
               {confirmModal.newStatus === 'success' ? <FaCheckCircle className="text-green-500 text-5xl mx-auto mb-4" /> : <FaBoxOpen className="text-zinc-300 text-5xl mx-auto mb-4" />}
-              <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2">Update Status?</h2>
+              <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2">Konfirmasi Status</h2>
               
               <div className="text-sm font-medium text-zinc-500 mb-8 leading-relaxed">
-                {confirmModal.newStatus === 'invoiced' && <p>Mark order as <span className="font-black text-yellow-600">WAITING PAYMENT</span>. System will auto-send email with <span className="font-bold underline">Bank Account info</span>.</p>}
-                {confirmModal.newStatus === 'paid' && <p>Mark order as <span className="font-black text-blue-600">PAID</span>. Payment verified.</p>}
-                {confirmModal.newStatus === 'production' && <p>Mark order as <span className="font-black text-purple-600">IN PRODUCTION</span>. Start preparing the items.</p>}
-                {confirmModal.newStatus === 'sending' && <p>Mark order as <span className="font-black text-orange-600">SENDING</span>. Confirm that the package is out for delivery.</p>}
-                {confirmModal.newStatus === 'success' && <p>Mark order as <span className="font-black text-green-600">SUCCESS</span>. Transaction will be fully completed.</p>}
+                {confirmModal.newStatus === 'invoiced' && <p>Ubah status menjadi <span className="font-black text-yellow-600">MENUNGGU PEMBAYARAN</span>. Sistem akan mengirim email berisi <span className="font-bold underline">Instruksi Pembayaran</span> kepada pelanggan.</p>}
+                {confirmModal.newStatus === 'paid' && <p>Ubah status menjadi <span className="font-black text-blue-600">DIBAYAR</span>. Sistem akan mengirim konfirmasi resi pembayaran ke email pelanggan.</p>}
+                {confirmModal.newStatus === 'production' && <p>Ubah status menjadi <span className="font-black text-purple-600">DALAM PRODUKSI</span>. Pelanggan akan menerima notifikasi bahwa pesanan sedang diproses.</p>}
+                {confirmModal.newStatus === 'sending' && <p>Ubah status menjadi <span className="font-black text-orange-600">PENGIRIMAN</span>. Pelanggan akan diberitahu bahwa paket telah dikirim.</p>}
+                {confirmModal.newStatus === 'success' && <p>Ubah status menjadi <span className="font-black text-green-600">SELESAI</span>. Transaksi akan ditutup dan notifikasi final dikirimkan.</p>}
               </div>
 
               <div className="flex gap-4">
-                <button onClick={() => setConfirmModal(null)} disabled={isUpdating} className="w-1/2 bg-zinc-100 text-zinc-600 py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl">CANCEL</button>
+                <button onClick={() => setConfirmModal(null)} disabled={isUpdating} className="w-1/2 bg-zinc-100 text-zinc-600 py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl">BATAL</button>
                 <button onClick={executeUpdateStatus} disabled={isUpdating} className="w-1/2 bg-black text-white hover:bg-zinc-800 py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl shadow-lg">
-                  {isUpdating ? "WAIT..." : "CONFIRM"}
+                  {isUpdating ? "MEMPROSES..." : "KONFIRMASI"}
                 </button>
               </div>
             </motion.div>
@@ -337,11 +324,11 @@ const TransactionList = ({ transactions, refreshData }) => {
              <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl text-center relative overflow-hidden">
                <div className="absolute top-0 left-0 w-full h-2 bg-red-600"></div>
                <FaTrash className="text-red-100 text-5xl mx-auto mb-4" />
-               <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2 text-red-600">Cancel Order?</h2>
-               <p className="text-sm font-medium text-zinc-500 mb-8">Data akan dihapus dan stok barang (LIMITED GEAR) akan dikembalikan ke etalase secara otomatis.</p>
+               <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2 text-red-600">Batalkan Pesanan?</h2>
+               <p className="text-sm font-medium text-zinc-500 mb-8">Data pesanan akan dihapus permanen dan stok barang akan direstorasi secara otomatis ke etalase.</p>
                <div className="flex gap-4">
-                 <button onClick={() => setDeleteModal(null)} disabled={isUpdating} className="w-1/2 bg-zinc-100 text-zinc-600 py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl">BACK</button>
-                 <button onClick={executeDelete} disabled={isUpdating} className="w-1/2 bg-red-600 text-white py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl shadow-lg shadow-red-600/20">{isUpdating ? "WAIT..." : "DELETE & RESTORE"}</button>
+                 <button onClick={() => setDeleteModal(null)} disabled={isUpdating} className="w-1/2 bg-zinc-100 text-zinc-600 py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl">KEMBALI</button>
+                 <button onClick={executeDelete} disabled={isUpdating} className="w-1/2 bg-red-600 text-white py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl shadow-lg shadow-red-600/20">{isUpdating ? "MEMPROSES..." : "HAPUS DATA"}</button>
                </div>
              </motion.div>
            </motion.div>

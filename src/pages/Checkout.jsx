@@ -45,34 +45,50 @@ const Checkout = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
+
+    // ✅ VALIDASI STRICT: Cegah user isi data kosong / WA palsu
+    if (!formData.full_name.trim() || !formData.whatsapp.trim() || !formData.address.trim()) {
+      setLoading(false);
+      return Swal.fire({ 
+        title: 'DATA TIDAK LENGKAP', 
+        text: 'Mohon lengkapi Nama Lengkap, Nomor WhatsApp, dan Alamat Anda demi kelancaran pengiriman.', 
+        icon: 'warning', 
+        confirmButtonColor: '#000' 
+      });
+    }
+
+    if (formData.whatsapp.trim().length < 9) {
+      setLoading(false);
+      return Swal.fire({ 
+        title: 'NOMOR WA TIDAK VALID', 
+        text: 'Mohon pastikan nomor WhatsApp yang Anda masukkan valid dan aktif untuk proses konfirmasi.', 
+        icon: 'warning', 
+        confirmButtonColor: '#000' 
+      });
+    }
+
     try {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       const userId = session?.user?.id;
-      if (sessionError || !userId) throw new Error("Sesi login tidak valid. Silakan kembali dan login ulang.");
+      if (sessionError || !userId) throw new Error("Sesi otentikasi tidak valid. Silakan login kembali.");
 
-      // ✅ 1. SISTEM GEMBOK STOK (ANTI-REBUTAN)
-      const reservedItems = []; // Nyimpen history kalau tiba-tiba harus di-rollback
+      const reservedItems = []; 
 
       for (const item of cartItems) {
         if (item.label === 'LIMITED GEAR') {
           const sizeToReserve = item.size || '-';
           
-          // Tembak fungsi database buat ngunci stok
           const { data: isSuccess, error: rpcError } = await supabase.rpc('reserve_stock', {
             p_product_id: item.id,
             p_size: sizeToReserve,
             p_qty: item.quantity
           });
 
-          if (rpcError) throw new Error(`Gagal memproses stok: ${rpcError.message}`);
+          if (rpcError) throw new Error(`Kesalahan sinkronisasi stok: ${rpcError.message}`);
 
           if (isSuccess) {
-            // Berhasil gembok stok
             reservedItems.push({ id: item.id, size: sizeToReserve, qty: item.quantity });
           } else {
-            // GAGAL! Stok abis keduluan orang lain.
-            
-            // Rollback manual barang yang udah terlanjur digembok di loop sebelumnya
             for (const resItem of reservedItems) {
                const { data: stockData } = await supabase.from('product_stocks').select('stock_reserved').eq('product_id', resItem.id).eq('size', resItem.size).single();
                if(stockData) {
@@ -81,18 +97,17 @@ const Checkout = () => {
             }
 
             Swal.fire({ 
-              title: 'YAHH KEDULUAN!', 
-              text: `Maaf, stok untuk produk "${item.name}" (Size: ${sizeToReserve}) baru saja di-checkout oleh orang lain dan sekarang tidak mencukupi. Silakan kurangi kuantitas atau hapus barang dari keranjang.`, 
+              title: 'STOK TIDAK MENCUKUPI', 
+              text: `Mohon maaf, stok untuk produk "${item.name}" (Ukuran: ${sizeToReserve}) baru saja habis dipesan oleh pelanggan lain. Silakan sesuaikan keranjang belanja Anda.`, 
               icon: 'error', 
               confirmButtonColor: '#000' 
             });
             setLoading(false);
-            return; // Hentikan proses checkout seketika!
+            return; 
           }
         }
       }
 
-      // ✅ 2. KALAU LOLOS SEMUA GEMBOK, LANJUT BIKIN TRANSAKSI
       const productSummary = cartItems.map(item => `${item.name} [Size: ${item.size || '-'}] (Qty: ${item.quantity})`).join(' | ');
       const totalQty = cartItems.reduce((acc, curr) => acc + curr.quantity, 0);
       const sizeSummary = cartItems.map(item => item.size || '-').join(', ');
@@ -107,7 +122,7 @@ const Checkout = () => {
       if (error) throw error
       clearCart(); setShowModal(true)
     } catch (err) {
-      Swal.fire({ title: 'GAGAL MEMPROSES', text: `Terjadi kendala pada sistem: ${err.message}`, icon: 'error', confirmButtonColor: '#e1aecf' })
+      Swal.fire({ title: 'GAGAL MEMPROSES', text: `Terjadi kendala pada sistem: ${err.message}`, icon: 'error', confirmButtonColor: '#000' })
     } finally { setLoading(false) }
   }
 
@@ -115,7 +130,7 @@ const Checkout = () => {
     if (isCOD) {
       Swal.fire({
         title: 'KEMBALI KE BERANDA?',
-        text: 'Pastikan nomor WhatsApp Anda aktif agar admin dapat menghubungi Anda.',
+        text: 'Pastikan nomor WhatsApp Anda aktif agar tim kami dapat menghubungi Anda.',
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#77cbf0',
@@ -128,12 +143,12 @@ const Checkout = () => {
     } else {
       Swal.fire({
         title: 'PERHATIAN!',
-        text: 'Apakah Anda sudah men-screenshot atau mencatat Nomor Rekening Pembayaran?',
+        text: 'Apakah Anda sudah memastikan Nomor Rekening Pembayaran tersimpan?',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#77cbf0',
         cancelButtonColor: '#e1aecf',
-        confirmButtonText: 'SUDAH DICATAT',
+        confirmButtonText: 'SUDAH TERSIMPAN',
         cancelButtonText: 'KEMBALI KE INFO'
       }).then((result) => {
         if (result.isConfirmed) navigate('/')
@@ -237,13 +252,13 @@ const Checkout = () => {
                 {!isCOD && <div className="flex justify-between items-center text-sm"><span className="text-vtuber-pink font-bold uppercase tracking-widest text-xs">Kode Unik</span><span className="font-black text-base text-vtuber-pink">+ Rp {activeUniqueCode}</span></div>}
               </div>
               <div className="border-t border-vtuber-blue/10 pt-4 mt-auto text-left">
-                <div className="flex justify-between items-end mb-1"><span className="font-black text-base md:text-lg uppercase tracking-widest text-vtuber-purple">Total</span><span className="text-3xl md:text-4xl font-black italic tracking-tighter text-zinc-800">{formatIDR(totalPrice)}</span></div>
+                <div className="flex justify-between items-end mb-1"><span className="font-black text-base md:text-lg uppercase tracking-widest text-vtuber-purple">Total Akhir</span><span className="text-3xl md:text-4xl font-black italic tracking-tighter text-zinc-800">{formatIDR(totalPrice)}</span></div>
                 <p className="text-[10px] text-right font-bold text-vtuber-pink uppercase tracking-widest">{isCOD ? "*Siapkan nominal tunai yang sesuai." : "*Mohon transfer TEPAT SESUAI nominal di atas."}</p>
               </div>
             </div>
 
             <button type="submit" form="checkout-form" disabled={loading} className="w-full bg-gradient-to-r from-vtuber-cyan to-vtuber-blue text-white py-5 font-black italic uppercase text-sm tracking-[0.2em] hover:from-vtuber-pink hover:to-vtuber-purple transition-all shadow-[0_10px_20px_rgba(164,229,250,0.4)] rounded-2xl">
-              {loading ? "MEMPROSES PESANAN..." : "KONFIRMASI & BUAT PESANAN"}
+              {loading ? "MEMPROSES PESANAN..." : "KONFIRMASI PESANAN"}
             </button>
           </div>
         </div>
@@ -270,12 +285,12 @@ const Checkout = () => {
                 ) : (
                   <div className="border-t border-vtuber-blue/10 pt-8 text-center max-w-md mx-auto">
                     <p className="font-black text-lg md:text-xl uppercase tracking-widest text-vtuber-cyan mb-2">🤝 PEMBAYARAN DI TEMPAT (COD)</p>
-                    <p className="font-bold text-sm text-vtuber-purple uppercase tracking-widest leading-relaxed">Admin akan menghubungi Anda via WhatsApp untuk menentukan jadwal dan titik temu (Khusus Area Kudus).</p>
+                    <p className="font-bold text-sm text-vtuber-purple uppercase tracking-widest leading-relaxed">Tim kami akan menghubungi Anda melalui WhatsApp untuk mengonfirmasi jadwal dan titik temu pengiriman (Khusus Area Kudus).</p>
                   </div>
                 )}
               </div>
 
-              <p className="text-sm text-vtuber-pink mb-10 font-bold italic leading-relaxed">{!isCOD ? "*Harap simpan bukti transfer Anda. Admin kami akan segera memverifikasi setelah pembayaran masuk." : "*Pastikan nomor WhatsApp yang Anda masukkan aktif untuk proses konfirmasi."}</p>
+              <p className="text-sm text-vtuber-pink mb-10 font-bold italic leading-relaxed">{!isCOD ? "*Mohon simpan bukti transfer Anda. Tim kami akan memverifikasi pesanan setelah pembayaran terkonfirmasi." : "*Pastikan nomor WhatsApp Anda aktif untuk kelancaran proses konfirmasi pengiriman."}</p>
 
               <button onClick={handleReturnHome} className="w-full bg-gradient-to-r from-vtuber-cyan to-vtuber-blue text-white py-6 font-black italic uppercase text-base tracking-[0.3em] hover:from-vtuber-pink hover:to-vtuber-purple transition-all rounded-2xl shadow-[0_10px_20px_rgba(164,229,250,0.4)]">
                 SAYA MENGERTI, KEMBALI KE BERANDA
