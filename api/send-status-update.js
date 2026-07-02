@@ -7,11 +7,13 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Metode Tidak Diizinkan' });
   }
 
-  const { email, transaction, status } = req.body;
+  // ✅ FIX: Tangkap parameter courier & tracking_number dari body request
+  const { email, transaction, status, courier, tracking_number } = req.body;
 
   let subject = '';
   let message = '';
   let badgeColor = '';
+  let trackingBox = ''; // Buat nampilin kotak resi di email
 
   if (status === 'production') {
     subject = 'Pemberitahuan: Pesanan Anda Sedang Diproses';
@@ -19,7 +21,21 @@ export default async function handler(req, res) {
     badgeColor = '#9333ea'; 
   } else if (status === 'sending') {
     subject = 'Pemberitahuan: Pesanan Anda Sedang Dikirim';
-    message = `Yth. Bapak/Ibu <strong>${transaction.full_name}</strong>,<br/><br/>Kabar baik! Pesanan Anda saat ini sedang dalam proses pengiriman menuju alamat tujuan yang telah didaftarkan. Mohon kesediaannya untuk menunggu kedatangan pesanan Anda dalam waktu dekat.`;
+    
+    // ✅ FIX: Sisipin data kurir dan resi kalau dia pilih SHIPMENT
+    if (transaction.delivery_method === 'SHIPMENT') {
+        message = `Yth. Bapak/Ibu <strong>${transaction.full_name}</strong>,<br/><br/>Kabar baik! Pesanan Anda saat ini sedang dalam proses pengiriman menuju alamat tujuan yang telah didaftarkan. Anda dapat melacak paket Anda menggunakan detail pengiriman di bawah ini.`;
+        trackingBox = `
+            <div style="background-color: #fff7ed; padding: 20px; border-radius: 6px; margin-top: 20px; border-left: 4px solid #ea580c;">
+                <h3 style="margin-top: 0; font-size: 13px; text-transform: uppercase; color: #ea580c; letter-spacing: 1px;">Detail Pengiriman</h3>
+                <p style="margin: 8px 0; font-size: 16px;"><strong>Kurir:</strong> ${courier}</p>
+                <p style="margin: 8px 0; font-size: 16px;"><strong>No. Resi:</strong> <span style="letter-spacing: 1px; font-weight: bold;">${tracking_number}</span></p>
+            </div>
+        `;
+    } else {
+        message = `Yth. Bapak/Ibu <strong>${transaction.full_name}</strong>,<br/><br/>Kabar baik! Pesanan Anda saat ini sedang dalam proses pengantaran menuju titik temu (COD) yang telah disepakati. Silakan bersiap-siap dan tunggu kedatangan tim kami.`;
+    }
+    
     badgeColor = '#ea580c'; 
   } else if (status === 'success') {
     subject = 'Pemberitahuan: Pesanan Selesai';
@@ -31,7 +47,7 @@ export default async function handler(req, res) {
 
   try {
     const data = await resend.emails.send({
-      from: 'DAEKAN INC. <admin@daekan.store>', // Sesuaikan dengan domain Resend lo
+      from: 'DAEKAN INC. <admin@daekan.store>',
       to: email,
       subject: subject,
       html: `
@@ -42,6 +58,8 @@ export default async function handler(req, res) {
           <div style="padding: 40px; color: #374151;">
             <h2 style="margin-top: 0; color: #111827; font-size: 20px;">${subject}</h2>
             <p style="line-height: 1.8; font-size: 15px; color: #4b5563;">${message}</p>
+            
+            ${trackingBox}
             
             <div style="background-color: #f9fafb; padding: 20px; border-radius: 6px; margin-top: 30px; border: 1px solid #f3f4f6;">
               <h3 style="margin-top: 0; font-size: 14px; text-transform: uppercase; color: #9ca3af; letter-spacing: 1px;">Rincian Pesanan</h3>

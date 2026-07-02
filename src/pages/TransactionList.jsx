@@ -12,6 +12,10 @@ const TransactionList = ({ transactions, refreshData }) => {
   const [filterMethod, setFilterMethod] = useState('ALL') 
   const [isFilterOpen, setIsFilterOpen] = useState(false)
 
+  // ✅ STATE BARU BUAT NYIMPEN INPUTAN RESI & KURIR
+  const [shippingCourier, setShippingCourier] = useState('')
+  const [trackingNumber, setTrackingNumber] = useState('')
+
   const filterOptions = [
     { value: 'ALL', label: 'ALL METHODS' },
     { value: 'SHIPMENT', label: 'SHIPMENT ONLY' },
@@ -38,14 +42,27 @@ const TransactionList = ({ transactions, refreshData }) => {
     
     if (currentIndex < STATUS_FLOW.length - 1) {
       const newStatus = STATUS_FLOW[currentIndex + 1];
+      // Reset inputan resi tiap kali modal kebuka
+      setShippingCourier('');
+      setTrackingNumber('');
       setConfirmModal({ id, currentStatus: normalizedStatus, newStatus, user_id });
     }
   }
 
   const executeUpdateStatus = async () => {
     if (!confirmModal) return
-    setIsUpdating(true)
     const { id, newStatus, user_id } = confirmModal
+
+    // ✅ VALIDASI: Kalau mau ngirim, kurir & resi wajib diisi!
+    if (newStatus === 'sending') {
+      const isTrxCOD = transactions.find(t => t.id === id)?.delivery_method === 'COD';
+      // Kalau COD, resi nggak wajib. Tapi kalau SHIPMENT (Reguler), wajib!
+      if (!isTrxCOD && (!shippingCourier.trim() || !trackingNumber.trim())) {
+        return Swal.fire({ title: 'DATA KURANG', text: 'Mohon isi jenis kurir dan nomor resi untuk pengiriman reguler.', icon: 'warning', confirmButtonColor: '#000' });
+      }
+    }
+
+    setIsUpdating(true)
 
     try {
       const needsEmail = ['invoiced', 'paid', 'production', 'sending', 'success'].includes(newStatus);
@@ -64,7 +81,14 @@ const TransactionList = ({ transactions, refreshData }) => {
         const response = await fetch(apiEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: userEmail, transaction: transactionToApprove, status: newStatus }),
+          // ✅ FIX: Kirim data kurir dan resi ke API
+          body: JSON.stringify({ 
+            email: userEmail, 
+            transaction: transactionToApprove, 
+            status: newStatus,
+            courier: shippingCourier,
+            tracking_number: trackingNumber
+          }),
         })
 
         if (!response.ok) console.warn(`Gagal mengirim notifikasi email untuk status ${newStatus}.`)
@@ -75,7 +99,12 @@ const TransactionList = ({ transactions, refreshData }) => {
 
       if (newStatus === 'paid') updatePayload.paid_at = now;
       if (newStatus === 'production') updatePayload.production_at = now;
-      if (newStatus === 'sending') updatePayload.shipped_at = now;
+      if (newStatus === 'sending') {
+         updatePayload.shipped_at = now;
+         // ✅ FIX: Simpan resi ke database
+         updatePayload.courier = shippingCourier.toUpperCase();
+         updatePayload.tracking_number = trackingNumber;
+      }
       if (newStatus === 'success') updatePayload.success_at = now;
 
       const { error } = await supabase.from('transactions').update(updatePayload).eq('id', id)
@@ -147,7 +176,7 @@ const TransactionList = ({ transactions, refreshData }) => {
 
   const handleExportCSV = () => {
     if (filteredTransactions.length === 0) return alert("Tidak ada data untuk di-export!")
-    const headers = ['Date', 'Order ID', 'Full Name', 'WhatsApp', 'Address', 'Province', 'Delivery Method', 'Product', 'Qty', 'Total Price', 'Status']
+    const headers = ['Date', 'Order ID', 'Full Name', 'WhatsApp', 'Address', 'Province', 'Delivery Method', 'Courier', 'Resi', 'Product', 'Qty', 'Total Price', 'Status']
     const csvRows = [headers.join(',')] 
     
     filteredTransactions.forEach(trx => {
@@ -162,7 +191,7 @@ const TransactionList = ({ transactions, refreshData }) => {
       const totalQty = trx.items && trx.items.length > 0 ? trx.items.reduce((acc, curr) => acc + curr.quantity, 0) : trx.quantity || 1
       const phone = `="` + trx.whatsapp + `"` 
       const devMethod = trx.delivery_method || 'SHIPMENT'
-      const row = [date, trx.id, `"${trx.full_name}"`, phone, address, trx.province, devMethod, product, totalQty, trx.total_price, trx.status]
+      const row = [date, trx.id, `"${trx.full_name}"`, phone, address, trx.province, devMethod, trx.courier || '-', trx.tracking_number || '-', product, totalQty, trx.total_price, trx.status]
       csvRows.push(row.join(','))
     })
 
@@ -220,7 +249,7 @@ const TransactionList = ({ transactions, refreshData }) => {
               <tr className="bg-zinc-100 text-[10px] uppercase tracking-[0.2em] text-zinc-500">
                 <th className="p-4 pl-6">Tanggal</th>
                 <th className="p-4">Pelanggan</th>
-                <th className="p-4">Metode</th>
+                <th className="p-4">Pengiriman</th>
                 <th className="p-4">Produk</th>
                 <th className="p-4">Qty</th>
                 <th className="p-4">Nominal</th>
@@ -236,7 +265,7 @@ const TransactionList = ({ transactions, refreshData }) => {
                   </td>
                   <td className="p-4">
                     <p className="font-black uppercase">{trx.full_name}</p>
-                    <a href={`https://wa.me/${(trx.whatsapp || '').replace(/^0/, '62')}`} target="_blank" rel="noreferrer" className="text-[10px] text-green-600 font-bold tracking-widest hover:underline">
+                    <a href={`https://wa.me/${(trx.whatsapp || '').replace(/^0/, '62')}`} target="_blank" rel="noreferrer" className="text-[10px] text-green-600 font-bold tracking-widest hover:underline block mt-0.5">
                       {trx.whatsapp}
                     </a>
                   </td>
@@ -244,6 +273,11 @@ const TransactionList = ({ transactions, refreshData }) => {
                     <span className={`px-2 py-1 text-[9px] font-black uppercase tracking-wider rounded border ${(trx.delivery_method || 'SHIPMENT') === 'COD' ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
                       {trx.delivery_method || 'SHIPMENT'}
                     </span>
+                    {trx.courier && trx.tracking_number && (
+                      <div className="mt-1.5 text-[9px] text-zinc-500 tracking-wider">
+                        <span className="font-black">{trx.courier}</span>: {trx.tracking_number}
+                      </div>
+                    )}
                   </td>
                   <td className="p-4 font-bold text-xs uppercase max-w-[250px]">
                     {trx.items && trx.items.length > 0 ? (
@@ -299,7 +333,7 @@ const TransactionList = ({ transactions, refreshData }) => {
               {confirmModal.newStatus === 'success' ? <FaCheckCircle className="text-green-500 text-5xl mx-auto mb-4" /> : <FaBoxOpen className="text-zinc-300 text-5xl mx-auto mb-4" />}
               <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2">Konfirmasi Status</h2>
               
-              <div className="text-sm font-medium text-zinc-500 mb-8 leading-relaxed">
+              <div className="text-sm font-medium text-zinc-500 mb-6 leading-relaxed">
                 {confirmModal.newStatus === 'invoiced' && <p>Ubah status menjadi <span className="font-black text-yellow-600">MENUNGGU PEMBAYARAN</span>. Sistem akan mengirim email berisi <span className="font-bold underline">Instruksi Pembayaran</span> kepada pelanggan.</p>}
                 {confirmModal.newStatus === 'paid' && <p>Ubah status menjadi <span className="font-black text-blue-600">DIBAYAR</span>. Sistem akan mengirim konfirmasi resi pembayaran ke email pelanggan.</p>}
                 {confirmModal.newStatus === 'production' && <p>Ubah status menjadi <span className="font-black text-purple-600">DALAM PRODUKSI</span>. Pelanggan akan menerima notifikasi bahwa pesanan sedang diproses.</p>}
@@ -307,10 +341,24 @@ const TransactionList = ({ transactions, refreshData }) => {
                 {confirmModal.newStatus === 'success' && <p>Ubah status menjadi <span className="font-black text-green-600">SELESAI</span>. Transaksi akan ditutup dan notifikasi final dikirimkan.</p>}
               </div>
 
+              {/* ✅ FIX: FIELD INPUT KURIR DAN RESI MUNCUL DISINI KALAU MAU SENDING */}
+              {confirmModal.newStatus === 'sending' && (
+                 <div className="text-left bg-zinc-50 border border-zinc-200 p-4 rounded-xl mb-6 space-y-3">
+                   <div>
+                     <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Kurir Pengiriman</label>
+                     <input type="text" placeholder="Contoh: JNT / JNE / SICEPAT" value={shippingCourier} onChange={e => setShippingCourier(e.target.value)} className="w-full bg-transparent border-b border-zinc-300 py-1.5 outline-none text-sm font-black uppercase focus:border-black" />
+                   </div>
+                   <div>
+                     <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Nomor Resi / Pelacakan</label>
+                     <input type="text" placeholder="Input no resi..." value={trackingNumber} onChange={e => setTrackingNumber(e.target.value)} className="w-full bg-transparent border-b border-zinc-300 py-1.5 outline-none text-sm font-black uppercase focus:border-black" />
+                   </div>
+                 </div>
+              )}
+
               <div className="flex gap-4">
-                <button onClick={() => setConfirmModal(null)} disabled={isUpdating} className="w-1/2 bg-zinc-100 text-zinc-600 py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl">BATAL</button>
-                <button onClick={executeUpdateStatus} disabled={isUpdating} className="w-1/2 bg-black text-white hover:bg-zinc-800 py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl shadow-lg">
-                  {isUpdating ? "MEMPROSES..." : "KONFIRMASI"}
+                <button onClick={() => setConfirmModal(null)} disabled={isUpdating} className="w-1/2 bg-zinc-100 text-zinc-600 py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl hover:bg-zinc-200 transition-colors">BATAL</button>
+                <button onClick={executeUpdateStatus} disabled={isUpdating} className="w-1/2 bg-black text-white hover:bg-zinc-800 py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl shadow-lg transition-colors">
+                  {isUpdating ? "PROSES..." : "KONFIRMASI"}
                 </button>
               </div>
             </motion.div>
