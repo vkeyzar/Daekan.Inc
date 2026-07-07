@@ -1,18 +1,18 @@
 import React, { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
-import { FaFileExcel, FaCheckCircle, FaExclamationTriangle, FaTrash, FaFilter, FaChevronDown, FaBoxOpen, FaEnvelope } from 'react-icons/fa'
+import { FaFileExcel, FaCheckCircle, FaExclamationTriangle, FaTrash, FaFilter, FaChevronDown, FaBoxOpen, FaEnvelope, FaPen } from 'react-icons/fa'
 import { motion, AnimatePresence } from 'framer-motion'
 import Swal from 'sweetalert2'
 
 const TransactionList = ({ transactions, refreshData }) => {
   const [confirmModal, setConfirmModal] = useState(null)
   const [deleteModal, setDeleteModal] = useState(null)
+  const [editResiModal, setEditResiModal] = useState(null) // ✅ STATE BARU BUAT MODAL EDIT RESI
   const [isUpdating, setIsUpdating] = useState(false)
   
   const [filterMethod, setFilterMethod] = useState('ALL') 
   const [isFilterOpen, setIsFilterOpen] = useState(false)
 
-  // ✅ STATE BARU BUAT NYIMPEN INPUTAN RESI & KURIR
   const [shippingCourier, setShippingCourier] = useState('')
   const [trackingNumber, setTrackingNumber] = useState('')
 
@@ -42,10 +42,76 @@ const TransactionList = ({ transactions, refreshData }) => {
     
     if (currentIndex < STATUS_FLOW.length - 1) {
       const newStatus = STATUS_FLOW[currentIndex + 1];
-      // Reset inputan resi tiap kali modal kebuka
       setShippingCourier('');
       setTrackingNumber('');
       setConfirmModal({ id, currentStatus: normalizedStatus, newStatus, user_id });
+    }
+  }
+
+  // ✅ FUNGSI BARU BUAT NAMPILIN MODAL EDIT RESI
+  const handleEditResiClick = (trx) => {
+    setShippingCourier(trx.courier || '');
+    setTrackingNumber(trx.tracking_number || '');
+    setEditResiModal({ id: trx.id, user_id: trx.user_id, status: trx.status });
+  }
+
+  // ✅ FUNGSI BARU BUAT EKSEKUSI EDIT RESI & KIRIM EMAIL ULANG
+  const executeEditResi = async () => {
+    if (!editResiModal) return;
+    
+    if (!shippingCourier.trim() || !trackingNumber.trim()) {
+      return Swal.fire({ title: 'DATA KURANG', text: 'Mohon isi jenis kurir dan nomor resi yang benar.', icon: 'warning', confirmButtonColor: '#000' });
+    }
+
+    setIsUpdating(true);
+    try {
+      const { id, user_id, status } = editResiModal;
+
+      // 1. Update Database
+      const { error } = await supabase.from('transactions')
+        .update({ 
+          courier: shippingCourier.toUpperCase(), 
+          tracking_number: trackingNumber 
+        })
+        .eq('id', id);
+        
+      if (error) throw error;
+
+      // 2. Kirim Email Update ke User
+      const { data: profileData, error: profileError } = await supabase.from('profiles').select('email').eq('id', user_id).single();
+      if (!profileError && profileData?.email) {
+        const userEmail = profileData.email;
+        const transactionToApprove = transactions.find(t => t.id === id);
+
+        // Kita anggap ini sama kayak ngirim ulang email status 'sending'
+        await fetch('/api/send-status-update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            email: userEmail, 
+            transaction: transactionToApprove, 
+            status: 'sending', // Paksa ngirim format 'sending'
+            courier: shippingCourier.toUpperCase(),
+            tracking_number: trackingNumber,
+            isResiUpdate: true // Tambahin flag biar API tau ini cuma update resi
+          }),
+        });
+      }
+
+      setEditResiModal(null);
+      Swal.fire({
+        title: 'RESI DIPERBARUI!',
+        text: 'Data resi berhasil diubah dan email notifikasi baru telah dikirim ke pelanggan.',
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false
+      });
+      refreshData();
+
+    } catch (error) {
+      Swal.fire({ title: 'GAGAL PROSES', text: error.message, icon: 'error', confirmButtonColor: '#000' });
+    } finally {
+      setIsUpdating(false);
     }
   }
 
@@ -53,10 +119,8 @@ const TransactionList = ({ transactions, refreshData }) => {
     if (!confirmModal) return
     const { id, newStatus, user_id } = confirmModal
 
-    // ✅ VALIDASI: Kalau mau ngirim, kurir & resi wajib diisi!
     if (newStatus === 'sending') {
       const isTrxCOD = transactions.find(t => t.id === id)?.delivery_method === 'COD';
-      // Kalau COD, resi nggak wajib. Tapi kalau SHIPMENT (Reguler), wajib!
       if (!isTrxCOD && (!shippingCourier.trim() || !trackingNumber.trim())) {
         return Swal.fire({ title: 'DATA KURANG', text: 'Mohon isi jenis kurir dan nomor resi untuk pengiriman reguler.', icon: 'warning', confirmButtonColor: '#000' });
       }
@@ -81,12 +145,11 @@ const TransactionList = ({ transactions, refreshData }) => {
         const response = await fetch(apiEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          // ✅ FIX: Kirim data kurir dan resi ke API
           body: JSON.stringify({ 
             email: userEmail, 
             transaction: transactionToApprove, 
             status: newStatus,
-            courier: shippingCourier,
+            courier: shippingCourier.toUpperCase(),
             tracking_number: trackingNumber
           }),
         })
@@ -101,7 +164,6 @@ const TransactionList = ({ transactions, refreshData }) => {
       if (newStatus === 'production') updatePayload.production_at = now;
       if (newStatus === 'sending') {
          updatePayload.shipped_at = now;
-         // ✅ FIX: Simpan resi ke database
          updatePayload.courier = shippingCourier.toUpperCase();
          updatePayload.tracking_number = trackingNumber;
       }
@@ -274,8 +336,16 @@ const TransactionList = ({ transactions, refreshData }) => {
                       {trx.delivery_method || 'SHIPMENT'}
                     </span>
                     {trx.courier && trx.tracking_number && (
-                      <div className="mt-1.5 text-[9px] text-zinc-500 tracking-wider">
-                        <span className="font-black">{trx.courier}</span>: {trx.tracking_number}
+                      <div className="mt-2 flex items-center gap-2">
+                        <div className="text-[9px] text-zinc-500 tracking-wider">
+                          <span className="font-black">{trx.courier}</span>: {trx.tracking_number}
+                        </div>
+                        {/* ✅ TOMBOL EDIT RESI (Hanya muncul kalau udah sending/success) */}
+                        {(trx.status === 'sending' || trx.status === 'success') && (trx.delivery_method !== 'COD') && (
+                          <button onClick={() => handleEditResiClick(trx)} className="text-blue-500 hover:text-blue-700 transition-colors" title="Edit Resi">
+                            <FaPen size={10} />
+                          </button>
+                        )}
                       </div>
                     )}
                   </td>
@@ -325,6 +395,7 @@ const TransactionList = ({ transactions, refreshData }) => {
         )}
       </div>
 
+      {/* ✅ MODAL KONFIRMASI STATUS NAIK TAHAP */}
       <AnimatePresence>
         {confirmModal && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
@@ -341,7 +412,6 @@ const TransactionList = ({ transactions, refreshData }) => {
                 {confirmModal.newStatus === 'success' && <p>Ubah status menjadi <span className="font-black text-green-600">SELESAI</span>. Transaksi akan ditutup dan notifikasi final dikirimkan.</p>}
               </div>
 
-              {/* ✅ FIX: FIELD INPUT KURIR DAN RESI MUNCUL DISINI KALAU MAU SENDING */}
               {confirmModal.newStatus === 'sending' && (
                  <div className="text-left bg-zinc-50 border border-zinc-200 p-4 rounded-xl mb-6 space-y-3">
                    <div>
@@ -359,6 +429,38 @@ const TransactionList = ({ transactions, refreshData }) => {
                 <button onClick={() => setConfirmModal(null)} disabled={isUpdating} className="w-1/2 bg-zinc-100 text-zinc-600 py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl hover:bg-zinc-200 transition-colors">BATAL</button>
                 <button onClick={executeUpdateStatus} disabled={isUpdating} className="w-1/2 bg-black text-white hover:bg-zinc-800 py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl shadow-lg transition-colors">
                   {isUpdating ? "PROSES..." : "KONFIRMASI"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ✅ MODAL BARU KHUSUS EDIT RESI */}
+      <AnimatePresence>
+        {editResiModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl text-center relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-2 bg-blue-500"></div>
+              <FaPen className="text-blue-500 text-4xl mx-auto mb-4" />
+              <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2">Edit Nomor Resi</h2>
+              <p className="text-sm font-medium text-zinc-500 mb-6 leading-relaxed">Perbaiki data resi. Sistem otomatis akan <span className="font-bold text-black">mengirimkan ulang email</span> ke pelanggan dengan data resi yang baru.</p>
+
+              <div className="text-left bg-zinc-50 border border-zinc-200 p-4 rounded-xl mb-6 space-y-3">
+                 <div>
+                   <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Kurir Pengiriman</label>
+                   <input type="text" placeholder="Contoh: JNT / JNE / SICEPAT" value={shippingCourier} onChange={e => setShippingCourier(e.target.value)} className="w-full bg-transparent border-b border-zinc-300 py-1.5 outline-none text-sm font-black uppercase focus:border-black" />
+                 </div>
+                 <div>
+                   <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Nomor Resi / Pelacakan</label>
+                   <input type="text" placeholder="Input no resi..." value={trackingNumber} onChange={e => setTrackingNumber(e.target.value)} className="w-full bg-transparent border-b border-zinc-300 py-1.5 outline-none text-sm font-black uppercase focus:border-black" />
+                 </div>
+              </div>
+
+              <div className="flex gap-4">
+                <button onClick={() => setEditResiModal(null)} disabled={isUpdating} className="w-1/2 bg-zinc-100 text-zinc-600 py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl hover:bg-zinc-200 transition-colors">BATAL</button>
+                <button onClick={executeEditResi} disabled={isUpdating} className="w-1/2 bg-blue-600 text-white hover:bg-blue-700 py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl shadow-lg transition-colors shadow-blue-500/20">
+                  {isUpdating ? "MENYIMPAN..." : "SIMPAN & KIRIM"}
                 </button>
               </div>
             </motion.div>

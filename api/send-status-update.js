@@ -7,27 +7,33 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Metode Tidak Diizinkan' });
   }
 
-  // ✅ FIX: Tangkap parameter courier & tracking_number dari body request
-  const { email, transaction, status, courier, tracking_number } = req.body;
+  // Tangkap parameter isResiUpdate
+  const { email, transaction, status, courier, tracking_number, isResiUpdate } = req.body;
 
   let subject = '';
   let message = '';
   let badgeColor = '';
-  let trackingBox = ''; // Buat nampilin kotak resi di email
+  let trackingBox = ''; 
 
   if (status === 'production') {
     subject = 'Pemberitahuan: Pesanan Anda Sedang Diproses';
     message = `Yth. Bapak/Ibu <strong>${transaction.full_name}</strong>,<br/><br/>Kami ingin menginformasikan bahwa pesanan Anda saat ini telah memasuki tahap produksi dan pengerjaan. Kami berkomitmen untuk memberikan kualitas terbaik dan akan segera menghubungi Anda kembali apabila pesanan telah siap untuk dikirimkan.`;
     badgeColor = '#9333ea'; 
   } else if (status === 'sending') {
-    subject = 'Pemberitahuan: Pesanan Anda Sedang Dikirim';
     
-    // ✅ FIX: Sisipin data kurir dan resi kalau dia pilih SHIPMENT
-    if (transaction.delivery_method === 'SHIPMENT') {
+    // ✅ BEDA SUBJECT & MESSAGE KALAU CUMA EDIT RESI
+    if (isResiUpdate) {
+        subject = 'Pembaruan: Detail Resi Pengiriman Anda';
+        message = `Yth. Bapak/Ibu <strong>${transaction.full_name}</strong>,<br/><br/>Terdapat pembaruan pada nomor resi untuk pesanan Anda. Silakan gunakan informasi pelacakan terbaru di bawah ini untuk memantau status pengiriman paket Anda.`;
+    } else {
+        subject = 'Pemberitahuan: Pesanan Anda Sedang Dikirim';
         message = `Yth. Bapak/Ibu <strong>${transaction.full_name}</strong>,<br/><br/>Kabar baik! Pesanan Anda saat ini sedang dalam proses pengiriman menuju alamat tujuan yang telah didaftarkan. Anda dapat melacak paket Anda menggunakan detail pengiriman di bawah ini.`;
+    }
+    
+    if (transaction.delivery_method === 'SHIPMENT') {
         trackingBox = `
             <div style="background-color: #fff7ed; padding: 20px; border-radius: 6px; margin-top: 20px; border-left: 4px solid #ea580c;">
-                <h3 style="margin-top: 0; font-size: 13px; text-transform: uppercase; color: #ea580c; letter-spacing: 1px;">Detail Pengiriman</h3>
+                <h3 style="margin-top: 0; font-size: 13px; text-transform: uppercase; color: #ea580c; letter-spacing: 1px;">Detail Pengiriman Terbaru</h3>
                 <p style="margin: 8px 0; font-size: 16px;"><strong>Kurir:</strong> ${courier}</p>
                 <p style="margin: 8px 0; font-size: 16px;"><strong>No. Resi:</strong> <span style="letter-spacing: 1px; font-weight: bold;">${tracking_number}</span></p>
             </div>
