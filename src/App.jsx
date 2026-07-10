@@ -10,6 +10,7 @@ import ScrollToHash from './components/ScrollToHash';
 import Checkout from './pages/Checkout'
 import SizeChart from './pages/SizeChart'
 import Products from './pages/Products'
+import TermsOfService from './pages/TermsOfService';
 
 const App = () => {
   return (
@@ -26,6 +27,7 @@ const App = () => {
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/size-chart" element={<SizeChart />} />
         <Route path="/products" element={<Products />} />
+        <Route path="/terms" element={<TermsOfService />} />
       </Routes>
     </Router>
   )

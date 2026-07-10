@@ -54,6 +54,7 @@ const Footer = () => {
                                 <FaWhatsapp size={20} className="cursor-pointer" />
                             </a>                    
                         </div>
+                        <a href="/terms" className="hover:text-vtuber-cyan transition-colors text-sm font-black uppercase tracking-[0.1em] mb-4 text-zinc-400">Terms & Conditions</a>
 
                         {/* ✅ OPEN FOR PARTNERSHIP PINDAH KE SINI */}
                         <div className="flex items-center gap-2 text-[10px] font-bold tracking-widest text-vtuber-blue uppercase">
