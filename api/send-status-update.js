@@ -7,7 +7,6 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Metode Tidak Diizinkan' });
   }
 
-  // Tangkap parameter isResiUpdate
   const { email, transaction, status, courier, tracking_number, isResiUpdate } = req.body;
 
   let subject = '';
@@ -20,8 +19,6 @@ export default async function handler(req, res) {
     message = `Yth. Bapak/Ibu <strong>${transaction.full_name}</strong>,<br/><br/>Kami ingin menginformasikan bahwa pesanan Anda saat ini telah memasuki tahap produksi dan pengerjaan. Kami berkomitmen untuk memberikan kualitas terbaik dan akan segera menghubungi Anda kembali apabila pesanan telah siap untuk dikirimkan.`;
     badgeColor = '#9333ea'; 
   } else if (status === 'sending') {
-    
-    // ✅ BEDA SUBJECT & MESSAGE KALAU CUMA EDIT RESI
     if (isResiUpdate) {
         subject = 'Pembaruan: Detail Resi Pengiriman Anda';
         message = `Yth. Bapak/Ibu <strong>${transaction.full_name}</strong>,<br/><br/>Terdapat pembaruan pada nomor resi untuk pesanan Anda. Silakan gunakan informasi pelacakan terbaru di bawah ini untuk memantau status pengiriman paket Anda.`;
@@ -41,12 +38,18 @@ export default async function handler(req, res) {
     } else {
         message = `Yth. Bapak/Ibu <strong>${transaction.full_name}</strong>,<br/><br/>Kabar baik! Pesanan Anda saat ini sedang dalam proses pengantaran menuju titik temu (COD) yang telah disepakati. Silakan bersiap-siap dan tunggu kedatangan tim kami.`;
     }
-    
     badgeColor = '#ea580c'; 
+
   } else if (status === 'success') {
     subject = 'Pemberitahuan: Pesanan Selesai';
     message = `Yth. Bapak/Ibu <strong>${transaction.full_name}</strong>,<br/><br/>Pesanan Anda telah kami tandai sebagai selesai. Kami mengucapkan terima kasih yang sebesar-besarnya atas kepercayaan Anda dalam berbelanja di Daekan Inc. Kami sangat menantikan kehadiran Anda pada koleksi kami selanjutnya.`;
     badgeColor = '#16a34a'; 
+
+  // ✅ TAMBAHAN BARU BUAT STATUS CANCELED
+  } else if (status === 'canceled') {
+    subject = 'Pemberitahuan: Pesanan Dibatalkan';
+    message = `Yth. Bapak/Ibu <strong>${transaction.full_name}</strong>,<br/><br/>Mohon maaf, kami menginformasikan bahwa pesanan Anda dengan nomor tagihan <strong>#${transaction.id}</strong> telah <strong>dibatalkan</strong>.<br/><br/>Hal ini dikarenakan kami tidak menerima konfirmasi pembayaran lebih dari 2x24 jam sejak pesanan dibuat.<br/><br/><span style="color: #b91c1c; font-weight: bold;">Ingin memesan kembali?</span><br/>Jangan khawatir! Anda dapat melakukan pemesanan ulang (Re-order) kapan saja melalui website kami selama stok produk masih tersedia.`;
+    badgeColor = '#ef4444'; // Merah
   } else {
     return res.status(400).json({ error: 'Parameter status tidak valid' });
   }

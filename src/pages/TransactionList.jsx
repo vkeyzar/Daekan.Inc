@@ -1,13 +1,14 @@
 import React, { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
-import { FaFileExcel, FaCheckCircle, FaExclamationTriangle, FaTrash, FaFilter, FaChevronDown, FaBoxOpen, FaEnvelope, FaPen } from 'react-icons/fa'
+import { FaFileExcel, FaCheckCircle, FaTrash, FaFilter, FaChevronDown, FaBoxOpen, FaPen, FaTimes } from 'react-icons/fa'
 import { motion, AnimatePresence } from 'framer-motion'
 import Swal from 'sweetalert2'
 
 const TransactionList = ({ transactions, refreshData }) => {
   const [confirmModal, setConfirmModal] = useState(null)
   const [deleteModal, setDeleteModal] = useState(null)
-  const [editResiModal, setEditResiModal] = useState(null) // ✅ STATE BARU BUAT MODAL EDIT RESI
+  const [editResiModal, setEditResiModal] = useState(null)
+  const [cancelModal, setCancelModal] = useState(null)
   const [isUpdating, setIsUpdating] = useState(false)
   
   const [filterMethod, setFilterMethod] = useState('ALL') 
@@ -22,22 +23,24 @@ const TransactionList = ({ transactions, refreshData }) => {
     { value: 'COD', label: 'COD ONLY' }
   ]
 
-  const STATUS_FLOW = ['pending', 'invoiced', 'paid', 'production', 'sending', 'success']
+  const STATUS_FLOW = ['pending', 'invoiced', 'verified', 'production', 'sending', 'success']
 
   const getStatusBadge = (status) => {
     switch(status) {
       case 'pending': return 'bg-zinc-100 text-zinc-600 border-zinc-200'
       case 'invoiced': return 'bg-yellow-100 text-yellow-700 border-yellow-200'
+      case 'verified': return 'bg-blue-100 text-blue-700 border-blue-200'
       case 'paid': return 'bg-blue-100 text-blue-700 border-blue-200'
       case 'production': return 'bg-purple-100 text-purple-700 border-purple-200'
       case 'sending': return 'bg-orange-100 text-orange-700 border-orange-200'
       case 'success': return 'bg-green-100 text-green-700 border-green-200'
+      case 'canceled': return 'bg-red-100 text-red-700 border-red-200'
       default: return 'bg-zinc-100 text-zinc-700 border-zinc-200'
     }
   }
 
   const handleNextStepClick = (id, currentStatus, user_id) => {
-    const normalizedStatus = currentStatus === 'verified' ? 'paid' : currentStatus;
+    const normalizedStatus = currentStatus === 'paid' ? 'verified' : currentStatus;
     const currentIndex = STATUS_FLOW.indexOf(normalizedStatus);
     
     if (currentIndex < STATUS_FLOW.length - 1) {
@@ -48,14 +51,67 @@ const TransactionList = ({ transactions, refreshData }) => {
     }
   }
 
-  // ✅ FUNGSI BARU BUAT NAMPILIN MODAL EDIT RESI
   const handleEditResiClick = (trx) => {
     setShippingCourier(trx.courier || '');
     setTrackingNumber(trx.tracking_number || '');
     setEditResiModal({ id: trx.id, user_id: trx.user_id, status: trx.status });
   }
 
-  // ✅ FUNGSI BARU BUAT EKSEKUSI EDIT RESI & KIRIM EMAIL ULANG
+  const handleCancelClick = (trx) => {
+    setCancelModal({ id: trx.id, user_id: trx.user_id });
+  }
+
+  const executeCancel = async () => {
+    if (!cancelModal) return;
+    setIsUpdating(true);
+
+    try {
+      const { id, user_id } = cancelModal;
+      const trxToCancel = transactions.find(t => t.id === id);
+
+      // 1. Restorasi Stok
+      if (trxToCancel && trxToCancel.items) {
+        for (const item of trxToCancel.items) {
+          if (item.label === 'LIMITED GEAR') {
+            const itemSize = item.size || '-';
+            const { data: stockData } = await supabase.from('product_stocks').select('stock_reserved').eq('product_id', item.id).eq('size', itemSize).single();
+            if (stockData) {
+              const newReserved = Math.max(0, stockData.stock_reserved - item.quantity);
+              await supabase.from('product_stocks').update({ stock_reserved: newReserved }).eq('product_id', item.id).eq('size', itemSize);
+            }
+          }
+        }
+      }
+
+      // 2. Update Status Database ke 'canceled'
+      const { error } = await supabase.from('transactions').update({ status: 'canceled' }).eq('id', id);
+      if (error) throw error;
+
+      // 3. Kirim Email Notifikasi Batal
+      const { data: profileData } = await supabase.from('profiles').select('email').eq('id', user_id).single();
+      if (profileData?.email) {
+        await fetch('/api/send-status-update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            email: profileData.email, 
+            transaction: trxToCancel, 
+            status: 'canceled' 
+          }),
+        });
+      }
+
+      setCancelModal(null);
+      refreshData();
+      Swal.fire({ title: 'PESANAN DIBATALKAN', text: 'Stok berhasil direstorasi dan email pembatalan telah dikirim ke pelanggan.', icon: 'success', timer: 2500, showConfirmButton: false });
+
+    } catch (error) {
+      Swal.fire({ title: 'GAGAL MEMBATALKAN', text: error.message, icon: 'error', confirmButtonColor: '#000' });
+    } finally {
+      setIsUpdating(false);
+    }
+  }
+
   const executeEditResi = async () => {
     if (!editResiModal) return;
     
@@ -65,9 +121,8 @@ const TransactionList = ({ transactions, refreshData }) => {
 
     setIsUpdating(true);
     try {
-      const { id, user_id, status } = editResiModal;
+      const { id, user_id } = editResiModal;
 
-      // 1. Update Database
       const { error } = await supabase.from('transactions')
         .update({ 
           courier: shippingCourier.toUpperCase(), 
@@ -77,36 +132,26 @@ const TransactionList = ({ transactions, refreshData }) => {
         
       if (error) throw error;
 
-      // 2. Kirim Email Update ke User
-      const { data: profileData, error: profileError } = await supabase.from('profiles').select('email').eq('id', user_id).single();
-      if (!profileError && profileData?.email) {
-        const userEmail = profileData.email;
+      const { data: profileData } = await supabase.from('profiles').select('email').eq('id', user_id).single();
+      if (profileData?.email) {
         const transactionToApprove = transactions.find(t => t.id === id);
-
-        // Kita anggap ini sama kayak ngirim ulang email status 'sending'
         await fetch('/api/send-status-update', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-            email: userEmail, 
+            email: profileData.email, 
             transaction: transactionToApprove, 
-            status: 'sending', // Paksa ngirim format 'sending'
+            status: 'sending',
             courier: shippingCourier.toUpperCase(),
             tracking_number: trackingNumber,
-            isResiUpdate: true // Tambahin flag biar API tau ini cuma update resi
+            isResiUpdate: true 
           }),
         });
       }
 
       setEditResiModal(null);
-      Swal.fire({
-        title: 'RESI DIPERBARUI!',
-        text: 'Data resi berhasil diubah dan email notifikasi baru telah dikirim ke pelanggan.',
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false
-      });
       refreshData();
+      Swal.fire({ title: 'RESI DIPERBARUI!', text: 'Data resi berhasil diubah dan email notifikasi baru telah dikirim.', icon: 'success', timer: 2000, showConfirmButton: false });
 
     } catch (error) {
       Swal.fire({ title: 'GAGAL PROSES', text: error.message, icon: 'error', confirmButtonColor: '#000' });
@@ -129,38 +174,36 @@ const TransactionList = ({ transactions, refreshData }) => {
     setIsUpdating(true)
 
     try {
-      const needsEmail = ['invoiced', 'paid', 'production', 'sending', 'success'].includes(newStatus);
+      const needsEmail = ['invoiced', 'verified', 'paid', 'production', 'sending', 'success'].includes(newStatus);
       
       if (needsEmail) {
-        const { data: profileData, error: profileError } = await supabase.from('profiles').select('email').eq('id', user_id).single()
-        if (profileError || !profileData?.email) throw new Error('Gagal menemukan email pembeli.')
+        const { data: profileData } = await supabase.from('profiles').select('email').eq('id', user_id).single()
+        if (profileData?.email) {
+            const userEmail = profileData.email
+            const transactionToApprove = transactions.find(t => t.id === id)
 
-        const userEmail = profileData.email
-        const transactionToApprove = transactions.find(t => t.id === id)
+            let apiEndpoint = '/api/send-status-update'; 
+            if (newStatus === 'invoiced') apiEndpoint = '/api/send-payment-details';
+            else if (newStatus === 'paid' || newStatus === 'verified') apiEndpoint = '/api/send-invoice';
 
-        let apiEndpoint = '/api/send-status-update'; 
-        if (newStatus === 'invoiced') apiEndpoint = '/api/send-payment-details';
-        else if (newStatus === 'paid') apiEndpoint = '/api/send-invoice';
-
-        const response = await fetch(apiEndpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            email: userEmail, 
-            transaction: transactionToApprove, 
-            status: newStatus,
-            courier: shippingCourier.toUpperCase(),
-            tracking_number: trackingNumber
-          }),
-        })
-
-        if (!response.ok) console.warn(`Gagal mengirim notifikasi email untuk status ${newStatus}.`)
+            await fetch(apiEndpoint, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                email: userEmail, 
+                transaction: transactionToApprove, 
+                status: newStatus === 'verified' ? 'paid' : newStatus,
+                courier: shippingCourier.toUpperCase(),
+                tracking_number: trackingNumber
+              }),
+            })
+        }
       }
 
       const now = new Date().toISOString();
       let updatePayload = { status: newStatus };
 
-      if (newStatus === 'paid') updatePayload.paid_at = now;
+      if (newStatus === 'verified' || newStatus === 'paid') updatePayload.paid_at = now;
       if (newStatus === 'production') updatePayload.production_at = now;
       if (newStatus === 'sending') {
          updatePayload.shipped_at = now;
@@ -173,23 +216,12 @@ const TransactionList = ({ transactions, refreshData }) => {
       if (error) throw error
 
       setConfirmModal(null)
-
-      setTimeout(() => {
-        Swal.fire({
-          title: newStatus === 'invoiced' ? 'INFORMASI PEMBAYARAN TERKIRIM' : 'STATUS BERHASIL DIPERBARUI',
-          text: newStatus === 'invoiced' ? `Instruksi pembayaran telah dikirimkan ke email pembeli.` : `Status pesanan dan notifikasi email berhasil diperbarui menjadi ${newStatus.toUpperCase()}.`,
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false
-        })
-        refreshData()
-      }, 300)
+      refreshData()
+      Swal.fire({ title: 'STATUS DIPERBARUI', text: `Status pesanan berhasil diperbarui menjadi ${newStatus.toUpperCase()}.`, icon: 'success', timer: 2000, showConfirmButton: false })
 
     } catch (error) {
       setConfirmModal(null)
-      setTimeout(() => {
-        Swal.fire({ title: 'GAGAL PROSES', text: error.message, icon: 'error', confirmButtonColor: '#000' })
-      }, 300)
+      Swal.fire({ title: 'GAGAL PROSES', text: error.message, icon: 'error', confirmButtonColor: '#000' })
     } finally {
       setIsUpdating(false)
     }
@@ -204,7 +236,8 @@ const TransactionList = ({ transactions, refreshData }) => {
     try {
       const trxToDelete = transactions.find(t => t.id === deleteModal.id);
 
-      if (trxToDelete && trxToDelete.items) {
+      // Jangan restorasi stok lagi kalau statusnya udah canceled
+      if (trxToDelete && trxToDelete.items && trxToDelete.status !== 'canceled') {
         for (const item of trxToDelete.items) {
           if (item.label === 'LIMITED GEAR') {
             const itemSize = item.size || '-';
@@ -222,10 +255,10 @@ const TransactionList = ({ transactions, refreshData }) => {
       
       refreshData(); 
       setDeleteModal(null);
-      Swal.fire({ title: 'PESANAN DIBATALKAN', text: 'Data pesanan telah dihapus dan stok berhasil direstorasi.', icon: 'success', timer: 2000, showConfirmButton: false });
+      Swal.fire({ title: 'DATA DIHAPUS', text: 'Data pesanan telah dihapus permanen dari sistem.', icon: 'success', timer: 2000, showConfirmButton: false });
 
     } catch (error) {
-      Swal.fire({ title: 'GAGAL MENGHAPUS', text: error.message, icon: 'error' });
+      Swal.fire({ title: 'GAGAL MENGHAPUS', text: error.message, icon: 'error', confirmButtonColor: '#000' });
     } finally {
       setIsUpdating(false)
     }
@@ -244,11 +277,7 @@ const TransactionList = ({ transactions, refreshData }) => {
     filteredTransactions.forEach(trx => {
       const date = new Date(trx.created_at).toLocaleDateString('id-ID')
       const address = `"${(trx.address || '').replace(/"/g, '""')}"` 
-      
-      const productText = trx.items && trx.items.length > 0 
-        ? trx.items.map(i => `${i.name} [Size: ${i.size || '-'}] (Qty: ${i.quantity})`).join(' || ') 
-        : trx.product_name || ''
-        
+      const productText = trx.items && trx.items.length > 0 ? trx.items.map(i => `${i.name} [Size: ${i.size || '-'}] (Qty: ${i.quantity})`).join(' || ') : trx.product_name || ''
       const product = `"${productText}"`
       const totalQty = trx.items && trx.items.length > 0 ? trx.items.reduce((acc, curr) => acc + curr.quantity, 0) : trx.quantity || 1
       const phone = `="` + trx.whatsapp + `"` 
@@ -340,7 +369,6 @@ const TransactionList = ({ transactions, refreshData }) => {
                         <div className="text-[9px] text-zinc-500 tracking-wider">
                           <span className="font-black">{trx.courier}</span>: {trx.tracking_number}
                         </div>
-                        {/* ✅ TOMBOL EDIT RESI (Hanya muncul kalau udah sending/success) */}
                         {(trx.status === 'sending' || trx.status === 'success') && (trx.delivery_method !== 'COD') && (
                           <button onClick={() => handleEditResiClick(trx)} className="text-blue-500 hover:text-blue-700 transition-colors" title="Edit Resi">
                             <FaPen size={10} />
@@ -375,16 +403,23 @@ const TransactionList = ({ transactions, refreshData }) => {
                     </span>
                   </td>
                   <td className="p-4 pr-6 text-center flex justify-center gap-2 mt-1.5">
-                    {trx.status !== 'success' ? (
+                    {trx.status !== 'success' && trx.status !== 'canceled' ? (
                       <button onClick={() => handleNextStepClick(trx.id, trx.status, trx.user_id)} className="inline-flex items-center justify-center p-3 rounded-xl bg-zinc-100 hover:bg-black hover:text-white transition-all text-zinc-500 shadow-sm" title="Move to Next Step">
                         <FaCheckCircle size={14} />
                       </button>
-                    ) : (
+                    ) : trx.status === 'success' ? (
                       <div className="inline-flex items-center justify-center p-3 rounded-xl bg-green-50 text-green-500 cursor-default" title="Order Completed">
                         <FaCheckCircle size={14} />
                       </div>
+                    ) : null}
+
+                    {(trx.status === 'pending' || trx.status === 'invoiced') && (
+                      <button onClick={() => handleCancelClick(trx)} className="inline-flex items-center justify-center p-3 rounded-xl bg-orange-50 hover:bg-orange-500 hover:text-white transition-all text-orange-400 shadow-sm" title="Batalkan Pesanan (Belum Bayar)">
+                        <FaTimes size={14} />
+                      </button>
                     )}
-                    <button onClick={() => handleDeleteClick(trx.id)} className="inline-flex items-center justify-center p-3 rounded-xl bg-red-50 hover:bg-red-600 hover:text-white transition-all text-red-400" title="Delete Data">
+
+                    <button onClick={() => handleDeleteClick(trx.id)} className="inline-flex items-center justify-center p-3 rounded-xl bg-red-50 hover:bg-red-600 hover:text-white transition-all text-red-400" title="Delete Data Permanen">
                       <FaTrash size={14} />
                     </button>
                   </td>
@@ -395,7 +430,6 @@ const TransactionList = ({ transactions, refreshData }) => {
         )}
       </div>
 
-      {/* ✅ MODAL KONFIRMASI STATUS NAIK TAHAP */}
       <AnimatePresence>
         {confirmModal && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
@@ -405,11 +439,11 @@ const TransactionList = ({ transactions, refreshData }) => {
               <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2">Konfirmasi Status</h2>
               
               <div className="text-sm font-medium text-zinc-500 mb-6 leading-relaxed">
-                {confirmModal.newStatus === 'invoiced' && <p>Ubah status menjadi <span className="font-black text-yellow-600">MENUNGGU PEMBAYARAN</span>. Sistem akan mengirim email berisi <span className="font-bold underline">Instruksi Pembayaran</span> kepada pelanggan.</p>}
-                {confirmModal.newStatus === 'paid' && <p>Ubah status menjadi <span className="font-black text-blue-600">DIBAYAR</span>. Sistem akan mengirim konfirmasi resi pembayaran ke email pelanggan.</p>}
-                {confirmModal.newStatus === 'production' && <p>Ubah status menjadi <span className="font-black text-purple-600">DALAM PRODUKSI</span>. Pelanggan akan menerima notifikasi bahwa pesanan sedang diproses.</p>}
+                {confirmModal.newStatus === 'invoiced' && <p>Ubah status menjadi <span className="font-black text-yellow-600">MENUNGGU PEMBAYARAN</span>. Sistem akan mengirim email berisi <span className="font-bold underline">Instruksi Pembayaran</span>.</p>}
+                {confirmModal.newStatus === 'verified' && <p>Ubah status menjadi <span className="font-black text-blue-600">DIBAYAR</span>. Sistem akan mengirim konfirmasi resi pembayaran ke email pelanggan.</p>}
+                {confirmModal.newStatus === 'production' && <p>Ubah status menjadi <span className="font-black text-purple-600">DALAM PRODUKSI</span>. Pelanggan akan menerima notifikasi proses.</p>}
                 {confirmModal.newStatus === 'sending' && <p>Ubah status menjadi <span className="font-black text-orange-600">PENGIRIMAN</span>. Pelanggan akan diberitahu bahwa paket telah dikirim.</p>}
-                {confirmModal.newStatus === 'success' && <p>Ubah status menjadi <span className="font-black text-green-600">SELESAI</span>. Transaksi akan ditutup dan notifikasi final dikirimkan.</p>}
+                {confirmModal.newStatus === 'success' && <p>Ubah status menjadi <span className="font-black text-green-600">SELESAI</span>. Transaksi akan ditutup.</p>}
               </div>
 
               {confirmModal.newStatus === 'sending' && (
@@ -436,7 +470,6 @@ const TransactionList = ({ transactions, refreshData }) => {
         )}
       </AnimatePresence>
 
-      {/* ✅ MODAL BARU KHUSUS EDIT RESI */}
       <AnimatePresence>
         {editResiModal && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
@@ -444,12 +477,12 @@ const TransactionList = ({ transactions, refreshData }) => {
               <div className="absolute top-0 left-0 w-full h-2 bg-blue-500"></div>
               <FaPen className="text-blue-500 text-4xl mx-auto mb-4" />
               <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2">Edit Nomor Resi</h2>
-              <p className="text-sm font-medium text-zinc-500 mb-6 leading-relaxed">Perbaiki data resi. Sistem otomatis akan <span className="font-bold text-black">mengirimkan ulang email</span> ke pelanggan dengan data resi yang baru.</p>
+              <p className="text-sm font-medium text-zinc-500 mb-6 leading-relaxed">Sistem otomatis akan <span className="font-bold text-black">mengirimkan ulang email</span> dengan resi baru.</p>
 
               <div className="text-left bg-zinc-50 border border-zinc-200 p-4 rounded-xl mb-6 space-y-3">
                  <div>
                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Kurir Pengiriman</label>
-                   <input type="text" placeholder="Contoh: JNT / JNE / SICEPAT" value={shippingCourier} onChange={e => setShippingCourier(e.target.value)} className="w-full bg-transparent border-b border-zinc-300 py-1.5 outline-none text-sm font-black uppercase focus:border-black" />
+                   <input type="text" placeholder="Contoh: JNT / JNE" value={shippingCourier} onChange={e => setShippingCourier(e.target.value)} className="w-full bg-transparent border-b border-zinc-300 py-1.5 outline-none text-sm font-black uppercase focus:border-black" />
                  </div>
                  <div>
                    <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Nomor Resi / Pelacakan</label>
@@ -460,11 +493,28 @@ const TransactionList = ({ transactions, refreshData }) => {
               <div className="flex gap-4">
                 <button onClick={() => setEditResiModal(null)} disabled={isUpdating} className="w-1/2 bg-zinc-100 text-zinc-600 py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl hover:bg-zinc-200 transition-colors">BATAL</button>
                 <button onClick={executeEditResi} disabled={isUpdating} className="w-1/2 bg-blue-600 text-white hover:bg-blue-700 py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl shadow-lg transition-colors shadow-blue-500/20">
-                  {isUpdating ? "MENYIMPAN..." : "SIMPAN & KIRIM"}
+                  {isUpdating ? "PROSES..." : "SIMPAN"}
                 </button>
               </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {cancelModal && (
+           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+             <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl text-center relative overflow-hidden">
+               <div className="absolute top-0 left-0 w-full h-2 bg-orange-500"></div>
+               <FaTimes className="text-orange-100 text-5xl mx-auto mb-4 bg-orange-500 rounded-full p-2" />
+               <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2 text-orange-600">Batalkan Pesanan?</h2>
+               <p className="text-sm font-medium text-zinc-500 mb-8">Anda akan membatalkan pesanan ini. Stok akan dikembalikan dan email notifikasi pembatalan akan dikirim ke pembeli.</p>
+               <div className="flex gap-4">
+                 <button onClick={() => setCancelModal(null)} disabled={isUpdating} className="w-1/2 bg-zinc-100 text-zinc-600 py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl hover:bg-zinc-200 transition-colors">KEMBALI</button>
+                 <button onClick={executeCancel} disabled={isUpdating} className="w-1/2 bg-orange-500 hover:bg-orange-600 text-white py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl shadow-lg shadow-orange-500/20">{isUpdating ? "PROSES..." : "BATALKAN"}</button>
+               </div>
+             </motion.div>
+           </motion.div>
         )}
       </AnimatePresence>
 
@@ -474,11 +524,11 @@ const TransactionList = ({ transactions, refreshData }) => {
              <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl text-center relative overflow-hidden">
                <div className="absolute top-0 left-0 w-full h-2 bg-red-600"></div>
                <FaTrash className="text-red-100 text-5xl mx-auto mb-4" />
-               <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2 text-red-600">Batalkan Pesanan?</h2>
-               <p className="text-sm font-medium text-zinc-500 mb-8">Data pesanan akan dihapus permanen dan stok barang akan direstorasi secara otomatis ke etalase.</p>
+               <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2 text-red-600">Hapus Permanen?</h2>
+               <p className="text-sm font-medium text-zinc-500 mb-8">Data pesanan akan dihapus permanen. Stok barang juga akan direstorasi (jika pesanan belum dibatalkan sebelumnya).</p>
                <div className="flex gap-4">
-                 <button onClick={() => setDeleteModal(null)} disabled={isUpdating} className="w-1/2 bg-zinc-100 text-zinc-600 py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl">KEMBALI</button>
-                 <button onClick={executeDelete} disabled={isUpdating} className="w-1/2 bg-red-600 text-white py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl shadow-lg shadow-red-600/20">{isUpdating ? "MEMPROSES..." : "HAPUS DATA"}</button>
+                 <button onClick={() => setDeleteModal(null)} disabled={isUpdating} className="w-1/2 bg-zinc-100 text-zinc-600 py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl hover:bg-zinc-200 transition-colors">KEMBALI</button>
+                 <button onClick={executeDelete} disabled={isUpdating} className="w-1/2 bg-red-600 text-white py-4 font-black italic uppercase text-xs tracking-[0.2em] rounded-xl shadow-lg shadow-red-600/20">{isUpdating ? "PROSES..." : "HAPUS DATA"}</button>
                </div>
              </motion.div>
            </motion.div>
