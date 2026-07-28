@@ -148,7 +148,7 @@ const Profile = () => {
             text: 'Pesanan Anda sedang diproses sistem.', 
             icon: 'success' 
           }).then(() => {
-            window.location.reload(); 
+            navigate('/'); 
             // Atau redirect ke profil: navigate('/profile');
           });
         },
