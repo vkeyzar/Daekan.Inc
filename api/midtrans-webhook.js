@@ -6,7 +6,6 @@ const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default async function handler(req, res) {
-  // Pastikan hanya menerima request POST dari Midtrans
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Metode Tidak Diizinkan' });
   }
@@ -14,21 +13,22 @@ export default async function handler(req, res) {
   try {
     const data = req.body;
     
-    // ✅ TAMBAHAN: Handle Test Ping / Dummy dari Midtrans
-    if (!data.order_id) {
-      return res.status(200).json({ message: 'Webhook siap bosku!' });
+    // ✅ FIX: Deteksi otomatis kalau ini cuma "Test Notification" dari tombol Midtrans
+    if (data.order_id && data.order_id.includes('payment_notif_test')) {
+      return res.status(200).json({ message: 'Test webhook berhasil tersambung bosku!' });
     }
 
-    // 1. EKSTRAK ID TRANSAKSI
+    // 1. EKSTRAK ID TRANSAKSI (Kode lu yang lama lanjut di sini...)
     const rawOrderId = data.order_id;
-    // ... (kode lu ke bawahnya tetep sama)
-    
-    // Buang tulisan 'DAEKAN-'
     let dbOrderId = rawOrderId.replace('DAEKAN-', '');
-    
-    // Ambil 36 karakter pertama saja (Karena UUID Supabase selalu 36 karakter)
-    // Otomatis '-timestamp' di belakangnya bakal terbuang
     dbOrderId = dbOrderId.substring(0, 36);
+
+    // Validasi apakah dbOrderId adalah UUID yang valid (36 karakter)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(dbOrderId)) {
+      // Kalau bukan UUID (misal data test dari Midtrans), kita pura-pura sukses aja biar Midtrans seneng
+      return res.status(200).json({ message: 'Bukan ID Daekan, diabaikan.' });
+    }
 
     const transactionStatus = data.transaction_status;
     const fraudStatus = data.fraud_status;
@@ -38,13 +38,12 @@ export default async function handler(req, res) {
     // 2. LOGIKA STATUS DARI MIDTRANS
     if (transactionStatus === 'capture' || transactionStatus === 'settlement') {
       if (fraudStatus === 'accept' || transactionStatus === 'settlement') {
-        newStatus = 'verified'; // OTOMATIS LUNAS
+        newStatus = 'verified'; 
       }
     } else if (transactionStatus === 'cancel' || transactionStatus === 'deny' || transactionStatus === 'expire') {
-      newStatus = 'canceled'; // OTOMATIS BATAL / EXPIRED
+      newStatus = 'canceled'; 
     }
 
-    // Jika statusnya pending atau tidak relevan, hiraukan
     if (!newStatus) return res.status(200).json({ status: 'Ignored' });
 
     // 3. AMBIL DATA DARI DATABASE
@@ -64,13 +63,11 @@ export default async function handler(req, res) {
     // EKSEKUSI JIKA STATUS: LUNAS
     // ==============================================
     if (newStatus === 'verified' && trxData.status !== 'verified') {
-      // Update Database
       await supabase.from('transactions').update({ 
         status: 'verified', 
         paid_at: new Date().toISOString() 
       }).eq('id', dbOrderId);
 
-      // Tembak API Email Invoice kita sendiri
       if (userEmail) {
         await fetch(`${baseUrl}/api/send-invoice`, {
           method: 'POST',
@@ -81,10 +78,10 @@ export default async function handler(req, res) {
     }
 
     // ==============================================
-    // EKSEKUSI JIKA STATUS: BATAL / EXPIRED (15 Menit / 2x24 Jam)
+    // EKSEKUSI JIKA STATUS: BATAL / EXPIRED
     // ==============================================
     if (newStatus === 'canceled' && trxData.status !== 'canceled') {
-      // A. Restore Stok Barang ke Etalase
+      // Restore Stok Barang ke Etalase
       if (trxData.items) {
         for (const item of trxData.items) {
           if (item.label === 'LIMITED GEAR') {
@@ -98,10 +95,8 @@ export default async function handler(req, res) {
         }
       }
 
-      // B. Update Database
       await supabase.from('transactions').update({ status: 'canceled' }).eq('id', dbOrderId);
 
-      // C. Tembak API Email Batal
       if (userEmail) {
         await fetch(`${baseUrl}/api/send-status-update`, {
           method: 'POST',
@@ -111,7 +106,6 @@ export default async function handler(req, res) {
       }
     }
 
-    // Beri tahu Midtrans bahwa notifikasi sudah diterima dengan baik
     return res.status(200).json({ status: 'OK' });
   } catch (error) {
     console.error("Webhook Error:", error);
