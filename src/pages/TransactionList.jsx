@@ -279,7 +279,7 @@ const TransactionList = ({ transactions, refreshData }) => {
     <div className="space-y-6">
 
       {/* GRAFIK PENJUALAN */}
-      <div className="bg-white rounded-3xl border border-zinc-100 shadow-sm p-6">
+      <div className="bg-white rounded-3xl border border-zinc-100 shadow-sm p-6 mb-6">
         <div className="flex items-center gap-3 mb-6 pb-4 border-b border-zinc-100 text-vtuber-cyan">
             <FaChartLine className="text-2xl" />
             <h3 className="font-black italic uppercase text-xl text-zinc-800 tracking-tighter">Sales Overview</h3>
@@ -293,20 +293,24 @@ const TransactionList = ({ transactions, refreshData }) => {
         {chartData.labels.length === 0 ? (
            <div className="h-40 flex items-center justify-center text-xs font-bold text-zinc-300 uppercase tracking-widest">Belum ada data penjualan pada periode ini</div>
         ) : (
-           <div className="h-48 flex items-end gap-2 sm:gap-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-zinc-200">
+           <div className="h-56 flex items-end gap-2 sm:gap-4 overflow-x-auto pb-2 pt-6 scrollbar-thin scrollbar-thumb-zinc-200">
              {chartData.labels.map((label, idx) => {
                 const heightPercentage = Math.max((chartData.data[idx] / chartData.maxData) * 100, 5); // min 5% height
                 return (
-                  <div key={idx} className="flex flex-col justify-end items-center flex-1 min-w-[40px] group relative">
+                  // ✅ FIX: Tambahin h-full di parent ini biar persentase height bar-nya berfungsi!
+                  <div key={idx} className="flex flex-col justify-end items-center flex-1 min-w-[40px] h-full group relative">
+                    
                     {/* Tooltip Hover */}
-                    <div className="absolute -top-10 opacity-0 group-hover:opacity-100 transition-opacity bg-black text-white text-[10px] font-bold py-1 px-2 rounded whitespace-nowrap z-10 pointer-events-none">
+                    <div className="absolute -top-8 opacity-0 group-hover:opacity-100 transition-opacity bg-black text-white text-[10px] font-bold py-1 px-2 rounded whitespace-nowrap z-10 pointer-events-none">
                        Rp {chartData.data[idx].toLocaleString('id-ID')}
                     </div>
+                    
                     {/* Bar */}
                     <div 
                       style={{ height: `${heightPercentage}%` }} 
-                      className="w-full bg-gradient-to-t from-vtuber-blue/20 to-vtuber-cyan rounded-t-lg transition-all duration-500 group-hover:opacity-80"
+                      className="w-full bg-gradient-to-t from-vtuber-blue/40 to-vtuber-cyan rounded-t-md transition-all duration-500 group-hover:opacity-80"
                     ></div>
+                    
                     {/* Label Bawah */}
                     <span className="text-[9px] font-bold text-zinc-400 mt-2 uppercase tracking-wider truncate w-full text-center">{label}</span>
                   </div>
