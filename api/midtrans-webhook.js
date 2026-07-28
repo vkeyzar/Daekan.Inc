@@ -13,30 +13,19 @@ export default async function handler(req, res) {
   try {
     const data = req.body;
     
-    // ✅ FIX: Deteksi otomatis kalau ini cuma "Test Notification" dari tombol Midtrans
-    // ✅ FIX: Deteksi otomatis kalau ini cuma "Test Notification" dari tombol Midtrans
+    // Deteksi otomatis kalau ini cuma "Test Notification" dari Midtrans
     if (data.order_id && data.order_id.includes('payment_notif_test')) {
       return res.status(200).json({ message: 'Test webhook berhasil tersambung bosku!' });
     }
 
     // 1. EKSTRAK ID TRANSAKSI
-    // Cek laci custom_field1 dulu (untuk order baru), kalau kosong baru potong order_id (untuk order lama)
     let dbOrderId = data.custom_field1;
-    
     if (!dbOrderId) {
       dbOrderId = data.order_id.replace('DAEKAN-', '').substring(0, 36);
     }
 
-    // Validasi apakah dbOrderId adalah UUID yang valid (36 karakter)
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(dbOrderId)) {
-      // Kalau bukan UUID (misal data test dari Midtrans), kita pura-pura sukses aja biar Midtrans seneng
-      return res.status(200).json({ message: 'Bukan ID Daekan, diabaikan.' });
-    }
-
     const transactionStatus = data.transaction_status;
     const fraudStatus = data.fraud_status;
-
     let newStatus = '';
 
     // 2. LOGIKA STATUS DARI MIDTRANS
@@ -50,18 +39,29 @@ export default async function handler(req, res) {
 
     if (!newStatus) return res.status(200).json({ status: 'Ignored' });
 
-    // 3. AMBIL DATA DARI DATABASE
+    // 3. AMBIL DATA TRANSAKSI (Tanpa Join Tabel biar aman dari bug Supabase)
     const { data: trxData, error: trxError } = await supabase
       .from('transactions')
-      .select('*, profiles!inner(email)')
+      .select('*')
       .eq('id', dbOrderId)
       .single();
 
     if (trxError || !trxData) return res.status(404).json({ error: 'Order not found' });
 
-    const protocol = req.headers['x-forwarded-proto'] || 'http';
-    const baseUrl = `${protocol}://${req.headers.host}`;
-    const userEmail = trxData.profiles.email;
+    // 4. AMBIL EMAIL USER SECARA TERPISAH (Sama persis kayak logika di TransactionList.jsx)
+    let userEmail = '';
+    if (trxData.user_id) {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('id', trxData.user_id)
+        .single();
+      userEmail = profileData?.email;
+    }
+
+    // 5. PAKSA PROTOKOL HTTPS UNTUK VERCEL (Anti-Redirect 308)
+    const isLocal = req.headers.host.includes('localhost');
+    const baseUrl = `${isLocal ? 'http' : 'https'}://${req.headers.host}`;
 
     // ==============================================
     // EKSEKUSI JIKA STATUS: LUNAS
@@ -73,11 +73,12 @@ export default async function handler(req, res) {
       }).eq('id', dbOrderId);
 
       if (userEmail) {
+        console.log(`Mengirim email LUNAS ke: ${userEmail}`);
         await fetch(`${baseUrl}/api/send-invoice`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: userEmail, transaction: trxData, status: 'paid' })
-        });
+        }).catch(err => console.error("Gagal kirim invoice:", err));
       }
     }
 
@@ -85,8 +86,6 @@ export default async function handler(req, res) {
     // EKSEKUSI JIKA STATUS: BATAL / EXPIRED
     // ==============================================
     if (newStatus === 'canceled' && (trxData.status === 'pending' || trxData.status === 'invoiced')) {
-      
-      // A. Restore Stok Barang ke Etalase
       if (trxData.items) {
         for (const item of trxData.items) {
           if (item.label === 'LIMITED GEAR') {
@@ -103,11 +102,12 @@ export default async function handler(req, res) {
       await supabase.from('transactions').update({ status: 'canceled' }).eq('id', dbOrderId);
 
       if (userEmail) {
+        console.log(`Mengirim email BATAL ke: ${userEmail}`);
         await fetch(`${baseUrl}/api/send-status-update`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: userEmail, transaction: trxData, status: 'canceled' })
-        });
+        }).catch(err => console.error("Gagal kirim email batal:", err));
       }
     }
 
