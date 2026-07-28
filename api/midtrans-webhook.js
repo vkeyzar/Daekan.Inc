@@ -84,8 +84,9 @@ export default async function handler(req, res) {
     // ==============================================
     // EKSEKUSI JIKA STATUS: BATAL / EXPIRED
     // ==============================================
-    if (newStatus === 'canceled' && trxData.status !== 'canceled') {
-      // Restore Stok Barang ke Etalase
+    if (newStatus === 'canceled' && (trxData.status === 'pending' || trxData.status === 'invoiced')) {
+      
+      // A. Restore Stok Barang ke Etalase
       if (trxData.items) {
         for (const item of trxData.items) {
           if (item.label === 'LIMITED GEAR') {
