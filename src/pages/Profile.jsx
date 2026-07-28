@@ -114,12 +114,14 @@ const Profile = () => {
         });
       }
 
-      // Tembak API lagi dengan ID Transaksi yang sama (Midtrans bakal otomatis ngasih token yang masih aktif)
+      // ✅ FIX: Tambahin timestamp biar order_id selalu unik di mata Midtrans setiap kali re-try
+      const uniqueOrderId = `${trx.id}-${Date.now()}`;
+
       const response = await fetch('/api/create-midtrans-transaction', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          order_id: trx.id,
+          order_id: uniqueOrderId, // Kirim ID unik ke Midtrans
           gross_amount: trx.total_price,
           customer_details: {
             first_name: trx.full_name,
