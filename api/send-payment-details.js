@@ -1,4 +1,6 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -8,20 +10,13 @@ export default async function handler(req, res) {
   try {
     const { email, transaction } = req.body;
 
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.VITE_EMAIL_USER,
-        pass: process.env.VITE_EMAIL_PASS
-      }
-    });
-
     const formatIDR = (price) => {
       return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(price);
     };
 
-    const mailOptions = {
-      from: `"DAEKAN INC." <${process.env.VITE_EMAIL_USER}>`,
+    const { data, error } = await resend.emails.send({
+      // PENTING: Ganti 'noreply@daekan.store' dengan domain yang udah lu verify di dashboard Resend!
+      from: 'DAEKAN INC. <admin@daekan.store>', 
       to: email,
       subject: `MENUNGGU PEMBAYARAN - Order #${transaction.id.split('-')[0].toUpperCase()}`,
       html: `
@@ -38,7 +33,7 @@ export default async function handler(req, res) {
             <p style="margin: 0; font-size: 13px; color: #b45309;">Pastikan Anda menyelesaikan pembayaran sebelum batas waktu berakhir agar pesanan tidak dibatalkan otomatis oleh sistem.</p>
           </div>
 
-          <p>Jika Anda tidak sengaja menutup halaman pembayaran *pop-up* sebelumnya, jangan khawatir. Anda dapat melanjutkan proses pembayaran melalui halaman profil Anda dengan mengklik tombol di bawah ini:</p>
+          <p>Jika Anda tidak sengaja menutup halaman pembayaran pop-up sebelumnya, jangan khawatir. Anda dapat melanjutkan proses pembayaran melalui halaman profil Anda dengan mengklik tombol di bawah ini:</p>
           
           <div style="text-align: center; margin: 35px 0;">
             <a href="https://daekan.store/profile" style="background-color: #000; color: #fff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 12px; letter-spacing: 2px; text-transform: uppercase;">LANJUTKAN PEMBAYARAN</a>
@@ -51,10 +46,11 @@ export default async function handler(req, res) {
           </p>
         </div>
       `
-    };
+    });
 
-    await transporter.sendMail(mailOptions);
-    return res.status(200).json({ message: 'Email instruksi pembayaran berhasil dikirim' });
+    if (error) throw error;
+
+    return res.status(200).json({ message: 'Email instruksi pembayaran berhasil dikirim', data });
   } catch (error) {
     console.error("Error kirim email pending:", error);
     return res.status(500).json({ error: error.message });

@@ -1,4 +1,6 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -8,19 +10,10 @@ export default async function handler(req, res) {
   try {
     const { email, transaction } = req.body;
 
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.VITE_EMAIL_USER,
-        pass: process.env.VITE_EMAIL_PASS
-      }
-    });
-
     const formatIDR = (price) => {
       return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(price);
     };
 
-    // Render list barang belanjaan biar rapi di email
     let itemsHtml = '';
     if (transaction.items) {
       const items = typeof transaction.items === 'string' ? JSON.parse(transaction.items) : transaction.items;
@@ -38,8 +31,9 @@ export default async function handler(req, res) {
       itemsHtml = `<tr><td colspan="3" style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${transaction.product_name}</td></tr>`;
     }
 
-    const mailOptions = {
-      from: `"DAEKAN INC." <${process.env.VITE_EMAIL_USER}>`,
+    const { data, error } = await resend.emails.send({
+      // PENTING: Ganti 'noreply@daekan.store' dengan domain yang udah lu verify di dashboard Resend!
+      from: 'DAEKAN INC. <admin@daekan.store>', 
       to: email,
       subject: `INVOICE LUNAS - Order #${transaction.id.split('-')[0].toUpperCase()}`,
       html: `
@@ -89,10 +83,11 @@ export default async function handler(req, res) {
           </p>
         </div>
       `
-    };
+    });
 
-    await transporter.sendMail(mailOptions);
-    return res.status(200).json({ message: 'Invoice Lunas berhasil dikirim' });
+    if (error) throw error;
+
+    return res.status(200).json({ message: 'Invoice Lunas berhasil dikirim', data });
   } catch (error) {
     console.error("Error kirim email invoice:", error);
     return res.status(500).json({ error: error.message });
