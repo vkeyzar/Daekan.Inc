@@ -121,7 +121,7 @@ const Profile = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          order_id: uniqueOrderId, // Kirim ID unik ke Midtrans
+          order_id: trx.id, // ✅ Balikin kirim ID aslinya aja
           gross_amount: trx.total_price,
           customer_details: {
             first_name: trx.full_name,

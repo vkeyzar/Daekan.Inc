@@ -14,14 +14,18 @@ export default async function handler(req, res) {
     const data = req.body;
     
     // ✅ FIX: Deteksi otomatis kalau ini cuma "Test Notification" dari tombol Midtrans
+    // ✅ FIX: Deteksi otomatis kalau ini cuma "Test Notification" dari tombol Midtrans
     if (data.order_id && data.order_id.includes('payment_notif_test')) {
       return res.status(200).json({ message: 'Test webhook berhasil tersambung bosku!' });
     }
 
-    // 1. EKSTRAK ID TRANSAKSI (Kode lu yang lama lanjut di sini...)
-    const rawOrderId = data.order_id;
-    let dbOrderId = rawOrderId.replace('DAEKAN-', '');
-    dbOrderId = dbOrderId.substring(0, 36);
+    // 1. EKSTRAK ID TRANSAKSI
+    // Cek laci custom_field1 dulu (untuk order baru), kalau kosong baru potong order_id (untuk order lama)
+    let dbOrderId = data.custom_field1;
+    
+    if (!dbOrderId) {
+      dbOrderId = data.order_id.replace('DAEKAN-', '').substring(0, 36);
+    }
 
     // Validasi apakah dbOrderId adalah UUID yang valid (36 karakter)
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
