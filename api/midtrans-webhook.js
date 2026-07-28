@@ -14,9 +14,14 @@ export default async function handler(req, res) {
   try {
     const data = req.body;
     
+    // ✅ TAMBAHAN: Handle Test Ping / Dummy dari Midtrans
+    if (!data.order_id) {
+      return res.status(200).json({ message: 'Webhook siap bosku!' });
+    }
+
     // 1. EKSTRAK ID TRANSAKSI
-    // Midtrans ngirim order_id format: DAEKAN-[UUID]-[TIMESTAMP]
     const rawOrderId = data.order_id;
+    // ... (kode lu ke bawahnya tetep sama)
     
     // Buang tulisan 'DAEKAN-'
     let dbOrderId = rawOrderId.replace('DAEKAN-', '');
