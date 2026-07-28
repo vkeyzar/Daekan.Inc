@@ -152,24 +152,24 @@ const Checkout = () => {
 
       // 5. TRIGGER POP-UP MIDTRANS
       window.snap.pay(midtransData.token, {
-        onSuccess: async function(result){
-          // User sukses bayar
-          await supabase.from('transactions').update({ status: 'verified', paid_at: new Date().toISOString() }).eq('id', trxData.id);
-          clearCart();
-          setShowModal(true);
+        onSuccess: function(result){
+          // ❌ HAPUS KODE AWAIT SUPABASE UPDATE DI SINI!
+          // Biarkan Webhook Vercel di background yang bekerja update DB & kirim email.
+
+          Swal.fire({ 
+            title: 'PEMBAYARAN BERHASIL!', 
+            text: 'Pesanan Anda sedang diproses sistem.', 
+            icon: 'success' 
+          }).then(() => {
+            window.location.reload(); 
+            // Atau redirect ke profil: navigate('/profile');
+          });
         },
         onPending: function(result){
-          // User milih metode yang butuh waktu (misal transfer VA/Alfamart) tapi belum bayar
-          clearCart();
-          Swal.fire({
-             title: 'MENUNGGU PEMBAYARAN',
-             text: 'Silakan selesaikan pembayaran Anda sesuai instruksi Midtrans.',
-             icon: 'info',
-             confirmButtonColor: '#000'
-          }).then(() => navigate('/profile')); 
+          Swal.fire({ title: 'MENUNGGU PEMBAYARAN', text: 'Silakan selesaikan pembayaran Anda.', icon: 'info' });
         },
         onError: function(result){
-          Swal.fire({ title: 'PEMBAYARAN GAGAL', text: 'Terjadi kesalahan saat memproses pembayaran Anda.', icon: 'error' });
+          Swal.fire({ title: 'GAGAL', text: 'Terjadi kesalahan pada pembayaran.', icon: 'error' });
         },
         onClose: function(){
           // User close pop-up tanpa milih metode pembayaran

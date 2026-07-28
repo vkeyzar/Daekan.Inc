@@ -139,9 +139,18 @@ const Profile = () => {
 
       // Munculin pop-up Midtrans
       window.snap.pay(midtransData.token, {
-        onSuccess: async function(result){
-          await supabase.from('transactions').update({ status: 'verified', paid_at: new Date().toISOString() }).eq('id', trx.id);
-          Swal.fire({ title: 'PEMBAYARAN BERHASIL!', text: 'Pesanan Anda akan segera diproses.', icon: 'success' }).then(() => window.location.reload());
+        onSuccess: function(result){
+          // ❌ HAPUS KODE AWAIT SUPABASE UPDATE DI SINI!
+          // Biarkan Webhook Vercel di background yang bekerja update DB & kirim email.
+
+          Swal.fire({ 
+            title: 'PEMBAYARAN BERHASIL!', 
+            text: 'Pesanan Anda sedang diproses sistem.', 
+            icon: 'success' 
+          }).then(() => {
+            window.location.reload(); 
+            // Atau redirect ke profil: navigate('/profile');
+          });
         },
         onPending: function(result){
           Swal.fire({ title: 'MENUNGGU PEMBAYARAN', text: 'Silakan selesaikan pembayaran Anda.', icon: 'info' });
@@ -150,7 +159,7 @@ const Profile = () => {
           Swal.fire({ title: 'GAGAL', text: 'Terjadi kesalahan pada pembayaran.', icon: 'error' });
         },
         onClose: function(){
-          // User nutup popup lagi
+          // User nutup pop-up
         }
       });
 
