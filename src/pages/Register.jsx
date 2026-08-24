@@ -29,36 +29,37 @@ const Register = () => {
       // Cek apakah error dari Supabase terkait password lemah
       if (errorMsg.includes('Password should contain at least one character of each')) {
         customHtml = `
-          <div style="text-align: left; border-left: 6px solid #000; padding: 16px; margin-top: 15px; background-color: #f3f4f6; border-radius: 0px 8px 8px 0px;">
-            <p style="font-weight: 900; text-transform: uppercase; letter-spacing: 1px; font-size: 14px; margin-top: 0; margin-bottom: 8px; color: #000;">
+          <div class="text-left border-l-4 border-vtuber-cyan pl-4 mt-4 bg-gray-50 py-3">
+            <p class="font-black uppercase tracking-wider text-xs mb-2 text-black">
               Password Terlalu Lemah!
             </p>
-            <p style="font-size: 13px; margin-bottom: 12px; color: #4b5563;">
-              Sistem keamanan kami mewajibkan kombinasi berikut:
+            <p class="text-xs mb-2 text-gray-600">
+              Wajib mengandung kombinasi berikut:
             </p>
-            <ul style="list-style-type: none; padding: 0; margin: 0; font-size: 13px; color: #111827; font-weight: 500;">
-              <li style="margin-bottom: 8px;">■ 1 <strong style="font-weight: 900;">HURUF BESAR</strong> (A-Z)</li>
-              <li style="margin-bottom: 8px;">■ 1 <strong style="font-weight: 900;">HURUF KECIL</strong> (a-z)</li>
-              <li style="margin-bottom: 8px;">■ 1 <strong style="font-weight: 900;">ANGKA</strong> (0-9)</li>
-              <li style="margin-bottom: 0;">■ 1 <strong style="font-weight: 900;">SIMBOL SPESIAL</strong> (!@#$% dll)</li>
+            <ul class="list-none p-0 m-0 text-xs text-gray-900 font-semibold">
+              <li class="mb-1"><span class="text-vtuber-cyan mr-1.5">■</span> 1 <strong class="font-black text-black">HURUF BESAR</strong> (A-Z)</li>
+              <li class="mb-1"><span class="text-vtuber-cyan mr-1.5">■</span> 1 <strong class="font-black text-black">HURUF KECIL</strong> (a-z)</li>
+              <li class="mb-1"><span class="text-vtuber-cyan mr-1.5">■</span> 1 <strong class="font-black text-black">ANGKA</strong> (0-9)</li>
+              <li class="mb-0"><span class="text-vtuber-cyan mr-1.5">■</span> 1 <strong class="font-black text-black">SIMBOL SPESIAL</strong> (!@#$ dll)</li>
             </ul>
           </div>
         `;
       } else if (errorMsg.includes('User already registered')) {
-        errorMsg = 'Email ini sudah terdaftar. Silakan login menggunakan akun Anda.';
+        errorMsg = 'Email ini sudah terdaftar. Silakan login.';
       }
 
       // Tampilkan SweetAlert dengan Vibe Daekan Inc.
       Swal.fire({
-        title: '<span style="font-weight: 900; font-style: italic; letter-spacing: 1.5px; font-size: 24px; color: #000;">REGISTRASI GAGAL</span>',
-        html: customHtml || undefined,
-        text: customHtml ? undefined : errorMsg,
+        title: 'REGISTRASI GAGAL',
+        html: customHtml || `<div class="text-left text-sm text-black font-semibold mt-2">${errorMsg}</div>`,
         icon: 'error',
-        confirmButtonColor: '#000',
-        confirmButtonText: '<span style="font-weight: bold; letter-spacing: 2px;">COBA LAGI</span>',
-        background: '#ffffff',
-        padding: '1.5em',
-        borderRadius: '12px'
+        buttonsStyling: false,
+        customClass: {
+          popup: 'bg-white border-4 border-black rounded-none p-6 shadow-2xl',
+          title: 'font-black italic tracking-wider text-2xl text-black uppercase',
+          htmlContainer: 'text-left text-sm',
+          confirmButton: 'rounded-none bg-vtuber-cyan hover:bg-vtuber-blue text-black font-black px-8 py-3 tracking-widest transition-all uppercase border-2 border-black mt-4 cursor-pointer'
+        }
       });
     } finally {
       setLoading(false)
