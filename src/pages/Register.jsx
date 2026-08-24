@@ -28,22 +28,28 @@ const Register = () => {
 
       if (error.message.includes("Password should contain at least one character of each")) {
         customHtml = `
-          <ul style="text-align: left; font-size: 14px; list-style-type: disc; padding-left: 20px;">
-            <li>Minimal 1 Huruf Besar</li>
-            <li>Minimal 1 Huruf Kecil</li>
-            <li>Minimal 1 Angka</li>
-            <li>Minimal 1 Karakter Spesial</li>
-          </ul>
+          <div style="text-align: left; border-left: 5px solid #000; padding-left: 16px; margin-top: 15px; background-color: #f9fafb; padding-top: 10px; padding-bottom: 10px;">
+            <p style="font-weight: 900; text-transform: uppercase; letter-spacing: 1px; font-size: 13px; margin-bottom: 10px; color: #000;">Password Terlalu Lemah!</p>
+            <p style="font-size: 12px; margin-bottom: 10px; color: #4b5563;">Wajib mengandung kombinasi berikut:</p>
+            <ul style="list-style-type: none; padding: 0; margin: 0; font-size: 13px; color: #111827; font-weight: 500;">
+              <li style="margin-bottom: 6px;">■ 1 <strong>HURUF BESAR</strong> (A-Z)</li>
+              <li style="margin-bottom: 6px;">■ 1 <strong>HURUF KECIL</strong> (a-z)</li>
+              <li style="margin-bottom: 6px;">■ 1 <strong>ANGKA</strong> (0-9)</li>
+              <li style="margin-bottom: 6px;">■ 1 <strong>SIMBOL SPESIAL</strong> (!@#$ dll)</li>
+            </ul>
+          </div>
         `
       } else if (error.message.includes("User already registered")) {
         errorMessage = "Email ini sudah terdaftar. Silakan login."
       }
 
       Swal.fire({ 
-        title: 'PENDAFTARAN GAGAL', 
+        title: 'REGISTRASI GAGAL', 
         icon: 'error', 
-        confirmButtonColor: '#e1aecf',
-        ...(customHtml ? { html: customHtml } : { text: errorMessage })
+        confirmButtonColor: '#000',
+        confirmButtonText: 'COBA LAGI',
+        background: '#ffffff',
+        html: customHtml || errorMessage
       })
     } finally {
       setLoading(false)
