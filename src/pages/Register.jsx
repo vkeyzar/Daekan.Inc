@@ -11,14 +11,43 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault()
     setLoading(true)
-    const { data, error } = await supabase.auth.signUp({ email, password })
+    try {
+      const { data, error } = await supabase.auth.signUp({ email, password })
 
-    if (error) {
-      Swal.fire({ title: 'PENDAFTARAN GAGAL', text: error.message, icon: 'error', confirmButtonColor: '#e1aecf' })
-    } else {
-      Swal.fire({ title: 'REGISTRASI BERHASIL', text: 'Cek email Anda untuk konfirmasi.', icon: 'success', confirmButtonColor: '#a4e5fa' })
+      if (error) throw error
+
+      Swal.fire({ 
+        title: 'REGISTRASI BERHASIL', 
+        text: 'Cek email Anda untuk konfirmasi.', 
+        icon: 'success', 
+        confirmButtonColor: '#a4e5fa' 
+      })
+    } catch (error) {
+      let customHtml = ''
+      let errorMessage = error.message
+
+      if (error.message.includes("Password should contain at least one character of each")) {
+        customHtml = `
+          <ul style="text-align: left; font-size: 14px;">
+            <li>Minimal 1 Huruf Besar</li>
+            <li>1 Huruf Kecil</li>
+            <li>1 Angka</li>
+            <li>1 Karakter Spesial</li>
+          </ul>
+        `
+      } else if (error.message.includes("User already registered")) {
+        errorMessage = "Email ini sudah terdaftar. Silakan login."
+      }
+
+      Swal.fire({ 
+        title: 'PENDAFTARAN GAGAL', 
+        icon: 'error', 
+        confirmButtonColor: '#e1aecf',
+        ...(customHtml ? { html: customHtml } : { text: errorMessage })
+      })
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   return (
