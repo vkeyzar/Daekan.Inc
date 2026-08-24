@@ -16,11 +16,16 @@ const Register = () => {
 
       if (error) throw error
 
-      Swal.fire({ 
-        title: 'REGISTRASI BERHASIL', 
-        text: 'Cek email Anda untuk konfirmasi.', 
-        icon: 'success', 
-        confirmButtonColor: '#a4e5fa' 
+      Swal.fire({
+        title: 'REGISTRASI BERHASIL',
+        text: 'Cek email Anda untuk konfirmasi.',
+        icon: 'success',
+        buttonsStyling: false,
+        customClass: {
+          popup: 'bg-white border-4 border-black rounded-none p-6 shadow-2xl',
+          title: 'font-black italic tracking-wider text-2xl text-black uppercase',
+          confirmButton: 'rounded-none bg-vtuber-cyan text-black font-bold px-8 py-3 tracking-widest uppercase border-2 border-black mt-4 cursor-pointer'
+        }
       })
     } catch (error) {
       let errorMsg = error.message;
@@ -30,17 +35,17 @@ const Register = () => {
       if (errorMsg.includes('Password should contain at least one character of each')) {
         customHtml = `
           <div class="text-left border-l-4 border-vtuber-cyan pl-4 mt-4 bg-gray-50 py-3">
-            <p class="font-black uppercase tracking-wider text-xs mb-2 text-black">
+            <p class="font-black italic uppercase tracking-wider text-xs mb-2 text-black">
               Password Terlalu Lemah!
             </p>
             <p class="text-xs mb-2 text-gray-600">
               Wajib mengandung kombinasi berikut:
             </p>
-            <ul class="list-none p-0 m-0 text-xs text-gray-900 font-semibold">
-              <li class="mb-1"><span class="text-vtuber-cyan mr-1.5">■</span> 1 <strong class="font-black text-black">HURUF BESAR</strong> (A-Z)</li>
-              <li class="mb-1"><span class="text-vtuber-cyan mr-1.5">■</span> 1 <strong class="font-black text-black">HURUF KECIL</strong> (a-z)</li>
-              <li class="mb-1"><span class="text-vtuber-cyan mr-1.5">■</span> 1 <strong class="font-black text-black">ANGKA</strong> (0-9)</li>
-              <li class="mb-0"><span class="text-vtuber-cyan mr-1.5">■</span> 1 <strong class="font-black text-black">SIMBOL SPESIAL</strong> (!@#$ dll)</li>
+            <ul class="list-none p-0 m-0 text-xs text-gray-900">
+              <li class="mb-1"><span class="text-vtuber-cyan mr-1.5">■</span><strong class="font-black text-black"> HURUF BESAR</strong> (A-Z)</li>
+              <li class="mb-1"><span class="text-vtuber-cyan mr-1.5">■</span><strong class="font-black text-black"> HURUF KECIL</strong> (a-z)</li>
+              <li class="mb-1"><span class="text-vtuber-cyan mr-1.5">■</span><strong class="font-black text-black"> ANGKA</strong> (0-9)</li>
+              <li class="mb-0"><span class="text-vtuber-cyan mr-1.5">■</span><strong class="font-black text-black"> SIMBOL SPESIAL</strong> (!@#\$ dll)</li>
             </ul>
           </div>
         `;
@@ -58,7 +63,7 @@ const Register = () => {
           popup: 'bg-white border-4 border-black rounded-none p-6 shadow-2xl',
           title: 'font-black italic tracking-wider text-2xl text-black uppercase',
           htmlContainer: 'text-left text-sm',
-          confirmButton: 'rounded-none bg-vtuber-cyan hover:bg-vtuber-blue text-black font-black px-8 py-3 tracking-widest transition-all uppercase border-2 border-black mt-4 cursor-pointer'
+          confirmButton: 'rounded-none bg-vtuber-cyan text-black font-bold px-8 py-3 tracking-widest uppercase border-2 border-black mt-4 cursor-pointer'
         }
       });
     } finally {
