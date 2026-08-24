@@ -28,11 +28,11 @@ const Register = () => {
 
       if (error.message.includes("Password should contain at least one character of each")) {
         customHtml = `
-          <ul style="text-align: left; font-size: 14px;">
+          <ul style="text-align: left; font-size: 14px; list-style-type: disc; padding-left: 20px;">
             <li>Minimal 1 Huruf Besar</li>
-            <li>1 Huruf Kecil</li>
-            <li>1 Angka</li>
-            <li>1 Karakter Spesial</li>
+            <li>Minimal 1 Huruf Kecil</li>
+            <li>Minimal 1 Angka</li>
+            <li>Minimal 1 Karakter Spesial</li>
           </ul>
         `
       } else if (error.message.includes("User already registered")) {
