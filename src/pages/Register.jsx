@@ -23,34 +23,43 @@ const Register = () => {
         confirmButtonColor: '#a4e5fa' 
       })
     } catch (error) {
-      let customHtml = ''
-      let errorMessage = error.message
+      let errorMsg = error.message;
+      let customHtml = null;
 
-      if (error.message.includes("Password should contain at least one character of each")) {
+      // Cek apakah error dari Supabase terkait password lemah
+      if (errorMsg.includes('Password should contain at least one character of each')) {
         customHtml = `
-          <div style="text-align: left; border-left: 5px solid #000; padding-left: 16px; margin-top: 15px; background-color: #f9fafb; padding-top: 10px; padding-bottom: 10px;">
-            <p style="font-weight: 900; text-transform: uppercase; letter-spacing: 1px; font-size: 13px; margin-bottom: 10px; color: #000;">Password Terlalu Lemah!</p>
-            <p style="font-size: 12px; margin-bottom: 10px; color: #4b5563;">Wajib mengandung kombinasi berikut:</p>
+          <div style="text-align: left; border-left: 6px solid #000; padding: 16px; margin-top: 15px; background-color: #f3f4f6; border-radius: 0px 8px 8px 0px;">
+            <p style="font-weight: 900; text-transform: uppercase; letter-spacing: 1px; font-size: 14px; margin-top: 0; margin-bottom: 8px; color: #000;">
+              Password Terlalu Lemah!
+            </p>
+            <p style="font-size: 13px; margin-bottom: 12px; color: #4b5563;">
+              Sistem keamanan kami mewajibkan kombinasi berikut:
+            </p>
             <ul style="list-style-type: none; padding: 0; margin: 0; font-size: 13px; color: #111827; font-weight: 500;">
-              <li style="margin-bottom: 6px;">■ 1 <strong>HURUF BESAR</strong> (A-Z)</li>
-              <li style="margin-bottom: 6px;">■ 1 <strong>HURUF KECIL</strong> (a-z)</li>
-              <li style="margin-bottom: 6px;">■ 1 <strong>ANGKA</strong> (0-9)</li>
-              <li style="margin-bottom: 6px;">■ 1 <strong>SIMBOL SPESIAL</strong> (!@#$ dll)</li>
+              <li style="margin-bottom: 8px;">■ 1 <strong style="font-weight: 900;">HURUF BESAR</strong> (A-Z)</li>
+              <li style="margin-bottom: 8px;">■ 1 <strong style="font-weight: 900;">HURUF KECIL</strong> (a-z)</li>
+              <li style="margin-bottom: 8px;">■ 1 <strong style="font-weight: 900;">ANGKA</strong> (0-9)</li>
+              <li style="margin-bottom: 0;">■ 1 <strong style="font-weight: 900;">SIMBOL SPESIAL</strong> (!@#$% dll)</li>
             </ul>
           </div>
-        `
-      } else if (error.message.includes("User already registered")) {
-        errorMessage = "Email ini sudah terdaftar. Silakan login."
+        `;
+      } else if (errorMsg.includes('User already registered')) {
+        errorMsg = 'Email ini sudah terdaftar. Silakan login menggunakan akun Anda.';
       }
 
-      Swal.fire({ 
-        title: 'REGISTRASI GAGAL', 
-        icon: 'error', 
+      // Tampilkan SweetAlert dengan Vibe Daekan Inc.
+      Swal.fire({
+        title: '<span style="font-weight: 900; font-style: italic; letter-spacing: 1.5px; font-size: 24px; color: #000;">REGISTRASI GAGAL</span>',
+        html: customHtml || undefined,
+        text: customHtml ? undefined : errorMsg,
+        icon: 'error',
         confirmButtonColor: '#000',
-        confirmButtonText: 'COBA LAGI',
+        confirmButtonText: '<span style="font-weight: bold; letter-spacing: 2px;">COBA LAGI</span>',
         background: '#ffffff',
-        html: customHtml || errorMessage
-      })
+        padding: '1.5em',
+        borderRadius: '12px'
+      });
     } finally {
       setLoading(false)
     }
