@@ -23,10 +23,9 @@ const SquareProductCard = ({ product, onOpenModal }) => {
   const showSaleBadge = isSale && !isComingSoon && !isSaleExpired && !isClosed;
 
   return (
-    <div 
+    <div
       onClick={() => onOpenModal(product)}
-      // ✅ FIX SIZE: Dikecilin jadi 200-240px biar gak raksasa
-      className={`group relative bg-white/80 backdrop-blur-sm border border-vtuber-blue/20 rounded-3xl p-4 cursor-pointer transition-all duration-300 hover:border-vtuber-pink w-[200px] md:w-[240px] shrink-0 aspect-square flex flex-col overflow-hidden ${isClosed ? 'opacity-80' : ''}`}
+      className={`group relative bg-white dark:bg-black border border-black dark:border-white p-4 cursor-pointer transition-all duration-300 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] w-[200px] md:w-[240px] shrink-0 aspect-square flex flex-col overflow-hidden font-sans ${isClosed ? 'opacity-80' : ''}`}
     >
       {isClosed && (
         <div className="absolute inset-0 bg-black/50 z-[10] flex items-center justify-center backdrop-blur-[1px]">
@@ -35,36 +34,35 @@ const SquareProductCard = ({ product, onOpenModal }) => {
       )}
 
       {showSaleBadge && (
-        <div className="absolute top-0 left-0 bg-gradient-to-br from-vtuber-pink to-vtuber-blue text-white px-3 py-2 rounded-br-2xl z-[5] shadow-sm flex flex-col items-center">
-          <span className="text-xs font-black tracking-tighter italic leading-none">SALE</span>
+        <div className="absolute top-0 left-0 bg-black dark:bg-white text-white dark:text-black px-3 py-2 z-[5] flex flex-col items-center">
+          <span className="text-xs font-black tracking-tighter uppercase leading-none">SALE</span>
         </div>
       )}
 
       <div className="flex-1 min-h-0 relative flex items-center justify-center mb-3">
-        <img 
-          src={product.image_url || product.image} 
-          alt={productName} 
+        <img
+          src={product.image_url || product.image}
+          alt={productName}
           className={`w-full h-full object-contain drop-shadow-sm transition-transform duration-500 group-hover:scale-105 ${isClosed ? 'grayscale opacity-60' : ''}`}
         />
       </div>
 
       <div className="shrink-0 text-center transition-all duration-500 flex flex-col justify-end">
-        {/* ✅ FIX TEXT: Pake line-clamp-2 biar text bisa 2 baris dan ga langsung kepotong */}
-        <h3 className="text-xs md:text-[13px] font-black text-zinc-800 italic uppercase tracking-[0.1em] line-clamp-2 px-1 mb-1 leading-tight" title={productName}>
+        <h3 className="text-xs md:text-[13px] font-black text-black dark:text-white uppercase tracking-[0.1em] line-clamp-2 px-1 mb-1 leading-tight" title={productName}>
           {productName}
         </h3>
-        
+
         <div className="flex flex-col justify-center items-center gap-0.5 mt-auto">
           {isComingSoon ? (
-            <p className="text-vtuber-purple font-black text-xs italic uppercase">Coming Soon</p>
+            <p className="text-black dark:text-white font-black text-xs uppercase tracking-tighter">Coming Soon</p>
           ) : (
             <div className="flex items-center gap-2 justify-center">
               {isSale && !isSaleExpired && !isClosed && (
-                <p className="text-[9px] text-vtuber-pink line-through font-bold opacity-80">
+                <p className="text-[9px] text-zinc-500 dark:text-zinc-400 line-through font-bold">
                   {formatIDR(product.original_price)}
                 </p>
               )}
-              <p className={`font-black text-sm md:text-base ${isClosed ? 'text-zinc-500' : 'text-vtuber-cyan'}`}>
+              <p className={`font-black text-sm md:text-base ${isClosed ? 'text-zinc-500' : 'text-black dark:text-white'}`}>
                 {formatIDR(product.price)}
               </p>
             </div>

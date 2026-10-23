@@ -2,18 +2,17 @@ import React, { useState, useMemo, useEffect } from 'react'
 import ProductCard from './ProductCard'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaSearch, FaFilter, FaSortAmountDown } from 'react-icons/fa'
-import { useSearchParams } from 'react-router-dom' 
+import { useSearchParams } from 'react-router-dom'
 
 const ProductGrid = ({ products, categories, onOpenModal, selectedProduct }) => {
   const [searchParams] = useSearchParams();
 
-  const [mainTab, setMainTab] = useState(searchParams.get('tab') || 'collab') 
+  const [mainTab, setMainTab] = useState(searchParams.get('tab') || 'collab')
   const [selectedGenre, setSelectedGenre] = useState(searchParams.get('genre') || 'ALL')
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('type') || 'ALL')
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState('sale-first')
 
-  // ✅ FIX: PAKSA UPDATE STATE KALAU URL BERUBAH
   useEffect(() => {
     const tab = searchParams.get('tab');
     const genre = searchParams.get('genre');
@@ -36,7 +35,7 @@ const ProductGrid = ({ products, categories, onOpenModal, selectedProduct }) => 
   const processedProducts = useMemo(() => {
     let result = [...products]
 
-    // 1. Filter TABS 
+    // 1. Filter TABS
     result = result.filter(p => {
       const line = (p.product_line || '').toUpperCase()
       const isCollab = line.includes('COLLAB')
@@ -45,8 +44,8 @@ const ProductGrid = ({ products, categories, onOpenModal, selectedProduct }) => 
 
     // 2. Search Text
     if (searchTerm) result = result.filter(p => (p.name || p.title || '').toLowerCase().includes(searchTerm.toLowerCase()))
-    
-    // 3. Filter Genre 
+
+    // 3. Filter Genre
     if (selectedGenre !== 'ALL') result = result.filter(p => p.category_id === selectedGenre)
 
     // 4. Filter Jenis Barang
@@ -54,7 +53,7 @@ const ProductGrid = ({ products, categories, onOpenModal, selectedProduct }) => 
 
     // 5. Sorting
     result.sort((a, b) => {
-      if (sortBy === 'sale-first') return (b.original_price > b.price) - (a.original_price > a.price); 
+      if (sortBy === 'sale-first') return (b.original_price > b.price) - (a.original_price > a.price);
       if (sortBy === 'newest') return b.id - a.id
       if (sortBy === 'price-low') return a.price - b.price
       if (sortBy === 'price-high') return b.price - a.price
@@ -76,24 +75,23 @@ const ProductGrid = ({ products, categories, onOpenModal, selectedProduct }) => 
   }, [products, mainTab])
 
   return (
-    <div className="w-full bg-transparent text-black pb-20 px-4 md:px-10 relative z-10">
-      
+    <div className="w-full bg-white dark:bg-black text-black dark:text-white pb-20 px-4 md:px-10 relative z-10 font-sans">
+
       <div className="flex flex-col items-center mb-16 pt-8">
-        <h2 className="text-5xl md:text-6xl font-black uppercase tracking-tighter mb-10 drop-shadow-sm text-center">
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-vtuber-cyan to-vtuber-blue pr-2">OUR</span>
-          <span className="text-vtuber-pink">PRODUCTS</span>
+        <h2 className="text-5xl md:text-6xl font-black uppercase tracking-tighter mb-10 text-center text-black dark:text-white">
+          OUR PRODUCTS
         </h2>
-        
-        <div className="flex bg-white/60 backdrop-blur-md p-1.5 rounded-full border border-vtuber-blue/20 shadow-[0_10px_30px_rgba(164,229,250,0.15)] overflow-x-auto max-w-full">
-          <button 
+
+        <div className="flex border border-black dark:border-white overflow-x-auto max-w-full">
+          <button
             onClick={() => handleTabChange('collab')}
-            className={`px-6 md:px-10 py-3 rounded-full font-black text-[10px] md:text-sm tracking-[0.2em] uppercase transition-all duration-500 whitespace-nowrap ${mainTab === 'collab' ? 'bg-gradient-to-r from-vtuber-cyan to-vtuber-blue text-white shadow-[0_5px_15px_rgba(164,229,250,0.5)]' : 'text-vtuber-purple hover:text-vtuber-cyan'}`}
+            className={`px-6 md:px-10 py-3 font-black text-[10px] md:text-sm tracking-[0.2em] uppercase transition-all duration-300 whitespace-nowrap ${mainTab === 'collab' ? 'bg-black dark:bg-white text-white dark:text-black' : 'bg-transparent text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black'}`}
           >
             VTUBER COLLABS
           </button>
-          <button 
+          <button
             onClick={() => handleTabChange('merch')}
-            className={`px-6 md:px-10 py-3 rounded-full font-black text-[10px] md:text-sm tracking-[0.2em] uppercase transition-all duration-500 whitespace-nowrap ${mainTab === 'merch' ? 'bg-gradient-to-r from-vtuber-cyan to-vtuber-blue text-white shadow-[0_5px_15px_rgba(164,229,250,0.5)]' : 'text-vtuber-purple hover:text-vtuber-cyan'}`}
+            className={`px-6 md:px-10 py-3 font-black text-[10px] md:text-sm tracking-[0.2em] uppercase transition-all duration-300 whitespace-nowrap border-l border-black dark:border-white ${mainTab === 'merch' ? 'bg-black dark:bg-white text-white dark:text-black' : 'bg-transparent text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black'}`}
           >
             DAEKAN MERCH
           </button>
@@ -101,34 +99,56 @@ const ProductGrid = ({ products, categories, onOpenModal, selectedProduct }) => 
       </div>
 
       <div className="max-w-7xl mx-auto w-full">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-10 pb-6 border-b border-vtuber-pink/20">
-          
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-10 pb-6 border-b border-black dark:border-white">
+
           <div className="relative w-full md:w-1/4 z-20 group">
-            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-vtuber-purple group-focus-within:text-vtuber-cyan transition-colors" />
-            <input type="text" placeholder="SEARCH..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-white/60 backdrop-blur-md border border-vtuber-blue/30 pl-11 pr-4 py-3 rounded-2xl text-xs font-bold tracking-widest uppercase focus:outline-none focus:border-vtuber-cyan focus:shadow-[0_0_15px_rgba(164,229,250,0.4)] transition-all text-vtuber-purple placeholder:text-vtuber-purple/50" />
+            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-black dark:text-white" />
+            <input
+              type="text"
+              placeholder="SEARCH..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-white dark:bg-black border border-black dark:border-white pl-11 pr-4 py-3 text-xs font-bold tracking-widest uppercase focus:outline-none transition-all text-black dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600"
+            />
           </div>
-          
+
           <div className="flex flex-wrap w-full md:w-auto gap-3 md:gap-4 z-20 justify-center">
-            
+
             <div className="relative w-[48%] md:w-auto group">
-              <FaFilter className="absolute left-4 top-1/2 -translate-y-1/2 text-vtuber-purple group-hover:text-vtuber-cyan transition-colors" size={12} />
-              <select value={selectedGenre} onChange={(e) => setSelectedGenre(e.target.value)} className="w-full appearance-none bg-white/60 backdrop-blur-md border border-vtuber-blue/30 pl-10 pr-8 py-3 rounded-2xl text-[10px] md:text-xs font-bold tracking-widest uppercase focus:outline-none focus:border-vtuber-cyan focus:shadow-[0_0_15px_rgba(164,229,250,0.4)] hover:border-vtuber-cyan transition-all text-vtuber-purple cursor-pointer">
+              <FaFilter className="absolute left-4 top-1/2 -translate-y-1/2 text-black dark:text-white" size={12} />
+              <select
+                value={selectedGenre}
+                onChange={(e) => setSelectedGenre(e.target.value)}
+                className="w-full appearance-none bg-white dark:bg-black border border-black dark:border-white pl-10 pr-8 py-3 text-[10px] md:text-xs font-bold tracking-widest uppercase focus:outline-none transition-all text-black dark:text-white cursor-pointer"
+              >
                 <option value="ALL">ALL GENRES</option>
                 {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
               </select>
             </div>
 
             <div className="relative w-[48%] md:w-auto group">
-              <FaFilter className="absolute left-4 top-1/2 -translate-y-1/2 text-vtuber-purple group-hover:text-vtuber-cyan transition-colors" size={12} />
-              <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="w-full appearance-none bg-white/60 backdrop-blur-md border border-vtuber-blue/30 pl-10 pr-8 py-3 rounded-2xl text-[10px] md:text-xs font-bold tracking-widest uppercase focus:outline-none focus:border-vtuber-cyan focus:shadow-[0_0_15px_rgba(164,229,250,0.4)] hover:border-vtuber-cyan transition-all text-vtuber-purple cursor-pointer">
+              <FaFilter className="absolute left-4 top-1/2 -translate-y-1/2 text-black dark:text-white" size={12} />
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-full appearance-none bg-white dark:bg-black border border-black dark:border-white pl-10 pr-8 py-3 text-[10px] md:text-xs font-bold tracking-widest uppercase focus:outline-none transition-all text-black dark:text-white cursor-pointer"
+              >
                 {itemTypes.map(type => <option key={type} value={type}>{type}</option>)}
               </select>
             </div>
 
             <div className="relative w-full md:w-auto group mt-3 md:mt-0">
-              <FaSortAmountDown className="absolute left-4 top-1/2 -translate-y-1/2 text-vtuber-purple group-hover:text-vtuber-cyan transition-colors" size={12} />
-              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full appearance-none bg-white/60 backdrop-blur-md border border-vtuber-blue/30 pl-10 pr-8 py-3 rounded-2xl text-[10px] md:text-xs font-bold tracking-widest uppercase focus:outline-none focus:border-vtuber-cyan focus:shadow-[0_0_15px_rgba(164,229,250,0.4)] hover:border-vtuber-cyan transition-all text-vtuber-purple cursor-pointer">
-                <option value="sale-first">SALE FIRST</option><option value="newest">NEWEST</option><option value="az">A - Z</option><option value="price-low">LOW - HIGH</option><option value="price-high">HIGH - LOW</option>
+              <FaSortAmountDown className="absolute left-4 top-1/2 -translate-y-1/2 text-black dark:text-white" size={12} />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="w-full appearance-none bg-white dark:bg-black border border-black dark:border-white pl-10 pr-8 py-3 text-[10px] md:text-xs font-bold tracking-widest uppercase focus:outline-none transition-all text-black dark:text-white cursor-pointer"
+              >
+                <option value="sale-first">SALE FIRST</option>
+                <option value="newest">NEWEST</option>
+                <option value="az">A - Z</option>
+                <option value="price-low">LOW - HIGH</option>
+                <option value="price-high">HIGH - LOW</option>
               </select>
             </div>
 
@@ -144,7 +164,9 @@ const ProductGrid = ({ products, categories, onOpenModal, selectedProduct }) => 
                 </motion.div>
               ))
             ) : (
-              <div className="w-full py-20 text-center"><p className="text-vtuber-pink font-bold tracking-widest uppercase">No gear found in this section.</p></div>
+              <div className="w-full py-20 text-center">
+                <p className="font-bold tracking-widest uppercase text-zinc-500 dark:text-zinc-400">No gear found in this section.</p>
+              </div>
             )}
           </AnimatePresence>
         </motion.div>

@@ -1,9 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 html, body {
   overflow-x: hidden;
   width: 100%;
   position: relative;
   scroll-behavior: smooth;
+  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
 }
+
+.dark body {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+body {
+  background-color: #ffffff;
+  color: #000000;
+}
+

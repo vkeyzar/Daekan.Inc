@@ -1,26 +1,20 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
-      // ✅ 1. DAFTARIN PALET WARNA VTUBER
-      colors: {
-        vtuber: {
-          pink: '#e1aecf',
-          cyan: '#a4e5fa',
-          blue: '#77cbf0',
-          purple: '#99c2ea',
-        }
+      fontFamily: {
+        sans: ['Inter', 'Helvetica Neue', 'Arial', 'sans-serif'],
       },
       keyframes: {
         'pop-up': {
           '0%': { opacity: '0', transform: 'scale(0.95)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
-        // ✅ 2. ANIMASI NGAMBANG BUAT STIKER POJOKAN
         'float-slow': { 
           '0%, 100%': { transform: 'translateY(0px)' },
           '50%': { transform: 'translateY(-20px)' },

@@ -1,47 +1,65 @@
 import React from 'react'
-import { motion } from 'framer-motion'
-import { FaArrowRight } from 'react-icons/fa'
 import { Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
 
 const Hero = () => {
   return (
-    <div name="home" className="w-full h-screen bg-transparent text-black flex flex-col justify-center items-center px-4 relative overflow-hidden"> 
+    <div className="w-full min-h-screen bg-white dark:bg-black text-black dark:text-white flex flex-col justify-center items-center px-6 relative overflow-hidden font-sans">
 
-      {/* JETTO BACKGROUND */}
-      <img 
-        src="https://corhxzcsgvcckigxleeo.supabase.co/storage/v1/object/public/asset/Freebies_Sticker.png" 
-        className="absolute top-1/2 -translate-y-1/2 -left-40 md:-left-20 h-[110vh] md:h-[130vh] w-auto max-w-none opacity-50 pointer-events-none z-[1]"
-        alt="VTuber Jetto Background"
-      />
+      {/* Brutalist horizontal rule top */}
+      <div className="absolute top-0 left-0 w-full h-[2px] bg-black dark:bg-white" />
 
-      {/* ✅ KONTEN KANAN: Ditambahin pt-12 md:pt-16 biar agak turun ke bawah */}
-      <motion.div 
-        initial={{ opacity: 0, x: 50 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.8 }}
-        className="z-10 relative flex flex-col items-center justify-center w-full md:w-[55%] lg:w-[45%] ml-auto md:pr-12 lg:pr-24 pt-12 md:pt-16"
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: 'easeOut' }}
+        className="text-center z-10 w-full max-w-7xl"
       >
-        
-        {/* ✅ LOGO CLICKABLE & KASIH JARAK EKSTRA (mb-12) */}
-        <Link to="/" className="w-full flex justify-center mb-12 cursor-pointer transition-transform duration-300 hover:scale-[1.02]">
-          <img 
-            src="https://corhxzcsgvcckigxleeo.supabase.co/storage/v1/object/public/asset/Logo_Daekan_X_Jetto.png" 
-            alt="Daekan x Jetto" 
-            className="w-full max-w-[350px] md:max-w-[450px] lg:max-w-[500px] object-contain drop-shadow-[0_15px_30px_rgba(225,174,207,0.4)]"
-          />
-        </Link>
+        {/* EYEBROW */}
+        <p className="text-[10px] md:text-xs font-bold uppercase tracking-[0.4em] mb-6 md:mb-8 text-black dark:text-white">
+          Official Store — Est. 2024
+        </p>
 
-        {/* TOMBOL BUY NOW */}
-        <div className="flex justify-center w-full px-4 md:px-0">
-            <a 
-              href="#new-arrivals" 
-              className="group px-10 py-4 md:py-5 bg-gradient-to-r from-vtuber-cyan to-vtuber-blue text-white font-black text-sm md:text-base tracking-[0.2em] hover:from-vtuber-pink hover:to-vtuber-purple transition-all duration-500 flex items-center justify-center gap-3 rounded-full shadow-[0_10px_30px_rgba(164,229,250,0.5)] hover:shadow-[0_10px_40px_rgba(225,174,207,0.8)] border-2 border-white/50 hover:scale-105"
-            >
-              BUY NOW
-              <FaArrowRight className="group-hover:translate-x-1 duration-200"/>
-            </a>
+        {/* GIANT DAEKAN */}
+        <h1 className="font-black uppercase leading-none tracking-tighter text-[18vw] md:text-[14vw] lg:text-[12vw] text-black dark:text-white select-none">
+          DAEKAN
+        </h1>
+
+        {/* SUBTITLE LINE */}
+        <div className="flex items-center justify-center gap-4 my-6 md:my-8">
+          <div className="h-[1px] flex-1 bg-black dark:bg-white opacity-30 max-w-[200px]" />
+          <p className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] text-black dark:text-white">
+            Design That Adapts
+          </p>
+          <div className="h-[1px] flex-1 bg-black dark:bg-white opacity-30 max-w-[200px]" />
+        </div>
+
+        {/* CTA */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+          <a
+            href="#new-arrivals"
+            className="px-10 py-4 bg-black dark:bg-white text-white dark:text-black font-black text-xs tracking-[0.25em] uppercase border-2 border-black dark:border-white hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-all duration-300"
+          >
+            SHOP NOW
+          </a>
+          <Link
+            to="/products"
+            className="px-10 py-4 bg-transparent text-black dark:text-white font-black text-xs tracking-[0.25em] uppercase border-2 border-black dark:border-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all duration-300"
+          >
+            VIEW ALL
+          </Link>
         </div>
       </motion.div>
+
+      {/* Bottom ticker line */}
+      <div className="absolute bottom-8 left-0 w-full overflow-hidden">
+        <p className="text-[9px] font-bold uppercase tracking-[0.5em] text-center text-black dark:text-white opacity-30">
+          DAEKAN INC. — OFFICIAL MERCHANDISE — VTUBER COLLABS — LIMITED DROPS
+        </p>
+      </div>
+
+      {/* Brutalist horizontal rule bottom */}
+      <div className="absolute bottom-0 left-0 w-full h-[1px] bg-black dark:bg-white opacity-20" />
     </div>
   )
 }

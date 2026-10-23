@@ -32,24 +32,21 @@ const ReviewSection = ({ session }) => {
   }
 
   return (
-    <section id="reviews" className="w-full bg-transparent py-24 px-4 md:px-10 relative z-10">
+    <section id="reviews" className="w-full bg-white dark:bg-black py-24 px-4 md:px-10 relative z-10 font-sans border-t border-black dark:border-white">
       <div className="max-w-screen-2xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
           <div className="text-left">
-            {/* ✅ HEADER REVIEWS GRADIENT */}
-            <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-2 drop-shadow-sm">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-vtuber-cyan to-vtuber-blue pr-2">CUSTOMER</span> 
-              <span className="text-vtuber-pink">REVIEWS</span>
+            <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-2 text-black dark:text-white">
+              CUSTOMER REVIEWS
             </h2>
-            <p className="text-vtuber-purple font-bold text-sm tracking-widest uppercase flex items-center gap-2 drop-shadow-sm">
-              From {reviews.length} total reviews <FaCheckCircle className="text-vtuber-cyan drop-shadow-[0_0_5px_rgba(164,229,250,0.8)]" />
+            <p className="font-bold text-sm tracking-widest uppercase flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
+              From {reviews.length} total reviews <FaCheckCircle className="text-black dark:text-white" />
             </p>
           </div>
 
-          {/* ✅ TOMBOL WRITE REVIEW GRADIENT */}
-          <button 
+          <button
             onClick={handleWriteReview}
-            className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-vtuber-cyan to-vtuber-blue text-white text-xs font-black tracking-[0.2em] uppercase hover:from-vtuber-pink hover:to-vtuber-purple transition-all duration-500 shadow-[0_10px_20px_rgba(164,229,250,0.4)] hover:shadow-[0_10px_30px_rgba(225,174,207,0.6)] rounded-full hover:scale-105"
+            className="flex items-center gap-2 px-8 py-4 bg-black dark:bg-white text-white dark:text-black text-xs font-black tracking-[0.2em] uppercase border border-black dark:border-white hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-all duration-300"
           >
             <FaPlus size={12} /> Write A Review
           </button>
@@ -57,35 +54,34 @@ const ReviewSection = ({ session }) => {
 
         {loading ? (
           <div className="flex justify-center py-20">
-            <p className="animate-pulse font-bold tracking-widest text-vtuber-pink uppercase">LOADING FEEDBACK...</p>
+            <p className="animate-pulse font-bold tracking-widest text-black dark:text-white uppercase">LOADING FEEDBACK...</p>
           </div>
         ) : (
           <div className="flex md:grid md:grid-cols-3 lg:grid-cols-4 gap-6 overflow-x-auto pb-10 no-scrollbar snap-x">
             {reviews.map((rev) => (
-              <motion.div 
+              <motion.div
                 key={rev.id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                className="min-w-[300px] md:min-w-full bg-white/80 backdrop-blur-md border border-vtuber-blue/20 p-5 snap-center shadow-lg rounded-3xl hover:border-vtuber-pink/50 transition-colors duration-500"
+                className="min-w-[300px] md:min-w-full bg-white dark:bg-black border border-black dark:border-white p-5 snap-center transition-all duration-300 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
               >
                 {rev.image_url && (
-                  <div className="w-full h-80 mb-5 overflow-hidden rounded-2xl bg-vtuber-purple/10">
+                  <div className="w-full h-80 mb-5 overflow-hidden bg-zinc-100 dark:bg-zinc-900">
                     <img src={rev.image_url} alt="Review" className="w-full h-full object-cover transition-all duration-700 hover:scale-110" />
                   </div>
                 )}
-                
-                {/* ✅ BINTANG JADI CYAN */}
-                <div className="flex gap-1 mb-4 drop-shadow-sm">
+
+                <div className="flex gap-1 mb-4">
                   {[...Array(5)].map((_, i) => (
-                    <FaStar key={i} size={14} className={i < rev.rating ? "text-vtuber-cyan" : "text-zinc-200"} />
+                    <FaStar key={i} size={14} className={i < rev.rating ? "text-black dark:text-white" : "text-zinc-300 dark:text-zinc-700"} />
                   ))}
                 </div>
 
-                <p className="font-bold text-[10px] text-vtuber-purple uppercase tracking-[0.2em] mb-1">
-                  {rev.user_name} {rev.is_verified && <span className="text-vtuber-cyan ml-1 drop-shadow-md">✓</span>}
+                <p className="font-bold text-[10px] text-black dark:text-white uppercase tracking-[0.2em] mb-1">
+                  {rev.user_name} {rev.is_verified && <span className="ml-1">✓</span>}
                 </p>
-                <h4 className="font-black italic uppercase text-xl mb-2 tracking-tighter text-zinc-800">{rev.title}</h4>
-                <p className="text-zinc-500 text-sm leading-relaxed font-medium italic">"{rev.comment}"</p>
+                <h4 className="font-black uppercase text-xl mb-2 tracking-tighter text-black dark:text-white">{rev.title}</h4>
+                <p className="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed font-medium">"{rev.comment}"</p>
               </motion.div>
             ))}
           </div>
