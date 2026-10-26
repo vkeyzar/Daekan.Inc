@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaBars, FaTimes, FaUser, FaShoppingBag } from 'react-icons/fa'
 import { supabase } from '../lib/supabaseClient'
+import type { Session } from '@supabase/supabase-js'
 import useCartStore from '../store/useCartStore'
 import SidebarCart from './SidebarCart'
 import { useTheme } from '../lib/ThemeContext'
@@ -12,17 +13,18 @@ import { useTheme } from '../lib/ThemeContext'
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const [session, setSession] = useState(null)
+  const [session, setSession] = useState<Session | null>(null)
   const [role, setRole] = useState(null)
   const [isCartOpen, setIsCartOpen] = useState(false)
 
-  const { isDark, toggleTheme } = useTheme()
+  const { theme, toggleTheme } = useTheme()
+  const isDark = theme === 'dark'
 
   const cart = useCartStore((state) => state.cart)
   const totalItems = cart.reduce((total, item) => total + item.quantity, 0)
   const pathname = usePathname()
 
-  const getUserRole = async (user) => {
+  const getUserRole = async (user: { id: string }) => {
     if (!user) return;
     const { data } = await supabase.from('profiles').select('role').eq('id', user.id).single();
     if (data) setRole(data.role);

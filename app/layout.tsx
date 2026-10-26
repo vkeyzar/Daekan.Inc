@@ -1,5 +1,5 @@
+import "./globals.css";
 import type { Metadata } from 'next';
-import './globals.css';
 import { ThemeProvider } from '@/lib/ThemeContext';
 
 export const metadata: Metadata = {
