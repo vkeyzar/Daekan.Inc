@@ -6,7 +6,10 @@
 
 @layer base {
   body {
-    @apply bg-white text-black dark:bg-black dark:text-white transition-colors duration-300;
+    @apply bg-white text-black transition-colors duration-300;
+  }
+  .dark body {
+    @apply bg-black text-white;
   }
 }
 
