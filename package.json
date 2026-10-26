@@ -1,6 +1,7 @@
 {
   "name": "daekan.web",
   "version": "0.1.0",
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -10,7 +11,9 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
+    "@tailwindcss/postcss": "^4.3.3",
     "@upstash/qstash": "^2.12.1",
+    "autoprefixer": "^10.6.1",
     "framer-motion": "^14.6.0",
     "midtrans-client": "^1.4.3",
     "next": "16.4.3",
