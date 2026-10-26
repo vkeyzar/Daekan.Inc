@@ -4,6 +4,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  body {
+    @apply bg-white text-black dark:bg-black dark:text-white transition-colors duration-300;
+  }
+}
+
 html, body {
   overflow-x: hidden;
   width: 100%;
