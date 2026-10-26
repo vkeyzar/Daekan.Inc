@@ -1,23 +1,26 @@
-import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+'use client';
 
-const ScrollToHash = () => {
-  const { hash } = useLocation();
+import { useEffect } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
+
+export default function ScrollToHash() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
+    const hash = window.location.hash;
     if (hash) {
-      // Tunggu render selesai
-      setTimeout(() => {
-        const id = hash.replace("#", "");
+      const timer = setTimeout(() => {
+        const id = hash.replace('#', '');
         const element = document.getElementById(id);
         if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "start" });
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
-      }, 200); // Delay 200ms biar aman
+      }, 200);
+
+      return () => clearTimeout(timer);
     }
-  }, [hash]);
+  }, [pathname, searchParams]);
 
   return null;
-};
-
-export default ScrollToHash;
+}

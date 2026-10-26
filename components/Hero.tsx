@@ -1,4 +1,4 @@
-"use client";
+'use client';
 import React from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
@@ -30,7 +30,7 @@ const Hero = () => {
         <div className="flex items-center justify-center gap-4 my-6 md:my-8">
           <div className="h-[1px] flex-1 bg-black dark:bg-white opacity-30 max-w-[200px]" />
           <p className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] text-black dark:text-white">
-            Design That Adapts
+            Designed to be Willing
           </p>
           <div className="h-[1px] flex-1 bg-black dark:bg-white opacity-30 max-w-[200px]" />
         </div>
@@ -44,7 +44,7 @@ const Hero = () => {
             SHOP NOW
           </a>
           <Link
-            to="/products"
+            href="/products"
             className="px-10 py-4 bg-transparent text-black dark:text-white font-black text-xs tracking-[0.25em] uppercase border-2 border-black dark:border-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all duration-300"
           >
             VIEW ALL

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 import React, { useState, useEffect } from 'react'
 import { IoClose } from "react-icons/io5";
 import { motion } from "framer-motion";
