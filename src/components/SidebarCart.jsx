@@ -66,7 +66,7 @@ const SidebarCart = ({ isOpen, onClose }) => {
                   <p className="text-xs font-bold uppercase tracking-widest text-vtuber-purple">Subtotal</p>
                   <p className="text-2xl font-black italic tracking-tighter text-zinc-800">{formatIDR(totalPrice)}</p>
                 </div>
-                <button onClick={handleCheckout} className="w-full bg-gradient-to-r from-vtuber-cyan to-vtuber-blue text-white py-5 rounded-xl font-black italic uppercase text-xs tracking-[0.2em] hover:from-vtuber-pink hover:to-vtuber-purple transition-all shadow-[0_5px_20px_rgba(164,229,250,0.4)]">
+                <button onClick={handleCheckout} className="w-full bg-gradient-to-r from-vtuber-cyan to-vtuber-blue text-black py-5 rounded-xl font-black italic uppercase text-xs tracking-[0.2em] hover:from-vtuber-pink hover:to-vtuber-purple transition-all shadow-[0_5px_20px_rgba(164,229,250,0.4)]">
                   LANJUTKAN KE PEMBAYARAN
                 </button>
                 <p className="text-[9px] text-vtuber-purple text-center mt-4 font-bold uppercase tracking-widest">
