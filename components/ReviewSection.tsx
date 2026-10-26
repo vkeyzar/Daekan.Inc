@@ -1,7 +1,8 @@
+"use client";
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FaStar, FaPlus, FaCheckCircle } from 'react-icons/fa'
-import { useNavigate } from 'react-router-dom'
+import { useRouter } from 'next/navigation'
 import { supabase } from '../lib/supabaseClient'
 import ReviewFormModal from './ReviewFormModal'
 
@@ -9,7 +10,7 @@ const ReviewSection = ({ session }) => {
   const [reviews, setReviews] = useState([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [loading, setLoading] = useState(true)
-  const navigate = useNavigate()
+  const router = useRouter()
 
   const fetchReviews = async () => {
     try {
@@ -27,7 +28,7 @@ const ReviewSection = ({ session }) => {
   useEffect(() => { fetchReviews() }, [])
 
   const handleWriteReview = () => {
-    if (!session) navigate('/login')
+    if (!session) router.push('/login')
     else setIsModalOpen(true)
   }
 

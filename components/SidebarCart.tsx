@@ -1,11 +1,12 @@
+"use client";
 import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { IoClose, IoTrashOutline } from 'react-icons/io5'
-import { useNavigate } from 'react-router-dom'
+import { useRouter } from 'next/navigation'
 import useCartStore from '../store/useCartStore'
 
 const SidebarCart = ({ isOpen, onClose }) => {
-  const navigate = useNavigate()
+  const router = useRouter()
   const cart = useCartStore((state) => state.cart)
   const updateQuantity = useCartStore((state) => state.updateQuantity)
   const removeFromCart = useCartStore((state) => state.removeFromCart)
@@ -13,7 +14,7 @@ const SidebarCart = ({ isOpen, onClose }) => {
   const formatIDR = (price) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(price)
   const totalPrice = cart.reduce((total, item) => total + (item.price * item.quantity), 0)
 
-  const handleCheckout = () => { onClose(); navigate('/checkout', { state: { cartItems: cart } }) }
+  const handleCheckout = () => { onClose(); router.push('/checkout', { state: { cartItems: cart } }) }
 
   return (
     <AnimatePresence>

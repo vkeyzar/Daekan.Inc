@@ -1,15 +1,16 @@
+"use client";
 import React, { useState, useEffect } from 'react'
 import { IoClose } from "react-icons/io5";
 import { motion } from "framer-motion";
 import Countdown from 'react-countdown';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useRouter, usePathname } from 'next/navigation';
 import useCartStore from '../store/useCartStore'; 
 import { supabase } from '../lib/supabaseClient'; 
 import Swal from 'sweetalert2'; 
 
 const ProductModal = ({ product, close }) => {
-  const navigate = useNavigate();
-  const location = useLocation(); 
+  const router = useRouter();
+  const pathname = usePathname();
   const addToCart = useCartStore((state) => state.addToCart);
 
   const productName = product.name || product.title || 'UNKNOWN GEAR';
@@ -87,7 +88,7 @@ const ProductModal = ({ product, close }) => {
         icon: 'warning', showCancelButton: true, confirmButtonColor: '#77cbf0', cancelButtonColor: '#e1aecf',
         confirmButtonText: 'KE HALAMAN LOGIN', cancelButtonText: 'BATAL'
       });
-      if (result.isConfirmed) { close(); navigate('/login', { state: { returnTo: '/#shop' } }); }
+      if (result.isConfirmed) { close(); router.push('/login', { state: { returnTo: '/#shop' } }); }
       return false;
     }
     return true;
@@ -111,7 +112,7 @@ const ProductModal = ({ product, close }) => {
     if (product.label === 'LIMITED GEAR' && availableQuantity === 0) return Swal.fire({ title: 'HABIS', text: 'Maaf, stok untuk ukuran ini sudah habis terjual.', icon: 'error', confirmButtonColor: '#000' });
     
     close();
-    navigate('/checkout', { state: { cartItems: [{ ...product, price: activePrice, size: needsSize ? selectedSize : '-', quantity: Math.max(1, Number(quantity) || 1) }] } });
+    router.push('/checkout', { state: { cartItems: [{ ...product, price: activePrice, size: needsSize ? selectedSize : '-', quantity: Math.max(1, Number(quantity) || 1) }] } });
   };
 
   // Cek apakah NON-SIZE barangnya habis

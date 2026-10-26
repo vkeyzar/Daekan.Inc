@@ -8,7 +8,7 @@ import ReviewSection from '@/components/ReviewSection'
 import SquareProductCard from '@/components/SquareProductCard'
 import ProductModal from '@/components/ProductModal'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabaseClient'
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa'
 import { AnimatePresence } from 'framer-motion'
 
