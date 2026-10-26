@@ -61,7 +61,7 @@ const SidebarCart = ({ isOpen, onClose }) => {
             </div>
 
             {cart.length > 0 && (
-              <div className="p-6 border-t border-vtuber-blue/10 bg-dark shrink-0 shadow-[0_-10px_30px_rgba(164,229,250,0.1)]">
+              <div className="p-6 border-t border-vtuber-blue/10 bg-black shrink-0 shadow-[0_-10px_30px_rgba(164,229,250,0.1)]">
                 <div className="flex justify-between items-end mb-6">
                   <p className="text-xs font-bold uppercase tracking-widest text-vtuber-purple">Subtotal</p>
                   <p className="text-2xl font-black italic tracking-tighter text-zinc-800">{formatIDR(totalPrice)}</p>
