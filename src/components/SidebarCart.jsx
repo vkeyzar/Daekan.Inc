@@ -20,7 +20,7 @@ const SidebarCart = ({ isOpen, onClose }) => {
       {isOpen && (
         <>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99998]" />
-          <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }} className="fixed top-0 right-0 h-[100dvh] w-full max-w-md bg-white z-[99999] shadow-2xl flex flex-col border-l border-vtuber-blue/20">
+          <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }} className="fixed top-0 right-0 h-[100dvh] w-full max-w-md bg-white dark:bg-black text-black dark:text-white z-[99999] shadow-2xl flex flex-col border-l border-vtuber-blue/20">
             <div className="flex items-center justify-between p-6 border-b border-vtuber-blue/10 shrink-0">
               <h2 className="text-2xl font-black italic uppercase tracking-tighter text-zinc-800">
                 Keranjang Belanja <span className="text-vtuber-pink font-medium text-lg">({cart.length})</span>
@@ -61,12 +61,12 @@ const SidebarCart = ({ isOpen, onClose }) => {
             </div>
 
             {cart.length > 0 && (
-              <div className="p-6 border-t border-vtuber-blue/10 bg-white shrink-0 shadow-[0_-10px_30px_rgba(164,229,250,0.1)]">
+              <div className="p-6 border-t border-vtuber-blue/10 bg-white dark:bg-black text-black dark:text-white shrink-0 shadow-[0_-10px_30px_rgba(164,229,250,0.1)]">
                 <div className="flex justify-between items-end mb-6">
                   <p className="text-xs font-bold uppercase tracking-widest text-vtuber-purple">Subtotal</p>
-                  <p className="text-2xl font-black italic tracking-tighter text-zinc-800">{formatIDR(totalPrice)}</p>
+                  <p className="text-2xl font-black italic tracking-tighter">{formatIDR(totalPrice)}</p>
                 </div>
-                <button onClick={handleCheckout} className="w-full bg-black text-white py-5 rounded-xl font-black italic uppercase text-xs tracking-[0.2em] hover:from-vtuber-pink hover:to-vtuber-purple transition-all shadow-[0_5px_20px_rgba(164,229,250,0.4)]">
+                <button onClick={handleCheckout} className="w-full bg-white dark:bg-black text-black dark:text-white text-white py-5 rounded-xl font-black italic uppercase text-xs tracking-[0.2em] hover:from-vtuber-pink hover:to-vtuber-purple transition-all shadow-[0_5px_20px_rgba(164,229,250,0.4)]">
                   LANJUTKAN KE PEMBAYARAN
                 </button>
                 <p className="text-[9px] text-vtuber-purple text-center mt-4 font-bold uppercase tracking-widest">
