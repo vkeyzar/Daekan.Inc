@@ -13,6 +13,9 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'DAEKAN INC.',
   description: 'Daekan Inc Official Store',
+  icons: {
+    icon: 'https://corhxzcsgvcckigxleeo.supabase.co/storage/v1/object/public/asset/Logo%20Square%20Potrait%20.jpg',
+  }
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
