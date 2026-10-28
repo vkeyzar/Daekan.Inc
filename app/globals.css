@@ -1,12 +1,86 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
-body {
-  background-color: #ffffff;
-  color: #000000;
-  transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+@theme {
+  --font-sans: var(--font-inter), 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  --color-vtuber-cyan: #000000;
+  --color-vtuber-blue: #18181b;
+  --color-vtuber-pink: #52525b;
+  --color-vtuber-purple: #27272a;
 }
 
-.dark body {
-  background-color: #000000;
-  color: #ffffff;
+html, body {
+  scroll-behavior: smooth;
+  font-family: var(--font-inter), 'Inter', 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* SweetAlert2 Exclusive Daekan Monochrome Theme */
+.swal2-popup {
+  font-family: var(--font-inter), 'Inter', 'Helvetica Neue', Arial, sans-serif !important;
+  border-radius: 0px !important;
+  border: 2px solid #000000 !important;
+  background: #ffffff !important;
+  color: #000000 !important;
+  box-shadow: 6px 6px 0px 0px rgba(0, 0, 0, 1) !important;
+  padding: 2rem !important;
+}
+
+.dark .swal2-popup {
+  border: 2px solid #ffffff !important;
+  background: #09090b !important;
+  color: #ffffff !important;
+  box-shadow: 6px 6px 0px 0px rgba(255, 255, 255, 1) !important;
+}
+
+.swal2-title {
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  font-size: 1.25rem !important;
+  color: inherit !important;
+}
+
+.swal2-html-container {
+  font-weight: 500 !important;
+  font-size: 0.875rem !important;
+  color: #52525b !important;
+}
+
+.dark .swal2-html-container {
+  color: #a1a1aa !important;
+}
+
+.swal2-confirm,
+.swal2-cancel {
+  border-radius: 0px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.15em !important;
+  font-size: 0.75rem !important;
+  padding: 0.85rem 1.75rem !important;
+  box-shadow: none !important;
+}
+
+.swal2-confirm {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border: 1px solid #000000 !important;
+}
+
+.dark .swal2-confirm {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #ffffff !important;
+}
+
+.swal2-cancel {
+  background-color: transparent !important;
+  color: #000000 !important;
+  border: 1px solid #000000 !important;
+}
+
+.dark .swal2-cancel {
+  background-color: transparent !important;
+  color: #ffffff !important;
+  border: 1px solid #ffffff !important;
 }

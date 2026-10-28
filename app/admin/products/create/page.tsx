@@ -6,7 +6,7 @@ import Swal from 'sweetalert2'
 
 const DEFAULT_SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
 
-const CreateProduct = ({ isOpen, onClose, refreshData, categories = [] }: { isOpen?: boolean; onClose?: any; refreshData?: any; categories?: any[] }) => {
+const CreateProduct = ({ isOpen, onClose, refreshData, categories = [] }: any) => {
   const [loading, setLoading] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null) 
@@ -92,8 +92,8 @@ const CreateProduct = ({ isOpen, onClose, refreshData, categories = [] }: { isOp
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-start justify-center p-4 overflow-y-auto pt-10 pb-20">
-      <div className="bg-white text-black p-8 md:p-12 rounded-[2.5rem] w-full max-w-5xl shadow-2xl my-auto mt-10 mb-10">
-        <h2 className="text-4xl font-black italic uppercase tracking-tighter mb-8">Create New Gear</h2>
+      <div className="bg-white dark:bg-zinc-950 text-black dark:text-white border-2 border-black dark:border-white p-6 sm:p-10 w-full max-w-5xl shadow-2xl my-auto mt-10 mb-10">
+        <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter mb-8">Create New Gear</h2>
         
         <form onSubmit={handleAddProduct} className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
           <div className="space-y-6">

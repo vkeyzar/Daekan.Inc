@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import ProductGrid from '@/components/ProductGrid'
@@ -35,13 +35,15 @@ const Products = () => {
 
       <div className="relative z-10 flex-1 flex flex-col">
         <Navbar />
-        <div className="flex-1 pt-24">
+        <div className="flex-1 pt-8">
           {loading ? (
             <div className="flex justify-center items-center h-[50vh]">
               <p className="animate-pulse font-bold tracking-widest text-black dark:text-white uppercase">Loading Gear...</p>
             </div>
           ) : (
-            <ProductGrid products={products} categories={categories} onOpenModal={setSelectedProduct} selectedProduct={selectedProduct} />
+            <Suspense fallback={<div className="flex justify-center items-center h-[50vh]"><p className="animate-pulse font-bold tracking-widest text-black dark:text-white uppercase">Loading Gear...</p></div>}>
+              <ProductGrid products={products} categories={categories} onOpenModal={setSelectedProduct} selectedProduct={selectedProduct} />
+            </Suspense>
           )}
         </div>
         <Footer />

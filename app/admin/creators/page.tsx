@@ -4,22 +4,20 @@ import React from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import Swal from 'sweetalert2'
 
-const CreatorList = ({ creators = [], refreshData, onOpenEditCreator }: { creators?: any[]; refreshData?: any; onOpenEditCreator?: any }) => {
-  
-  // FUNGSI DELETE GACOR
+const CreatorList = ({ creators = [], refreshData, onOpenEditCreator }: any) => {
+
   const handleDelete = async (id: any, name: any) => {
     const confirm = await Swal.fire({
       title: `HAPUS ${name}?`,
-      text: "Data ini bakal ilang permanen dari roster, yakin?",
+      text: "Data ini akan hilang permanen dari roster, yakin?",
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#d33', // Merah buat delete
+      confirmButtonColor: '#d33',
       cancelButtonColor: '#000',
       confirmButtonText: 'YA, HAPUS!'
     });
 
     if (confirm.isConfirmed) {
-      // SIKAT DATABASE
       const { error } = await supabase
         .from('creators')
         .delete()
@@ -29,7 +27,6 @@ const CreatorList = ({ creators = [], refreshData, onOpenEditCreator }: { creato
         Swal.fire('GAGAL!', error.message, 'error');
       } else {
         Swal.fire('BERHASIL!', `${name} telah dihapus.`, 'success');
-        // REFRESH DATA Dashboard (AutoSync)
         refreshData();
       }
     }
@@ -38,88 +35,81 @@ const CreatorList = ({ creators = [], refreshData, onOpenEditCreator }: { creato
   const parseSocials = (socialsData: any) => {
     try {
       return typeof socialsData === 'string' ? JSON.parse(socialsData) : socialsData;
-    } catch (e) {
+    } catch {
       return {};
     }
   };
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-left border-collapse min-w-[1200px]">
+    <div className="overflow-x-auto border-2 border-black dark:border-white bg-white dark:bg-zinc-950 p-4 sm:p-6">
+      <table className="w-full text-left border-collapse min-w-[1000px]">
         <thead>
-          <tr className="text-xs font-black tracking-[0.2em] text-zinc-400 uppercase border-b border-zinc-100">
-            <th className="pb-6 font-black">Creator Profile</th>
-            <th className="pb-6 font-black">Role</th>
-            <th className="pb-6 font-black">YouTube ID</th>
-            <th className="pb-6 font-black">Video ID</th>
-            <th className="pb-6 font-black text-center">Socials</th>
-            <th className="pb-6 font-black text-right">Actions</th>
+          <tr className="text-xs sm:text-sm font-black tracking-[0.15em] text-zinc-600 dark:text-zinc-400 uppercase border-b-2 border-black dark:border-white">
+            <th className="pb-4 font-black">Creator Profile</th>
+            <th className="pb-4 font-black">Role</th>
+            <th className="pb-4 font-black">YouTube ID</th>
+            <th className="pb-4 font-black">Video ID</th>
+            <th className="pb-4 font-black text-center">Socials</th>
+            <th className="pb-4 font-black text-right">Actions</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-zinc-50">
+        <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
           {creators.map((talent: any) => {
             const socials = parseSocials(talent.socials);
-            
+
             return (
-              <tr key={talent.id} className="group hover:bg-zinc-50/80 transition-all duration-300">
-                
-                {/* PROFILE */}
-                <td className="py-8 flex items-center gap-6">
-                  <div className="w-16 h-16 rounded-2xl overflow-hidden bg-zinc-100 border border-zinc-200 shadow-sm group-hover:scale-105 transition-transform duration-500">
-                    <img 
-                      src={talent.image || 'https://via.placeholder.com/150'} 
-                      className="w-full h-full object-cover" 
+              <tr key={talent.id} className="group hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-all duration-200">
+                <td className="py-6 flex items-center gap-5">
+                  <div className="w-16 h-16 overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-black dark:border-white shrink-0">
+                    <img
+                      src={talent.image || 'https://via.placeholder.com/150'}
+                      className="w-full h-full object-cover"
                       alt={talent.name}
                     />
                   </div>
                   <div>
-                    <p className="font-black text-base uppercase tracking-tight leading-none mb-1">{talent.name}</p>
-                    <p className="text-[10px] text-zinc-400 font-mono">ID: {talent.id}</p>
+                    <p className="font-black text-base uppercase tracking-tight leading-none mb-1 text-black dark:text-white">{talent.name}</p>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">ID: {talent.id}</p>
                   </div>
                 </td>
 
-                {/* ROLE */}
-                <td className="py-8">
-                  <span className="text-[10px] font-black bg-zinc-900 text-white px-3 py-1 rounded-md uppercase tracking-widest">
+                <td className="py-6">
+                  <span className="text-xs font-black bg-black text-white dark:bg-white dark:text-black px-3 py-1 uppercase tracking-widest">
                     {talent.role || 'TALENT'}
                   </span>
                 </td>
 
-                {/* YOUTUBE CHANNEL ID */}
-                <td className="py-8">
-                  <p className="text-[11px] font-mono text-zinc-500 bg-zinc-50 px-2 py-1 rounded border border-zinc-100 inline-block">
+                <td className="py-6">
+                  <p className="text-xs font-mono text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-900 px-2.5 py-1 border border-zinc-300 dark:border-zinc-700 inline-block">
                     {talent.channel_id || '—'}
                   </p>
                 </td>
 
-                {/* YOUTUBE VIDEO ID */}
-                <td className="py-8">
-                  <p className="text-[11px] font-mono text-red-500 bg-red-50 px-2 py-1 rounded border border-red-100 inline-block font-bold">
+                <td className="py-6">
+                  <p className="text-xs font-mono text-red-600 bg-red-50 px-2.5 py-1 border border-red-200 inline-block font-bold">
                     {talent.youtube_video_id || '—'}
                   </p>
                 </td>
 
-                {/* SOCIALS */}
-                <td className="py-8 text-center">
+                <td className="py-6 text-center">
                   <div className="flex justify-center gap-2">
-                    {socials?.youtube && <span className="text-[9px] font-black bg-red-600 text-white px-2 py-1 rounded">YT</span>}
-                    {socials?.instagram && <span className="text-[9px] font-black bg-zinc-900 text-white px-2 py-1 rounded">IG</span>}
-                    {socials?.tiktok && <span className="text-[9px] font-black bg-black text-white px-2 py-1 rounded">TK</span>}
+                    {socials?.youtube && <span className="text-xs font-black bg-red-600 text-white px-2 py-1">YT</span>}
+                    {socials?.instagram && <span className="text-xs font-black bg-zinc-900 text-white px-2 py-1">IG</span>}
+                    {socials?.tiktok && <span className="text-xs font-black bg-black text-white px-2 py-1">TK</span>}
                   </div>
                 </td>
 
-                {/* ACTIONS */}
-                <td className="py-8 text-right">
+                <td className="py-6 text-right">
                   <div className="flex justify-end gap-5">
-                    <button 
-                      onClick={() => onOpenEditCreator(talent)} 
-                      className="text-xs font-black uppercase tracking-widest text-zinc-400 hover:text-black transition-all"
+                    <button
+                      onClick={() => onOpenEditCreator(talent)}
+                      className="text-xs sm:text-sm font-black uppercase tracking-widest text-black dark:text-white hover:underline cursor-pointer"
                     >
                       Edit
                     </button>
-                    <button 
-                      onClick={() => handleDelete(talent.id, talent.name)} 
-                      className="text-xs font-black uppercase tracking-widest text-red-500 hover:text-red-700 transition-all"
+                    <button
+                      onClick={() => handleDelete(talent.id, talent.name)}
+                      className="text-xs sm:text-sm font-black uppercase tracking-widest text-red-600 dark:text-red-400 hover:underline cursor-pointer"
                     >
                       Remove
                     </button>

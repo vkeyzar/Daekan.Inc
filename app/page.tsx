@@ -53,15 +53,9 @@ const Home = () => {
     }
   }
 
-  // ==========================================
-  // LOGIC 1: NEW ARRIVALS
-  // ==========================================
   const latestCategory = categories.find((c: any) => products.some((p: any) => p.category_id === c.id))
   const highlightProducts = latestCategory ? products.filter((p: any) => p.category_id === latestCategory.id) : []
 
-  // ==========================================
-  // LOGIC 2: GENRE CARDS & DETEKSI TAB
-  // ==========================================
   const remainingCategories = categories.filter((cat: any) => cat.id !== latestCategory?.id);
   const dbCategoryCards = remainingCategories.map((cat: any) => {
     const catProds = products.filter((p: any) => p.category_id === cat.id);
@@ -92,33 +86,35 @@ const Home = () => {
         <section id="new-arrivals" className="py-24 px-4 md:px-10 max-w-[1400px] mx-auto">
 
           <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-black dark:text-white">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase tracking-tighter text-black dark:text-white">
               NEW ARRIVALS:{' '}
               <span className="text-black dark:text-white">{latestCategory ? latestCategory.name : 'DAEKAN GEAR'}</span>
             </h2>
-            <p className="font-bold tracking-widest text-xs mt-2 uppercase text-zinc-600 dark:text-zinc-400">Official Latest Release</p>
+            <p className="font-bold tracking-[0.25em] text-[11px] md:text-xs mt-2 uppercase text-zinc-600 dark:text-zinc-400">
+              Official Latest Release
+            </p>
           </div>
 
           <div className="relative group/slider">
-            <div ref={collabScrollRef} className="flex overflow-x-auto gap-6 snap-x pb-8 px-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <div ref={collabScrollRef} className="flex overflow-x-auto gap-6 snap-x pb-8 px-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               {highlightProducts.length > 0 ? (
                 highlightProducts.map((p: any) => <SquareProductCard key={p.id} product={p} onOpenModal={setSelectedProduct} />)
               ) : (
-                <p className="text-center w-full font-bold text-sm tracking-widest text-zinc-500 dark:text-zinc-400">NO NEW GEAR FOUND.</p>
+                <p className="text-center w-full font-bold text-xs tracking-[0.2em] text-zinc-500 dark:text-zinc-400">NO NEW GEAR FOUND.</p>
               )}
             </div>
           </div>
 
           <div className="flex justify-between items-end mt-24 mb-8 border-b border-black dark:border-white pb-4 px-2">
             <h3 className="text-xl md:text-2xl font-black uppercase text-black dark:text-white tracking-tighter">More Daekan Goods</h3>
-            <Link href="/products" className="text-[10px] md:text-xs font-black uppercase tracking-[0.1em] md:tracking-[0.2em] text-black dark:text-white hover:opacity-60 transition-all shrink-0">
+            <Link href="/products" className="text-[11px] md:text-xs font-black uppercase tracking-[0.2em] text-black dark:text-white hover:opacity-60 transition-all shrink-0">
               View All Products &rarr;
             </Link>
           </div>
 
           <div className="relative group/slider">
-            <button onClick={() => scroll(genreScrollRef, 'left')} className="absolute -left-4 md:-left-6 top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-black p-3 border border-black dark:border-white text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black opacity-0 group-hover/slider:opacity-100 transition-all hidden md:block">
-              <FaChevronLeft size={16} />
+            <button onClick={() => scroll(genreScrollRef, 'left')} className="absolute -left-4 md:-left-6 top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-black p-3 border border-black dark:border-white text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black opacity-0 group-hover/slider:opacity-100 transition-all hidden md:block cursor-pointer">
+              <FaChevronLeft size={14} />
             </button>
 
             <div ref={genreScrollRef} className="flex overflow-x-auto gap-6 snap-x pb-8 px-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
@@ -127,17 +123,17 @@ const Home = () => {
                   <Link
                     key={collection.id}
                     href={`/products?tab=${collection.targetTab}&${collection.isGenre ? 'genre' : 'type'}=${collection.id}`}
-                    className="group relative w-[200px] md:w-[240px] shrink-0 aspect-square overflow-hidden border border-black dark:border-white hover:border-black dark:hover:border-white transition-all duration-300 block bg-white dark:bg-black"
+                    className="group relative w-[200px] md:w-[240px] shrink-0 aspect-square overflow-hidden border border-black dark:border-white hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] transition-all duration-300 block bg-white dark:bg-black"
                   >
                     <img
                       src={collection.image}
                       className="w-full h-full object-contain p-4 relative z-10 transition-transform duration-500 group-hover:scale-110"
                       alt={collection.name}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent z-20 flex items-end p-6">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent z-20 flex items-end p-6">
                       <div>
-                        <p className="text-white text-[10px] font-bold tracking-[0.2em] uppercase mb-1">Explore Collection</p>
-                        <h3 className="text-white font-black uppercase tracking-widest text-lg md:text-xl leading-tight group-hover:opacity-80 transition-all">
+                        <p className="text-zinc-200 text-[10px] font-bold tracking-[0.2em] uppercase mb-1">Explore Collection</p>
+                        <h3 className="text-white font-black uppercase tracking-widest text-base md:text-lg leading-tight group-hover:opacity-80 transition-all">
                           {collection.name}
                         </h3>
                       </div>
@@ -145,12 +141,12 @@ const Home = () => {
                   </Link>
                 ))
               ) : (
-                <p className="text-center w-full font-bold text-sm tracking-widest text-zinc-500 dark:text-zinc-400">NO COLLECTIONS FOUND.</p>
+                <p className="text-center w-full font-bold text-xs tracking-[0.2em] text-zinc-500 dark:text-zinc-400">NO COLLECTIONS FOUND.</p>
               )}
             </div>
 
-            <button onClick={() => scroll(genreScrollRef, 'right')} className="absolute -right-4 md:-right-6 top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-black p-3 border border-black dark:border-white text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black opacity-0 group-hover/slider:opacity-100 transition-all hidden md:block">
-              <FaChevronRight size={16} />
+            <button onClick={() => scroll(genreScrollRef, 'right')} className="absolute -right-4 md:-right-6 top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-black p-3 border border-black dark:border-white text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black opacity-0 group-hover/slider:opacity-100 transition-all hidden md:block cursor-pointer">
+              <FaChevronRight size={14} />
             </button>
           </div>
         </section>

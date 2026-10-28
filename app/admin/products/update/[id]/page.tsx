@@ -6,7 +6,7 @@ import Swal from 'sweetalert2'
 
 const DEFAULT_SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
 
-const UpdateProduct = ({ isOpen, onClose, productData, refreshData, categories = [] }: { isOpen?: boolean; onClose?: any; productData?: any; refreshData?: any; categories?: any[] }) => {
+const UpdateProduct = ({ isOpen, onClose, productData, refreshData, categories = [] }: any) => {
   const [loading, setLoading] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   
@@ -82,14 +82,12 @@ const UpdateProduct = ({ isOpen, onClose, productData, refreshData, categories =
           ? stocks.filter(s => s.size && s.size.trim() !== '' && s.stock_physical !== '').map(s => ({
               product_id: product.id, 
               size: s.size.toUpperCase().trim(), 
-              stock_physical: parseInt(s.stock_physical) || 0, 
-              stock_reserved: parseInt(s.stock_reserved) || 0
+              stock_physical: parseInt(s.stock_physical) || 0
             }))
           : [{ 
               product_id: product.id, 
               size: '-', 
-              stock_physical: parseInt(stocks[0]?.stock_physical) || 0, 
-              stock_reserved: parseInt(stocks[0]?.stock_reserved) || 0 
+              stock_physical: parseInt(stocks[0]?.stock_physical) || 0
             }];
         
         if (stockPayload.length > 0) {
@@ -112,9 +110,9 @@ const UpdateProduct = ({ isOpen, onClose, productData, refreshData, categories =
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[9999] flex items-start justify-center p-4 overflow-y-auto pt-10 pb-20">
-      <div className="bg-white text-black p-8 md:p-12 rounded-[2.5rem] w-full max-w-4xl shadow-2xl my-auto mt-10 mb-10">
-        <h2 className="text-4xl font-black italic uppercase tracking-tighter mb-8">
-          Update Gear <span className="text-zinc-400">"{product.name}"</span>
+      <div className="bg-white dark:bg-zinc-950 text-black dark:text-white border-2 border-black dark:border-white p-6 sm:p-10 w-full max-w-4xl shadow-2xl my-auto mt-10 mb-10">
+        <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter mb-8">
+          Update Gear <span className="text-zinc-500">"{product.name}"</span>
         </h2>
         
         <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">

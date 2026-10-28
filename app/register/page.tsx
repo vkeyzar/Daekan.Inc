@@ -4,8 +4,8 @@ import React, { useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import Link from 'next/link'
 import Swal from 'sweetalert2'
+import Navbar from '@/components/Navbar'
 
-// ✅ Sanitasi HTML untuk mencegah XSS — wajib sebelum inject string ke customHtml Swal
 const escapeHtml = (str: any) =>
   String(str)
     .replace(/&/g, '&amp;')
@@ -27,7 +27,6 @@ interface Requirement {
   test: (p: string) => boolean;
 }
 
-// Daftar kriteria password beserta regex pengecekannya
 const REQUIREMENTS: Requirement[] = [
   { key: 'hasUpper',   label: 'Huruf Besar (A–Z)',       test: (p: string) => /[A-Z]/.test(p) },
   { key: 'hasLower',   label: 'Huruf Kecil (a–z)',        test: (p: string) => /[a-z]/.test(p) },
@@ -44,7 +43,6 @@ const Register = () => {
     hasUpper: false, hasLower: false, hasNumber: false, hasSpecial: false,
   })
 
-  // ✅ Handler password — React menangani rendering secara aman (tidak ada innerHTML user-input)
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value
     setPassword(val)
@@ -62,7 +60,7 @@ const Register = () => {
     e.preventDefault()
     setLoading(true)
     try {
-      const { data, error } = await supabase.auth.signUp({ email, password })
+      const { error } = await supabase.auth.signUp({ email, password })
 
       if (error) throw error
 
@@ -74,7 +72,7 @@ const Register = () => {
         customClass: {
           popup:         'bg-white border-4 border-black rounded-none p-6 shadow-2xl',
           title:         'font-black italic tracking-wider text-2xl text-black uppercase',
-          confirmButton: 'rounded-none bg-vtuber-cyan text-black font-bold px-8 py-3 tracking-widest uppercase border-2 border-black mt-4 cursor-pointer',
+          confirmButton: 'rounded-none bg-black text-white font-bold px-8 py-3 tracking-widest uppercase border-2 border-black mt-4 cursor-pointer',
         }
       })
     } catch (error: any) {
@@ -82,9 +80,8 @@ const Register = () => {
       let customHtml = null
 
       if (errorMsg.includes('Password should contain at least one character of each')) {
-        // ✅ List di-center: container text-center + ul inline-block text-left
         customHtml = `
-          <div class="border-l-4 border-vtuber-cyan pl-4 mt-4 bg-gray-50 py-4 text-center">
+          <div class="border-l-4 border-black pl-4 mt-4 bg-gray-50 py-4 text-center">
             <p class="font-black italic uppercase tracking-wider text-base mb-1 text-black">
               Password Terlalu Lemah!
             </p>
@@ -92,10 +89,10 @@ const Register = () => {
               Wajib mengandung kombinasi berikut:
             </p>
             <ul class="list-none p-0 m-0 inline-block text-left text-sm text-gray-900">
-              <li class="mb-2"><span class="text-vtuber-cyan mr-2 text-base">■</span><strong class="font-black text-black">HURUF BESAR</strong> (A-Z)</li>
-              <li class="mb-2"><span class="text-vtuber-cyan mr-2 text-base">■</span><strong class="font-black text-black">HURUF KECIL</strong> (a-z)</li>
-              <li class="mb-2"><span class="text-vtuber-cyan mr-2 text-base">■</span><strong class="font-black text-black">ANGKA</strong> (0-9)</li>
-              <li class="mb-0"><span class="text-vtuber-cyan mr-2 text-base">■</span><strong class="font-black text-black">SIMBOL SPESIAL</strong> (!@#$ dll)</li>
+              <li class="mb-2"><span class="text-black mr-2 text-base">■</span><strong class="font-black text-black">HURUF BESAR</strong> (A-Z)</li>
+              <li class="mb-2"><span class="text-black mr-2 text-base">■</span><strong class="font-black text-black">HURUF KECIL</strong> (a-z)</li>
+              <li class="mb-2"><span class="text-black mr-2 text-base">■</span><strong class="font-black text-black">ANGKA</strong> (0-9)</li>
+              <li class="mb-0"><span class="text-black mr-2 text-base">■</span><strong class="font-black text-black">SIMBOL SPESIAL</strong> (!@#$ dll)</li>
             </ul>
           </div>
         `
@@ -103,7 +100,6 @@ const Register = () => {
         errorMsg = 'Email ini sudah terdaftar. Silakan login.'
       }
 
-      // ✅ escapeHtml() mencegah errorMsg dari server digunakan untuk inject script ke Swal
       Swal.fire({
         title: 'REGISTRASI GAGAL',
         html: customHtml || `<div class="text-center text-sm text-black font-semibold mt-2">${escapeHtml(errorMsg)}</div>`,
@@ -113,7 +109,7 @@ const Register = () => {
           popup:         'bg-white border-4 border-black rounded-none p-6 shadow-2xl',
           title:         'font-black italic tracking-wider text-2xl text-black uppercase',
           htmlContainer: 'text-sm',
-          confirmButton: 'rounded-none bg-vtuber-cyan text-black font-bold px-8 py-3 tracking-widest uppercase border-2 border-black mt-4 cursor-pointer',
+          confirmButton: 'rounded-none bg-black text-white font-bold px-8 py-3 tracking-widest uppercase border-2 border-black mt-4 cursor-pointer',
         }
       })
     } finally {
@@ -122,90 +118,96 @@ const Register = () => {
   }
 
   return (
-    <div className="relative flex items-center justify-center min-h-screen bg-white overflow-hidden text-black p-6 md:p-12">
-      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-vtuber-pink/20 rounded-full blur-[120px] pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-vtuber-cyan/20 rounded-full blur-[100px] pointer-events-none"></div>
-
-      <form onSubmit={handleRegister} className="relative z-10 bg-white/80 backdrop-blur-xl p-10 rounded-[2.5rem] border border-vtuber-blue/20 w-full max-w-md shadow-2xl">
-        <h2 className="text-3xl font-black mb-2 italic uppercase tracking-tighter drop-shadow-sm">
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-vtuber-cyan to-vtuber-blue pr-1">JOIN DAEKAN</span>
-          <span className="font-light ml-0.5 text-vtuber-pink">INC.</span>
-        </h2>
-        <p className="text-vtuber-purple text-[10px] md:text-xs uppercase tracking-[0.2em] mb-8 font-bold">Create your daekan account</p>
-
-        <div className="space-y-4">
-          {/* Email */}
-          <div>
-            <label className="text-[10px] font-black uppercase tracking-widest text-vtuber-purple ml-1">Email Address</label>
-            <input
-              type="email"
-              placeholder="daekan@inc.com"
-              required
-              autoComplete="email"
-              className="w-full p-4 bg-white border border-vtuber-blue/30 rounded-2xl focus:outline-none focus:border-vtuber-cyan transition-all text-vtuber-purple"
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-
-          {/* Password + Real-time Strength Checker */}
-          <div>
-            <label className="text-[10px] font-black uppercase tracking-widest text-vtuber-purple ml-1">Password</label>
-            <input
-              type="password"
-              placeholder="••••••••"
-              required
-              autoComplete="new-password"
-              className="w-full p-4 bg-white border border-vtuber-blue/30 rounded-2xl focus:outline-none focus:border-vtuber-cyan transition-all text-vtuber-purple"
-              onChange={handlePasswordChange}
-              onFocus={() => setShowChecker(true)}
-            />
-
-            {/* ✅ Checker muncul saat input password difokus, terupdate tiap keystroke */}
-            {showChecker && (
-              <div className="mt-3 border-l-4 border-vtuber-cyan bg-gray-50 px-4 py-3 rounded-r-xl">
-                <p className="text-[10px] font-black uppercase tracking-widest text-black mb-2.5">
-                  Kriteria Password:
-                </p>
-                <ul className="space-y-1.5">
-                  {REQUIREMENTS.map((req) => {
-                    const passed = pwChecks[req.key]
-                    return (
-                      <li key={req.key} className="flex items-center gap-2.5 text-xs">
-                        <span className={`text-base font-bold leading-none transition-all duration-200 ${passed ? 'text-vtuber-cyan' : 'text-gray-300'}`}>
-                          {passed ? '■' : '□'}
-                        </span>
-                        <span className={`font-semibold transition-colors duration-200 ${passed ? 'text-black' : 'text-gray-400'}`}>
-                          {req.label}
-                        </span>
-                      </li>
-                    )
-                  })}
-                </ul>
-                {allPassed && (
-                  <p className="mt-2.5 text-[10px] font-black uppercase tracking-wider text-vtuber-cyan animate-pop-up">
-                    ✓ Password Kuat! Siap didaftarkan.
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <button
-          disabled={loading}
-          className="w-full bg-gradient-to-r from-vtuber-cyan to-vtuber-blue text-white font-black py-4 rounded-2xl mt-8 hover:from-vtuber-pink hover:to-vtuber-purple transition-all shadow-[0_10px_20px_rgba(164,229,250,0.4)] tracking-widest disabled:opacity-50"
+    <div className="min-h-screen flex flex-col bg-white dark:bg-black text-black dark:text-white font-sans">
+      <Navbar />
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 md:p-12">
+        <form
+          onSubmit={handleRegister}
+          className="relative z-10 bg-white dark:bg-black p-8 sm:p-10 border border-black dark:border-white w-full max-w-md shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
         >
-          {loading ? 'PROCESSING...' : 'REGISTER ACCOUNT'}
-        </button>
+          <h2 className="text-3xl font-black mb-1.5 uppercase tracking-tighter text-black dark:text-white">
+            JOIN DAEKAN <span className="font-light text-zinc-500 dark:text-zinc-400">INC.</span>
+          </h2>
+          <p className="text-zinc-500 dark:text-zinc-400 text-[11px] uppercase tracking-[0.25em] mb-8 font-bold">
+            Create your daekan account
+          </p>
 
-        <p className="mt-8 text-vtuber-purple text-[11px] text-center uppercase tracking-widest font-bold">
-          Already a member?{' '}
-          <Link href="/login" className="text-vtuber-pink font-black hover:underline underline-offset-4">Login</Link>
-        </p>
-      </form>
+          <div className="space-y-5">
+            <div>
+              <label className="block text-[11px] font-black uppercase tracking-[0.2em] text-black dark:text-white mb-2">
+                Email Address
+              </label>
+              <input
+                type="email"
+                placeholder="daekan@inc.com"
+                required
+                autoComplete="email"
+                className="w-full p-3.5 bg-white dark:bg-black border border-black dark:border-white focus:outline-none text-xs sm:text-sm font-medium text-black dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 transition-all"
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-black uppercase tracking-[0.2em] text-black dark:text-white mb-2">
+                Password
+              </label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                required
+                autoComplete="new-password"
+                className="w-full p-3.5 bg-white dark:bg-black border border-black dark:border-white focus:outline-none text-xs sm:text-sm font-medium text-black dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-600 transition-all"
+                onChange={handlePasswordChange}
+                onFocus={() => setShowChecker(true)}
+              />
+
+              {showChecker && (
+                <div className="mt-3 border-l-2 border-black dark:border-white bg-zinc-50 dark:bg-zinc-900 px-4 py-3">
+                  <p className="text-[11px] font-black uppercase tracking-[0.2em] text-black dark:text-white mb-2">
+                    Kriteria Password:
+                  </p>
+                  <ul className="space-y-1.5">
+                    {REQUIREMENTS.map((req) => {
+                      const passed = pwChecks[req.key]
+                      return (
+                        <li key={req.key} className="flex items-center gap-2 text-xs">
+                          <span className={`text-sm font-bold leading-none transition-all duration-200 ${passed ? 'text-black dark:text-white' : 'text-zinc-400'}`}>
+                            {passed ? '■' : '□'}
+                          </span>
+                          <span className={`font-semibold transition-colors duration-200 ${passed ? 'text-black dark:text-white' : 'text-zinc-500 dark:text-zinc-400'}`}>
+                            {req.label}
+                          </span>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                  {allPassed && (
+                    <p className="mt-2.5 text-[11px] font-black uppercase tracking-wider text-black dark:text-white">
+                      ✓ Password Kuat! Siap didaftarkan.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <button
+            disabled={loading}
+            className="w-full bg-black dark:bg-white text-white dark:text-black border border-black dark:border-white font-black text-xs py-4 mt-8 hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-all tracking-[0.25em] uppercase disabled:opacity-50 cursor-pointer"
+          >
+            {loading ? 'PROCESSING...' : 'REGISTER ACCOUNT'}
+          </button>
+
+          <p className="mt-8 text-zinc-600 dark:text-zinc-400 text-[11px] text-center uppercase tracking-[0.2em] font-bold">
+            Already a member?{' '}
+            <Link href="/login" className="text-black dark:text-white font-black underline underline-offset-4 hover:opacity-70">
+              Login
+            </Link>
+          </p>
+        </form>
+      </div>
     </div>
   )
 }
 
 export default Register
-

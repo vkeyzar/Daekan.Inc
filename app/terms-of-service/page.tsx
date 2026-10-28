@@ -3,6 +3,8 @@
 import React, { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FaScaleBalanced } from 'react-icons/fa6'
+import Navbar from '@/components/Navbar'
+import Footer from '@/components/Footer'
 
 const TermsOfService = () => {
   useEffect(() => {
@@ -10,27 +12,31 @@ const TermsOfService = () => {
   }, [])
 
   return (
-    <div className="min-h-screen bg-white text-zinc-800 pt-24 pb-20 px-4 md:px-8 font-sans">
-      <motion.div 
+    <div className="min-h-screen flex flex-col bg-white dark:bg-black text-black dark:text-white font-sans">
+      <Navbar />
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-4xl mx-auto"
+        className="max-w-4xl mx-auto py-16 px-4 sm:px-8 flex-1"
       >
-        <div className="text-center mb-12 border-b border-zinc-100 pb-10">
-          <FaScaleBalanced className="text-4xl text-vtuber-cyan mx-auto mb-4" />
-          <h1 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter mb-4">DAEKAN INC - TERMS AND CONDITIONS</h1>
-          <p className="text-sm font-bold text-vtuber-purple uppercase tracking-widest">Daekan Inc. Legal Notice</p>
+        <div className="text-center mb-12 border-b-2 border-black dark:border-white pb-10">
+          <FaScaleBalanced className="text-4xl text-black dark:text-white mx-auto mb-4" />
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase tracking-tighter mb-4 text-black dark:text-white">
+            DAEKAN INC — TERMS AND CONDITIONS
+          </h1>
+          <p className="text-xs sm:text-sm font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-widest">
+            Daekan Inc. Legal Notice
+          </p>
         </div>
 
-        <div className="space-y-10 text-sm leading-relaxed text-zinc-600 font-medium">
-          
+        <div className="space-y-10 text-sm sm:text-base leading-relaxed text-zinc-700 dark:text-zinc-300 font-medium">
           <section>
-            <h2 className="text-xl font-black uppercase tracking-widest text-black mb-3">1. CONDITIONS OF USE</h2>
+            <h2 className="text-lg sm:text-xl font-black uppercase tracking-widest text-black dark:text-white mb-3">1. CONDITIONS OF USE</h2>
             <p>DAEKAN INC is offered to you, the user, conditioned on your acceptance of the terms, conditions and notices contained or incorporated by reference herein and such additional terms and conditions, agreements, and notices that may apply to any page or section of the Site.</p>
           </section>
 
           <section>
-            <h2 className="text-xl font-black uppercase tracking-widest text-black mb-3">2. OVERVIEW</h2>
+            <h2 className="text-lg sm:text-xl font-black uppercase tracking-widest text-black dark:text-white mb-3">2. OVERVIEW</h2>
             <p className="mb-2">Your use of this Site constitutes your agreement to all terms, conditions and notices.</p>
             <p className="mb-2">Please read them carefully.</p>
             <p className="mb-2">By using this Site, you agree to these Terms and Conditions, as well as any other terms, guidelines or rules that are applicable to any portion of this Site, without limitation or qualification.</p>
@@ -38,7 +44,7 @@ const TermsOfService = () => {
           </section>
 
           <section>
-            <h2 className="text-xl font-black uppercase tracking-widest text-black mb-3">3. MODIFICATION OF THE SITE AND THESE TERMS & CONDITIONS</h2>
+            <h2 className="text-lg sm:text-xl font-black uppercase tracking-widest text-black dark:text-white mb-3">3. MODIFICATION OF THE SITE AND THESE TERMS &amp; CONDITIONS</h2>
             <p className="mb-2">DAEKAN INC reserves the right to change, modify, alter, update or discontinue the terms, conditions, and notices under which this Site is offered and the links, content, information, prices and any other materials offered via this Site at any time and from time to time without notice or further obligation to you except as may be provided therein.</p>
             <p className="mb-2">We have the right to adjust prices from time to time.</p>
             <p className="mb-2">If for some reason there may have been a price mistake, DAEKAN INC has the right to refuse the order.</p>
@@ -46,14 +52,14 @@ const TermsOfService = () => {
           </section>
 
           <section>
-            <h2 className="text-xl font-black uppercase tracking-widest text-black mb-3">4. COPYRIGHTS</h2>
+            <h2 className="text-lg sm:text-xl font-black uppercase tracking-widest text-black dark:text-white mb-3">4. COPYRIGHTS</h2>
             <p className="mb-2">This Site is owned and operated by DAEKAN INC.</p>
             <p className="mb-2">Unless otherwise specified, all materials on this Site, trademarks, service marks, logos are the property of DAEKAN INC and are protected by the copyright laws of Indonesia and, throughout the world by the applicable copyright laws.</p>
             <p>No materials published by DAEKAN INC on this Site, in whole or in part, may be copied, reproduced, modified, republished, uploaded, posted, transmitted, or distributed in any form or by any means without prior written permission from DAEKAN INC.</p>
           </section>
 
           <section>
-            <h2 className="text-xl font-black uppercase tracking-widest text-black mb-3">5. SIGN UP</h2>
+            <h2 className="text-lg sm:text-xl font-black uppercase tracking-widest text-black dark:text-white mb-3">5. SIGN UP</h2>
             <p className="mb-2">You need to sign up this Site to purchase by insert your username and password.</p>
             <p className="mb-2">You will get benefits such as newsletters, updates, and special offers by signing up.</p>
             <p className="mb-2">You will be asked to provide accurate and current information on all registration forms on this Site.</p>
@@ -62,36 +68,36 @@ const TermsOfService = () => {
           </section>
 
           <section>
-            <h2 className="text-xl font-black uppercase tracking-widest text-black mb-3">6. ELECTRONIC COMMUNICATIONS</h2>
-            <p className="mb-2">You agree that DAEKAN INC may send electronic mails to you for the purpose of advising you of changes or additions to this Site, about any of DAEKAN INC's tshirts and deskmats or services, or for such other purpose(s) as we deem appropriate.</p>
-            <p>If you wish to unsubscribe from our newsletters, please click on "Newsletters" in your account page and unsubscribe.</p>
+            <h2 className="text-lg sm:text-xl font-black uppercase tracking-widest text-black dark:text-white mb-3">6. ELECTRONIC COMMUNICATIONS</h2>
+            <p className="mb-2">You agree that DAEKAN INC may send electronic mails to you for the purpose of advising you of changes or additions to this Site, about any of DAEKAN INC&apos;s tshirts and deskmats or services, or for such other purpose(s) as we deem appropriate.</p>
+            <p>If you wish to unsubscribe from our newsletters, please click on &quot;Newsletters&quot; in your account page and unsubscribe.</p>
           </section>
 
           <section>
-            <h2 className="text-xl font-black uppercase tracking-widest text-black mb-3">7. PRODUCT DESCRIPTIONS</h2>
+            <h2 className="text-lg sm:text-xl font-black uppercase tracking-widest text-black dark:text-white mb-3">7. PRODUCT DESCRIPTIONS</h2>
             <p className="mb-2">We always try our best to display the information and colors of the tshirts and deskmats that appear on the Site as accurately as possible.</p>
-            <p>However, we cannot guarantee that your monitor's display of any color will be accurate as the actual colors you see depends on your monitor quality.</p>
+            <p>However, we cannot guarantee that your monitor&apos;s display of any color will be accurate as the actual colors you see depends on your monitor quality.</p>
           </section>
 
           <section>
-            <h2 className="text-xl font-black uppercase tracking-widest text-black mb-3">8. RISK OF LOSS</h2>
+            <h2 className="text-lg sm:text-xl font-black uppercase tracking-widest text-black dark:text-white mb-3">8. RISK OF LOSS</h2>
             <p className="mb-2">All tshirts and deskmats purchased from DAEKAN INC are made pursuant to a shipment contract.</p>
             <p>This means that the risk of loss and title for such tshirts and deskmats pass to you upon our delivery to the carrier.</p>
           </section>
 
           <section>
-            <h2 className="text-xl font-black uppercase tracking-widest text-black mb-3">9. CONDITIONS OF RETURNS</h2>
+            <h2 className="text-lg sm:text-xl font-black uppercase tracking-widest text-black dark:text-white mb-3">9. CONDITIONS OF RETURNS</h2>
             <ul className="list-disc pl-5 mb-4 space-y-2">
               <li>Tshirts and deskmats must be returned within 7 days from the date it is received.</li>
               <li>Tshirts and deskmats must be in original condition.</li>
               <li>Tshirts and deskmats must have all tags attached.</li>
               <li>Sale tshirts and deskmats are not eligible for returns.</li>
             </ul>
-            <p className="italic font-bold text-red-500">Please Note: Shipping and handling charges are not refundable.</p>
+            <p className="italic font-bold text-red-600 dark:text-red-400">Please Note: Shipping and handling charges are not refundable.</p>
           </section>
 
           <section>
-            <h2 className="text-xl font-black uppercase tracking-widest text-black mb-3">10. PRIVACY POLICY</h2>
+            <h2 className="text-lg sm:text-xl font-black uppercase tracking-widest text-black dark:text-white mb-3">10. PRIVACY POLICY</h2>
             <p className="mb-2">Your information is safe with us.</p>
             <p className="mb-2">DAEKAN INC understands that privacy concerns are extremely important to our customers.</p>
             <p className="mb-2">You can rest assured that any information you submit to us will not be misused, abused or sold to any other parties.</p>
@@ -99,35 +105,36 @@ const TermsOfService = () => {
           </section>
 
           <section>
-            <h2 className="text-xl font-black uppercase tracking-widest text-black mb-3">11. INDEMNITY</h2>
-            <p>You agree to indemnify, defend and hold DAEKAN INC harmless from and against any and all third party claims, liabilities, damages, losses or expenses (including reasonable attorney's fees and costs) arising out of, based on or in connection with your access and/or use of this Site.</p>
+            <h2 className="text-lg sm:text-xl font-black uppercase tracking-widest text-black dark:text-white mb-3">11. INDEMNITY</h2>
+            <p>You agree to indemnify, defend and hold DAEKAN INC harmless from and against any and all third party claims, liabilities, damages, losses or expenses (including reasonable attorney&apos;s fees and costs) arising out of, based on or in connection with your access and/or use of this Site.</p>
           </section>
 
           <section>
-            <h2 className="text-xl font-black uppercase tracking-widest text-black mb-3">12. DISCLAIMER</h2>
+            <h2 className="text-lg sm:text-xl font-black uppercase tracking-widest text-black dark:text-white mb-3">12. DISCLAIMER</h2>
             <p className="mb-2">DAEKAN INC assumes no responsibility for accuracy, correctness, timeliness, or content of the Materials provided on this Site.</p>
             <p className="mb-2">You should not assume that the Materials on this Site are continuously updated or otherwise contain current information.</p>
             <p>DAEKAN INC is not responsible for supplying content or materials from the Site that have expired or have been removed.</p>
           </section>
 
           <section>
-            <h2 className="text-xl font-black uppercase tracking-widest text-black mb-3">13. APPLICABLE LAWS</h2>
+            <h2 className="text-lg sm:text-xl font-black uppercase tracking-widest text-black dark:text-white mb-3">13. APPLICABLE LAWS</h2>
             <p>These Terms and Conditions are governed by the law in force in Indonesia.</p>
           </section>
 
           <section>
-            <h2 className="text-xl font-black uppercase tracking-widest text-black mb-3">14. QUESTIONS AND FEEDBACK</h2>
+            <h2 className="text-lg sm:text-xl font-black uppercase tracking-widest text-black dark:text-white mb-3">14. QUESTIONS AND FEEDBACK</h2>
             <p className="mb-2">We welcome your questions, comments, and concerns about privacy or any of the information collected from you or about you.</p>
             <p>Please send us any and all feedback pertaining to privacy, or any other issue.</p>
           </section>
-
         </div>
 
-        <div className="mt-16 pt-8 border-t border-zinc-200 text-center">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-400">Legal Notice DAEKAN INC is a brand by DAEKAN INC. Copyright c 2025 All Rights Reserved.</p>
+        <div className="mt-16 pt-8 border-t-2 border-black dark:border-white text-center">
+          <p className="text-xs sm:text-sm font-bold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">
+            Legal Notice DAEKAN INC is a brand by DAEKAN INC. Copyright &copy; 2026 All Rights Reserved.
+          </p>
         </div>
-
       </motion.div>
+      <Footer />
     </div>
   )
 }

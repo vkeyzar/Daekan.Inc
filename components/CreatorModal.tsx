@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { FaTimes, FaYoutube, FaTiktok, FaTwitch, FaInstagram } from 'react-icons/fa'
 import { FaXTwitter } from "react-icons/fa6"
 
-const CreatorModal = ({ creator, close }) => {
+const CreatorModal = ({ creator, close }: { creator: any; close: () => void }) => {
   // 1. Sesuaikan dengan nama kolom di Supabase: youtube_video_id
   const [currentVideoId, setCurrentVideoId] = useState(creator.youtube_video_id)
 

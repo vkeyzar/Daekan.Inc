@@ -1,9 +1,9 @@
 import React from 'react'
 
-const CreatorSection = ({ creators, onOpenModal }) => { 
+const CreatorSection = ({ creators, onOpenModal }: { creators: any[]; onOpenModal: (creator: any) => void }) => { 
   return (
     // --- KUNCI FIX: bg-white diganti jadi bg-transparent, ditambah relative z-10 ---
-    <div name="talents" className="w-full bg-transparent text-black pt-32 pb-20 px-4 md:px-10 relative z-10">
+    <div id="talents" className="w-full bg-transparent text-black pt-32 pb-20 px-4 md:px-10 relative z-10">
       <div className="max-w-screen-2xl mx-auto flex flex-col justify-center h-full">
         
         <div className="text-center mb-16">
@@ -18,7 +18,7 @@ const CreatorSection = ({ creators, onOpenModal }) => {
         {/* Grid Kreator */}
         <div className="flex flex-wrap justify-center gap-8 px-12 sm:px-0">
           
-          {creators && creators.map((creator) => (
+          {creators && creators.map((creator: any) => (
             <div 
               key={creator.id} 
               onClick={() => onOpenModal(creator)} 

@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import { FaUserCircle, FaShoppingBag, FaSignOutAlt, FaCreditCard, FaClock, FaCheckCircle, FaTruck } from 'react-icons/fa'
 import Swal from 'sweetalert2'
+import Navbar from '@/components/Navbar'
+import Footer from '@/components/Footer'
 
 const Profile = () => {
   const router = useRouter()
@@ -13,11 +15,10 @@ const Profile = () => {
   const [loading, setLoading] = useState(true)
   const [payLoading, setPayLoading] = useState(false)
 
-  // Load script Midtrans (Snap)
   useEffect(() => {
     const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || '';
-    const snapUrl = clientKey.includes('SB-') 
-      ? "https://app.sandbox.midtrans.com/snap/snap.js" 
+    const snapUrl = clientKey.includes('SB-')
+      ? "https://app.sandbox.midtrans.com/snap/snap.js"
       : "https://app.midtrans.com/snap/snap.js";
 
     const script = document.createElement("script");
@@ -42,16 +43,14 @@ const Profile = () => {
           return
         }
 
-        // Ambil data profil
         const { data: profileData } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
           .single()
-        
+
         setUser(profileData || session.user)
 
-        // Ambil data transaksi user tersebut, urutkan dari yang terbaru
         const { data: trxData } = await supabase
           .from('transactions')
           .select('*')
@@ -80,22 +79,20 @@ const Profile = () => {
 
   const getStatusDisplay = (status: any) => {
     switch (status) {
-      case 'pending': return { text: 'MENUNGGU PEMBAYARAN', color: 'text-orange-600 bg-orange-100', icon: <FaClock /> }
-      case 'invoiced': return { text: 'MENUNGGU PEMBAYARAN', color: 'text-orange-600 bg-orange-100', icon: <FaClock /> }
-      case 'verified': return { text: 'DIBAYAR (PROSES)', color: 'text-blue-600 bg-blue-100', icon: <FaCheckCircle /> }
-      case 'production': return { text: 'DALAM PRODUKSI', color: 'text-purple-600 bg-purple-100', icon: <FaShoppingBag /> }
-      case 'sending': return { text: 'SEDANG DIKIRIM', color: 'text-vtuber-cyan bg-vtuber-cyan/10', icon: <FaTruck /> }
-      case 'success': return { text: 'SELESAI', color: 'text-green-600 bg-green-100', icon: <FaCheckCircle /> }
-      case 'canceled': return { text: 'DIBATALKAN', color: 'text-red-600 bg-red-100', icon: <FaUserCircle /> } // fallback icon
-      default: return { text: (status || '').toUpperCase(), color: 'text-zinc-600 bg-zinc-100', icon: <FaShoppingBag /> }
+      case 'pending': return { text: 'MENUNGGU PEMBAYARAN', color: 'text-orange-700 bg-orange-100 border-orange-300', icon: <FaClock /> }
+      case 'invoiced': return { text: 'MENUNGGU PEMBAYARAN', color: 'text-orange-700 bg-orange-100 border-orange-300', icon: <FaClock /> }
+      case 'verified': return { text: 'DIBAYAR (PROSES)', color: 'text-blue-700 bg-blue-100 border-blue-300', icon: <FaCheckCircle /> }
+      case 'production': return { text: 'DALAM PRODUKSI', color: 'text-purple-700 bg-purple-100 border-purple-300', icon: <FaShoppingBag /> }
+      case 'sending': return { text: 'SEDANG DIKIRIM', color: 'text-indigo-700 bg-indigo-100 border-indigo-300', icon: <FaTruck /> }
+      case 'success': return { text: 'SELESAI', color: 'text-green-700 bg-green-100 border-green-300', icon: <FaCheckCircle /> }
+      case 'canceled': return { text: 'DIBATALKAN', color: 'text-red-700 bg-red-100 border-red-300', icon: <FaUserCircle /> }
+      default: return { text: (status || '').toUpperCase(), color: 'text-zinc-700 bg-zinc-100 border-zinc-300', icon: <FaShoppingBag /> }
     }
   }
 
-  // Fungsi buat ngelanjutin pembayaran yang tertunda
   const handlePayNow = async (trx: any) => {
     setPayLoading(true);
     try {
-      // Re-construct item details buat Midtrans
       const itemDetails = trx.items ? trx.items.map((item: any) => ({
         id: item.id.toString(),
         price: item.price,
@@ -103,10 +100,9 @@ const Profile = () => {
         name: item.name.substring(0, 50)
       })) : [];
 
-      // Hitung ongkir (Total Harga - Subtotal Items)
       const subtotal = trx.items ? trx.items.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0) : trx.total_price;
       const shippingCost = trx.total_price - subtotal;
-      
+
       if (shippingCost > 0) {
         itemDetails.push({
           id: 'SHIPPING',
@@ -120,7 +116,7 @@ const Profile = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          order_id: trx.id, // ✅ Balikin kirim ID aslinya aja
+          order_id: trx.id,
           gross_amount: trx.total_price,
           customer_details: {
             first_name: trx.full_name,
@@ -136,30 +132,23 @@ const Profile = () => {
 
       setPayLoading(false);
 
-      // Munculin pop-up Midtrans
       (window as any).snap.pay(midtransData.token, {
-        onSuccess: function(result: any){
-          // ❌ HAPUS KODE AWAIT SUPABASE UPDATE DI SINI!
-          // Biarkan Webhook Vercel di background yang bekerja update DB & kirim email.
-
-          Swal.fire({ 
-            title: 'PEMBAYARAN BERHASIL!', 
-            text: 'Pesanan Anda sedang diproses sistem.', 
-            icon: 'success' 
+        onSuccess: function () {
+          Swal.fire({
+            title: 'PEMBAYARAN BERHASIL!',
+            text: 'Pesanan Anda sedang diproses sistem.',
+            icon: 'success'
           }).then(() => {
-            router.push('/'); 
-            // Atau redirect ke profil: router.push('/profile');
+            router.push('/');
           });
         },
-        onPending: function(result: any){
+        onPending: function () {
           Swal.fire({ title: 'MENUNGGU PEMBAYARAN', text: 'Silakan selesaikan pembayaran Anda.', icon: 'info' });
         },
-        onError: function(result: any){
+        onError: function () {
           Swal.fire({ title: 'GAGAL', text: 'Terjadi kesalahan pada pembayaran.', icon: 'error' });
         },
-        onClose: function(){
-          // User nutup pop-up
-        }
+        onClose: function () {}
       });
 
     } catch (err: any) {
@@ -168,89 +157,107 @@ const Profile = () => {
     }
   }
 
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center font-black tracking-widest text-vtuber-cyan animate-pulse">LOADING...</div>
-  }
-
   return (
-    <div className="min-h-screen bg-zinc-50 pt-28 pb-20 px-4 md:px-8 font-sans">
-      <div className="max-w-4xl mx-auto space-y-8">
-        
-        {/* HEADER PROFIL */}
-        <div className="bg-white p-6 md:p-10 rounded-3xl shadow-sm border border-zinc-100 flex flex-col md:flex-row items-center gap-6">
-          <div className="w-24 h-24 bg-gradient-to-tr from-vtuber-cyan to-vtuber-purple rounded-full flex items-center justify-center text-white shadow-lg">
-            <FaUserCircle className="text-6xl" />
-          </div>
-          <div className="text-center md:text-left flex-1">
-            <h1 className="text-3xl font-black italic uppercase tracking-tighter text-zinc-800">{user?.full_name || 'DAEKAN MEMBER'}</h1>
-            <p className="text-sm font-bold text-zinc-400 mt-1">{user?.email}</p>
-          </div>
-          <button onClick={handleLogout} className="flex items-center gap-2 px-6 py-3 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-colors rounded-xl font-bold uppercase tracking-widest text-xs">
-            <FaSignOutAlt /> Keluar
-          </button>
+    <div className="min-h-screen flex flex-col bg-white dark:bg-black text-black dark:text-white font-sans">
+      <Navbar />
+      {loading ? (
+        <div className="flex-1 flex items-center justify-center font-black tracking-widest text-sm sm:text-base animate-pulse">
+          LOADING PROFILE...
         </div>
-
-        {/* DAFTAR TRANSAKSI */}
-        <div className="bg-white p-6 md:p-10 rounded-3xl shadow-sm border border-zinc-100">
-          <h2 className="text-2xl font-black italic uppercase tracking-tighter text-zinc-800 mb-6 flex items-center gap-3">
-            <FaShoppingBag className="text-vtuber-cyan" /> Riwayat Pesanan
-          </h2>
-
-          {transactions.length === 0 ? (
-            <div className="text-center py-10 bg-zinc-50 rounded-2xl border border-zinc-100">
-              <p className="text-sm font-bold uppercase tracking-widest text-zinc-400">Belum ada transaksi.</p>
+      ) : (
+        <div className="flex-1 py-12 px-4 md:px-8">
+          <div className="max-w-4xl mx-auto space-y-8">
+            {/* HEADER PROFIL */}
+            <div className="bg-white dark:bg-zinc-950 p-6 md:p-10 border-2 border-black dark:border-white flex flex-col md:flex-row items-center gap-6">
+              <div className="w-20 h-20 bg-black dark:bg-white text-white dark:text-black flex items-center justify-center shrink-0">
+                <FaUserCircle className="text-5xl" />
+              </div>
+              <div className="text-center md:text-left flex-1 min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tighter text-black dark:text-white truncate">
+                  {user?.full_name || 'DAEKAN MEMBER'}
+                </h1>
+                <p className="text-sm sm:text-base font-bold text-zinc-500 dark:text-zinc-400 mt-1 break-all">{user?.email}</p>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white hover:bg-red-700 transition-colors font-black uppercase tracking-widest text-xs sm:text-sm cursor-pointer"
+              >
+                <FaSignOutAlt /> Keluar
+              </button>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {transactions.map((trx: any) => {
-                const statusInfo = getStatusDisplay(trx.status);
-                
-                return (
-                  <div key={trx.id} className="border border-zinc-100 rounded-2xl p-5 hover:shadow-md transition-shadow bg-zinc-50/50">
-                    <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-4 pb-4 border-b border-zinc-100">
-                      <div>
-                        <p className="text-[10px] font-bold text-zinc-400 tracking-widest uppercase mb-1">Order ID: #{trx.id.split('-')[0].toUpperCase()}</p>
-                        <p className="text-sm font-bold text-zinc-600">{new Date(trx.created_at).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                      </div>
-                      <div className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 w-fit ${statusInfo.color}`}>
-                        {statusInfo.icon} {statusInfo.text}
-                      </div>
-                    </div>
 
-                    <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
-                      <div className="w-full md:w-auto">
-                        <p className="font-black uppercase text-sm mb-1 line-clamp-2 max-w-md">{trx.product_name}</p>
-                        <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Total: {formatIDR(trx.total_price)}</p>
-                      </div>
+            {/* DAFTAR TRANSAKSI */}
+            <div className="bg-white dark:bg-zinc-950 p-6 md:p-10 border-2 border-black dark:border-white">
+              <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tighter text-black dark:text-white mb-6 flex items-center gap-3 border-b-2 border-black dark:border-white pb-4">
+                <FaShoppingBag /> Riwayat Pesanan
+              </h2>
 
-                      {/* TOMBOL LANJUT BAYAR */}
-                      {(trx.status === 'pending' || trx.status === 'invoiced') && (
-                        <button 
-                          onClick={() => handlePayNow(trx)}
-                          disabled={payLoading}
-                          className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-black text-white hover:bg-zinc-800 transition-colors rounded-xl font-black uppercase tracking-widest text-xs shadow-lg"
-                        >
-                          <FaCreditCard /> {payLoading ? 'MEMPROSES...' : 'BAYAR SEKARANG'}
-                        </button>
-                      )}
-                    </div>
-                    
-                    {/* INFO RESI JIKA ADA */}
-                    {trx.courier && trx.tracking_number && (
-                      <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-xl">
-                        <p className="text-xs font-bold text-blue-800 uppercase tracking-widest flex items-center gap-2">
-                          <FaTruck /> Resi {trx.courier}: <span className="font-black bg-white px-2 py-1 rounded select-all">{trx.tracking_number}</span>
-                        </p>
+              {transactions.length === 0 ? (
+                <div className="text-center py-12 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                  <p className="text-sm sm:text-base font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">
+                    Belum ada transaksi.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {transactions.map((trx: any) => {
+                    const statusInfo = getStatusDisplay(trx.status);
+
+                    return (
+                      <div key={trx.id} className="border-2 border-black dark:border-white p-5 bg-white dark:bg-black">
+                        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-4 pb-4 border-b border-zinc-200 dark:border-zinc-800">
+                          <div>
+                            <p className="text-xs font-black text-zinc-500 dark:text-zinc-400 tracking-widest uppercase mb-1">
+                              Order ID: #{trx.id.split('-')[0].toUpperCase()}
+                            </p>
+                            <p className="text-sm sm:text-base font-bold text-black dark:text-white">
+                              {new Date(trx.created_at).toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                            </p>
+                          </div>
+                          <div className={`px-4 py-2 border text-xs font-black uppercase tracking-widest flex items-center gap-2 w-fit ${statusInfo.color}`}>
+                            {statusInfo.icon} {statusInfo.text}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                          <div className="w-full md:w-auto">
+                            <p className="font-black uppercase text-sm sm:text-base mb-1 text-black dark:text-white">{trx.product_name}</p>
+                            <p className="text-sm font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-widest">
+                              Total: <span className="text-black dark:text-white font-black">{formatIDR(trx.total_price)}</span>
+                            </p>
+                          </div>
+
+                          {(trx.status === 'pending' || trx.status === 'invoiced') && (
+                            <button
+                              onClick={() => handlePayNow(trx)}
+                              disabled={payLoading}
+                              className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3.5 bg-black dark:bg-white text-white dark:text-black hover:opacity-80 transition-opacity font-black uppercase tracking-widest text-xs sm:text-sm cursor-pointer"
+                            >
+                              <FaCreditCard /> {payLoading ? 'MEMPROSES...' : 'BAYAR SEKARANG'}
+                            </button>
+                          )}
+                        </div>
+
+                        {trx.courier && trx.tracking_number && (
+                          <div className="mt-4 p-3.5 bg-zinc-100 dark:bg-zinc-900 border border-black dark:border-white">
+                            <p className="text-xs sm:text-sm font-bold text-black dark:text-white uppercase tracking-widest flex flex-wrap items-center gap-2">
+                              <FaTruck /> Resi {trx.courier}:{' '}
+                              <span className="font-black bg-white dark:bg-black px-2.5 py-1 border border-black dark:border-white select-all">
+                                {trx.tracking_number}
+                              </span>
+                            </p>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                )
-              })}
+                    )
+                  })}
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
-
-      </div>
+      )}
+      <Footer />
     </div>
   )
 }

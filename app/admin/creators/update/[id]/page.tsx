@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import Swal from 'sweetalert2'
 
-const UpdateCreator = ({ isOpen, onClose, creatorData, refreshData }: { isOpen?: boolean; onClose?: any; creatorData?: any; refreshData?: any }) => {
+const UpdateCreator = ({ isOpen, onClose, creatorData, refreshData }: any) => {
   const [loading, setLoading] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -111,7 +111,7 @@ const UpdateCreator = ({ isOpen, onClose, creatorData, refreshData }: { isOpen?:
 
   return (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-xl z-[9999] flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white text-black p-8 md:p-12 rounded-[3rem] w-full max-w-5xl shadow-2xl my-auto">
+      <div className="bg-white dark:bg-zinc-950 text-black dark:text-white border-2 border-black dark:border-white p-6 sm:p-10 w-full max-w-5xl shadow-2xl my-auto">
         <div className="flex justify-between items-start mb-10">
           <div>
             <h2 className="text-5xl font-black italic uppercase tracking-tighter">Edit Talent</h2>

@@ -10,7 +10,7 @@ const slides = [
   { id: 4, image: 'https://corhxzcsgvcckigxleeo.supabase.co/storage/v1/object/public/asset/1773920712410.webp' },
 ]
 
-const ImagePreviewModal = ({ isOpen, imageSrc, onClose }) => {
+const ImagePreviewModal = ({ isOpen, imageSrc, onClose }: { isOpen: boolean; imageSrc: string | null; onClose: () => void }) => {
   if (!isOpen) return null;
 
   return ReactDOM.createPortal(
@@ -40,7 +40,7 @@ const ImagePreviewModal = ({ isOpen, imageSrc, onClose }) => {
           className="relative max-w-7xl w-full h-full flex justify-center items-center z-[999999]"
           onClick={(e) => e.stopPropagation()} 
         >
-          <img src={imageSrc} alt="Full Preview" className="w-full h-auto max-h-[90vh] object-contain drop-shadow-[0_0_30px_rgba(164,229,250,0.3)] rounded-xl" />
+          <img src={imageSrc ?? undefined} alt="Full Preview" className="w-full h-auto max-h-[90vh] object-contain drop-shadow-[0_0_30px_rgba(164,229,250,0.3)] rounded-xl" />
         </motion.div>
       </motion.div>
     </AnimatePresence>,
@@ -50,7 +50,7 @@ const ImagePreviewModal = ({ isOpen, imageSrc, onClose }) => {
 
 const ProductSlideshow = () => {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [selectedImageForPreview, setSelectedImageForPreview] = useState(null)
+  const [selectedImageForPreview, setSelectedImageForPreview] = useState<string | null>(null)
 
   useEffect(() => {
     if (slides.length === 0) return;
@@ -60,8 +60,8 @@ const ProductSlideshow = () => {
     return () => clearInterval(timer) 
   }, [])
 
-  const nextSlide = (e) => { e.stopPropagation(); setCurrentIndex((prevIndex) => (prevIndex + 1) % slides.length); }
-  const prevSlide = (e) => { e.stopPropagation(); setCurrentIndex((prevIndex) => (prevIndex - 1 + slides.length) % slides.length); }
+  const nextSlide = (e: React.MouseEvent) => { e.stopPropagation(); setCurrentIndex((prevIndex) => (prevIndex + 1) % slides.length); }
+  const prevSlide = (e: React.MouseEvent) => { e.stopPropagation(); setCurrentIndex((prevIndex) => (prevIndex - 1 + slides.length) % slides.length); }
 
   if (slides.length === 0) return null;
 

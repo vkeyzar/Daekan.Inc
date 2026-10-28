@@ -7,12 +7,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Set default state langsung ke 'light' biar web buka putih duluan
   const [theme, setTheme] = useState('light');
 
-  useEffect(() => {
-    // Cek localStorage, kalau kosong otomatis 'light'
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    setTheme(savedTheme);
-  }, []);
-
+  // Default mutlak 'light': tidak membaca localStorage / preferensi sistem
   useEffect(() => {
     const root = window.document.documentElement;
     if (theme === 'dark') {
@@ -20,13 +15,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     } else {
       root.classList.remove('dark');
     }
-    localStorage.setItem('theme', theme);
   }, [theme]);
 
   const toggleTheme = () => setTheme(theme === 'light' ? 'dark' : 'light');
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, isDark: theme === 'dark', toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );
