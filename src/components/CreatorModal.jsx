@@ -1,3 +1,4 @@
+'use client';
 import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { FaTimes, FaYoutube, FaTiktok, FaTwitch, FaInstagram } from 'react-icons/fa'

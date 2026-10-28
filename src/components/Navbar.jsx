@@ -1,3 +1,4 @@
+'use client';
 import React, { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -63,7 +64,7 @@ const Navbar = () => {
       >
         <div className="w-full px-6 md:px-12 flex justify-between items-center relative">
 
-          <Link to="/" onClick={scrollToTop} className="z-10 relative shrink-0 flex items-center mt-1 md:mt-1.5">
+          <Link href="/" onClick={scrollToTop} className="z-10 relative shrink-0 flex items-center mt-1 md:mt-1.5">
             <img
               src="https://corhxzcsgvcckigxleeo.supabase.co/storage/v1/object/public/asset/daekan%20new%20logo.png"
               alt="Daekan Inc."
@@ -73,11 +74,11 @@ const Navbar = () => {
           </Link>
 
           <div className="hidden md:flex gap-10 font-bold text-sm tracking-widest absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
-            <Link to="/" onClick={scrollToTop} className="uppercase hover:underline transition-all duration-200">HOME</Link>
-            <Link to="/products" onClick={scrollToTop} className="uppercase hover:underline transition-all duration-200">PRODUCTS</Link>
-            <Link to="/#reviews" className="uppercase hover:underline transition-all duration-200">REVIEWS</Link>
+            <Link href="/" onClick={scrollToTop} className="uppercase hover:underline transition-all duration-200">HOME</Link>
+            <Link href="/products" onClick={scrollToTop} className="uppercase hover:underline transition-all duration-200">PRODUCTS</Link>
+            <Link href="/#reviews" className="uppercase hover:underline transition-all duration-200">REVIEWS</Link>
             {session && role === 'admin' && (
-              <Link to="/admin-dashboard" className="text-red-600 dark:text-red-400 uppercase hover:underline transition-all duration-200">ADMIN</Link>
+              <Link href="/admin-dashboard" className="text-red-600 dark:text-red-400 uppercase hover:underline transition-all duration-200">ADMIN</Link>
             )}
           </div>
 
@@ -101,7 +102,7 @@ const Navbar = () => {
               )}
             </button>
 
-            <Link to={session ? "/profile" : "/login"} className="hidden md:flex hover:opacity-60 transition-all">
+            <Link href={session ? "/profile" : "/login"} className="hidden md:flex hover:opacity-60 transition-all">
               <FaUser size={18} className="cursor-pointer" />
             </Link>
 
@@ -121,14 +122,14 @@ const Navbar = () => {
             transition={{ duration: 0.2 }}
             className="md:hidden fixed inset-0 bg-black dark:bg-white z-40 flex flex-col items-center justify-center gap-8 text-3xl font-black uppercase tracking-tighter text-white dark:text-black"
           >
-            <Link to="/" onClick={() => setIsOpen(false)} className="hover:opacity-60 transition-all">HOME</Link>
-            <Link to="/products" onClick={() => setIsOpen(false)} className="hover:opacity-60 transition-all">PRODUCTS</Link>
-            <Link to="/#reviews" onClick={() => setIsOpen(false)} className="hover:opacity-60 transition-all">REVIEWS</Link>
+            <Link href="/" onClick={() => setIsOpen(false)} className="hover:opacity-60 transition-all">HOME</Link>
+            <Link href="/products" onClick={() => setIsOpen(false)} className="hover:opacity-60 transition-all">PRODUCTS</Link>
+            <Link href="/#reviews" onClick={() => setIsOpen(false)} className="hover:opacity-60 transition-all">REVIEWS</Link>
             {session && role === 'admin' && (
-              <Link to="/admin-dashboard" onClick={() => setIsOpen(false)} className="text-red-400 dark:text-red-600 hover:opacity-60">ADMIN</Link>
+              <Link href="/admin-dashboard" onClick={() => setIsOpen(false)} className="text-red-400 dark:text-red-600 hover:opacity-60">ADMIN</Link>
             )}
             <hr className="w-1/2 border-current opacity-20" />
-            <Link to={session ? "/profile" : "/login"} onClick={() => setIsOpen(false)}>
+            <Link href={session ? "/profile" : "/login"} onClick={() => setIsOpen(false)}>
               <FaUser size={30} className="hover:opacity-60 transition-all" />
             </Link>
           </motion.div>

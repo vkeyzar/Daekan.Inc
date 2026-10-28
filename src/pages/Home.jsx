@@ -110,7 +110,7 @@ const Home = () => {
 
           <div className="flex justify-between items-end mt-24 mb-8 border-b border-black dark:border-white pb-4 px-2">
             <h3 className="text-xl md:text-2xl font-black uppercase text-black dark:text-white tracking-tighter">More Daekan Goods</h3>
-            <Link to="/products" className="text-[10px] md:text-xs font-black uppercase tracking-[0.1em] md:tracking-[0.2em] text-black dark:text-white hover:opacity-60 transition-all shrink-0">
+            <Link href="/products" className="text-[10px] md:text-xs font-black uppercase tracking-[0.1em] md:tracking-[0.2em] text-black dark:text-white hover:opacity-60 transition-all shrink-0">
               View All Products &rarr;
             </Link>
           </div>
@@ -125,7 +125,7 @@ const Home = () => {
                 allCollectionCards.map(collection => (
                   <Link
                     key={collection.id}
-                    to={`/products?tab=${collection.targetTab}&${collection.isGenre ? 'genre' : 'type'}=${collection.id}`}
+                    href={`/products?tab=${collection.targetTab}&${collection.isGenre ? 'genre' : 'type'}=${collection.id}`}
                     className="group relative w-[200px] md:w-[240px] shrink-0 aspect-square overflow-hidden border border-black dark:border-white hover:border-black dark:hover:border-white transition-all duration-300 block bg-white dark:bg-black"
                   >
                     <img

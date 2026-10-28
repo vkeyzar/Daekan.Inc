@@ -185,7 +185,7 @@ const Register = () => {
 
         <p className="mt-8 text-vtuber-purple text-[11px] text-center uppercase tracking-widest font-bold">
           Already a member?{' '}
-          <Link to="/login" className="text-vtuber-pink font-black hover:underline underline-offset-4">Login</Link>
+          <Link href="/login" className="text-vtuber-pink font-black hover:underline underline-offset-4">Login</Link>
         </p>
       </form>
     </div>

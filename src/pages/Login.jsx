@@ -62,7 +62,7 @@ const Login = () => {
         </button>
 
         <p className="mt-8 text-vtuber-purple text-[11px] text-center uppercase tracking-widest font-bold">
-          Belum punya akun? <Link to="/register" className="text-vtuber-pink font-black hover:underline underline-offset-4">Daftar di sini</Link>
+          Belum punya akun? <Link href="/register" className="text-vtuber-pink font-black hover:underline underline-offset-4">Daftar di sini</Link>
         </p>
       </form>
     </div>
