@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabaseClient'
 import { FaFileExcel, FaCheckCircle, FaTrash, FaFilter, FaChevronDown, FaBoxOpen, FaPen, FaTimes, FaCalendarAlt, FaChartLine } from 'react-icons/fa'
 import { motion, AnimatePresence } from 'framer-motion'
 import Swal from 'sweetalert2'
@@ -568,7 +568,5 @@ const TransactionList = ({ transactions = [], refreshData }: { transactions?: an
     </div>
   )
 }
-
-export default TransactionList
 
 export default TransactionList

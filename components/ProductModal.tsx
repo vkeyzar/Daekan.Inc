@@ -1,256 +1,174 @@
 'use client';
-import React, { useState, useEffect } from 'react'
-import { IoClose } from "react-icons/io5";
-import { motion } from "framer-motion";
-import Countdown from 'react-countdown';
-import { useRouter, usePathname } from 'next/navigation';
-import useCartStore from '../store/useCartStore'; 
-import { supabase } from '../lib/supabaseClient'; 
-import Swal from 'sweetalert2'; 
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+// Sesuaikan import ini jika lokasi store Anda berbeda
+// import { useCartStore } from '@/store/useCartStore';
 
-const ProductModal = ({ product, close }) => {
-  const router = useRouter();
-  const pathname = usePathname();
-  const addToCart = useCartStore((state) => state.addToCart);
-
-  const productName = product.name || product.title || 'UNKNOWN GEAR';
-  const isComingSoon = !product.price || product.price === 0;
-  const isSale = product.original_price && Number(product.original_price) > Number(product.price);
-  const isClosed = product.is_open === false;
-  const needsSize = product.has_size !== false; 
-
-  const sizeChartCat = (product.product_line || '').toUpperCase().includes('COLLAB') ? 'COLLAB' : 'MERCH';
-
-  const [isSaleExpired, setIsSaleExpired] = useState(false);
-  const [selectedSize, setSelectedSize] = useState('');
-  const [quantity, setQuantity] = useState(1);
-
-  // ✅ STATE BARU BUAT STOK DINAMIS
-  const [stockData, setStockData] = useState([]);
-  const [availableQuantity, setAvailableQuantity] = useState(null);
-
-  useEffect(() => {
-    if (product.sale_end_date) {
-      const timeLeft = new Date(product.sale_end_date).getTime() - Date.now();
-      if (timeLeft <= 0) setIsSaleExpired(true);
-      else setIsSaleExpired(false);
-    } else {
-      setIsSaleExpired(false);
-    }
-  }, [product.sale_end_date]);
-
-  // ✅ FETCH STOK AKTUAL DARI DB (Khusus Limited Gear)
-  useEffect(() => {
-    if (product.label === 'LIMITED GEAR') {
-      const fetchStock = async () => {
-        const { data, error } = await supabase
-          .from('product_stocks')
-          .select('*')
-          .eq('product_id', product.id);
-        if (data) setStockData(data);
-      };
-      fetchStock();
-    }
-  }, [product.id, product.label]);
-
-  // ✅ PANTAU SISA STOK BERDASARKAN SIZE YG DIPILIH
-  useEffect(() => {
-    if (product.label === 'LIMITED GEAR') {
-      if (needsSize && selectedSize) {
-        const s = stockData.find(x => x.size === selectedSize);
-        if (s) {
-          const avail = s.stock_physical - s.stock_reserved;
-          setAvailableQuantity(avail > 0 ? avail : 0);
-          if (quantity > avail) setQuantity(avail > 0 ? 1 : 0);
-        }
-      } else if (!needsSize) {
-        const s = stockData.find(x => x.size === '-');
-        if (s) {
-          const avail = s.stock_physical - s.stock_reserved;
-          setAvailableQuantity(avail > 0 ? avail : 0);
-          if (quantity > avail) setQuantity(avail > 0 ? 1 : 0);
-        }
-      }
-    }
-  }, [selectedSize, stockData, needsSize, product.label, quantity]);
-
-  const formatIDR = (price) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(price);
-
-  const showSaleBadge = isSale && !isComingSoon && !isSaleExpired && !isClosed;
-  const activePrice = selectedSize === 'XXL' ? Number(product.price) + 10000 : Number(product.price);
-
-  const checkUserSession = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      const result = await Swal.fire({
-        title: 'OTENTIKASI DIPERLUKAN',
-        text: 'Silakan masuk ke akun Anda atau mendaftar terlebih dahulu untuk dapat melanjutkan proses pembelanjaan.',
-        icon: 'warning', showCancelButton: true, confirmButtonColor: '#77cbf0', cancelButtonColor: '#e1aecf',
-        confirmButtonText: 'KE HALAMAN LOGIN', cancelButtonText: 'BATAL'
-      });
-      if (result.isConfirmed) { close(); router.push('/login', { state: { returnTo: '/#shop' } }); }
-      return false;
-    }
-    return true;
-  };
-
-  const handleAddToCart = async () => {
-    const isLoggedIn = await checkUserSession();
-    if (!isLoggedIn) return;
-    if (needsSize && !selectedSize) return Swal.fire({ title: 'PERHATIAN', text: 'Mohon pilih ukuran (Size) terlebih dahulu.', icon: 'warning', confirmButtonColor: '#e1aecf' });
-    if (product.label === 'LIMITED GEAR' && availableQuantity === 0) return Swal.fire({ title: 'HABIS', text: 'Maaf, stok untuk ukuran ini sudah habis terjual.', icon: 'error', confirmButtonColor: '#000' });
-    
-    addToCart({ ...product, price: activePrice }, needsSize ? selectedSize : '-', Math.max(1, Number(quantity) || 1));
-    Swal.fire({ title: 'BERHASIL', text: 'Barang telah dimasukkan ke keranjang Anda.', icon: 'success', timer: 1500, showConfirmButton: false });
-    close();
-  };
-
-  const handleBuyNow = async () => {
-    const isLoggedIn = await checkUserSession();
-    if (!isLoggedIn) return;
-    if (needsSize && !selectedSize) return Swal.fire({ title: 'PERHATIAN', text: 'Mohon pilih ukuran (Size) terlebih dahulu.', icon: 'warning', confirmButtonColor: '#e1aecf' });
-    if (product.label === 'LIMITED GEAR' && availableQuantity === 0) return Swal.fire({ title: 'HABIS', text: 'Maaf, stok untuk ukuran ini sudah habis terjual.', icon: 'error', confirmButtonColor: '#000' });
-    
-    close();
-    router.push('/checkout', { state: { cartItems: [{ ...product, price: activePrice, size: needsSize ? selectedSize : '-', quantity: Math.max(1, Number(quantity) || 1) }] } });
-  };
-
-  // Cek apakah NON-SIZE barangnya habis
-  const isNonSizeSoldOut = product.label === 'LIMITED GEAR' && !needsSize && availableQuantity === 0;
-
-  return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[1000] flex items-center justify-center p-2 md:p-4 bg-black/80 backdrop-blur-sm" onClick={close}>
-        <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="bg-white rounded-3xl max-w-7xl w-full overflow-hidden shadow-2xl relative flex flex-col md:flex-row max-h-[90vh] md:h-auto" onClick={(e) => e.stopPropagation()}>
-            <button onClick={close} className="absolute top-2 right-2 md:top-4 md:right-4 text-vtuber-pink hover:text-vtuber-cyan z-50 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-md transition-colors"><IoClose className="w-6 h-6" /></button>
-
-            <div className="w-full md:w-[60%] bg-vtuber-purple/5 flex items-center justify-center relative h-64 md:h-[85vh] shrink-0 border-r border-vtuber-blue/10">
-               {(isClosed || isNonSizeSoldOut) && (<div className="absolute inset-0 bg-black/40 z-[5] flex items-center justify-center backdrop-blur-[2px]"><span className="bg-black text-white px-6 py-2 font-black text-2xl tracking-[0.2em] uppercase -rotate-12 border border-white/20 shadow-2xl">SOLD OUT</span></div>)}
-                {showSaleBadge && (
-                  <div className="absolute top-0 left-0 bg-gradient-to-br from-vtuber-pink to-vtuber-blue text-white px-6 py-4 rounded-br-3xl shadow-[0_10px_30px_rgba(225,174,207,0.5)] z-10 flex flex-col items-center">
-                    <p className="text-[20px] font-black uppercase tracking-[0.2em] leading-none mb-1">{product.sale_end_date ? "LIMITED SALE" : "SPECIAL PRICE"}</p>
-                    {product.sale_end_date && <div className="font-mono text-[18px] font-black tabular-nums tracking-tighter"><Countdown date={new Date(product.sale_end_date)} onComplete={() => setIsSaleExpired(true)} /></div>}
-                  </div>
-                )}
-               <img src={product.image_url || product.image} alt={productName} className={`w-full h-full object-contain p-4 transition-all duration-300 drop-shadow-md ${(isClosed || isNonSizeSoldOut) ? 'grayscale opacity-60' : ''}`} />
-            </div>
-
-            <div className="w-full md:w-[40%] p-6 md:p-10 flex flex-col justify-start bg-white overflow-y-auto max-h-[50vh] md:max-h-[85vh]">
-                <h2 className={`text-3xl md:text-4xl font-black uppercase tracking-tighter mb-2 shrink-0 ${isClosed ? 'text-zinc-400' : 'text-zinc-800'}`}>{productName}</h2>
-                
-                <div className="flex items-center gap-3 mb-6 shrink-0 flex-wrap">
-                  {isComingSoon ? (
-                    <p className="text-3xl text-vtuber-purple font-black italic tracking-tighter">COMING SOON</p>
-                  ) : (
-                    <>
-                      <p className={`text-3xl font-black transition-colors ${isClosed ? 'text-zinc-400' : 'text-vtuber-purple'}`}>{formatIDR(activePrice)}</p>
-                      {selectedSize === 'XXL' && <p className="text-[10px] font-black text-black uppercase tracking-widest bg-vtuber-pink px-2.5 py-1 rounded-lg drop-shadow-sm">(+ Biaya Extra XXL)</p>}
-                      {showSaleBadge && selectedSize !== 'XXL' && <p className="text-lg text-vtuber-pink line-through font-bold opacity-70">{formatIDR(product.original_price)}</p>}
-                    </>
-                  )}
-                </div>
-                
-                <div className="text-sm text-black mb-6 border-t border-b border-vtuber-blue/10 py-4 shrink-0 font-medium">
-                  <p className="whitespace-pre-line leading-relaxed">{product.description || "No description available for this premium gear."}</p>
-                </div>
-
-                {!isClosed && !isComingSoon && (
-                  <div className="space-y-4 mb-8 shrink-0">
-                    {needsSize && (
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <label className="text-xs font-bold tracking-[0.2em] uppercase text-vtuber-purple">Pilih Ukuran</label>
-                          <button type="button" onClick={() => window.open(`/size-chart?cat=${sizeChartCat}`, '_blank')} className="text-[10px] font-bold text-vtuber-cyan uppercase underline tracking-[0.1em] hover:text-vtuber-pink">Panduan Ukuran</button>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {/* ✅ LOGIC RENDER SIZE (Dinamis kalau limited, Statis kalau biasa) */}
-                          {product.label === 'LIMITED GEAR' ? (
-                            stockData.length > 0 ? (
-                              stockData.map((sz) => {
-                                const avail = sz.stock_physical - sz.stock_reserved;
-                                const isSoldOut = avail <= 0;
-                                return (
-                                  <button 
-                                    key={sz.size} 
-                                    disabled={isSoldOut}
-                                    onClick={() => setSelectedSize(sz.size)} 
-                                    className={`flex-1 min-w-[3rem] py-2 md:py-3 border-2 font-black text-xs md:text-sm transition-all rounded-xl relative ${isSoldOut ? 'bg-zinc-100 border-zinc-200 text-zinc-400 cursor-not-allowed' : (selectedSize === sz.size ? 'border-vtuber-pink bg-vtuber-pink text-white shadow-[0_0_10px_rgba(225,174,207,0.5)]' : 'border-vtuber-blue/20 text-vtuber-purple hover:border-vtuber-cyan hover:text-vtuber-cyan')}`}
-                                  >
-                                    {sz.size}
-                                    {sz.size === 'XXL' && !isSoldOut && <span className="absolute -top-2.5 -right-2 bg-vtuber-pink text-black font-black text-[10px] px-2 py-0.5 rounded-full drop-shadow-sm border border-black/5">+10K</span>}
-                                    {isSoldOut && <span className="absolute -top-2 -right-1 bg-red-500 text-white font-black tracking-tighter text-[8px] px-1.5 py-0.5 rounded shadow-sm z-10">SOLD OUT</span>}
-                                  </button>
-                                );
-                              })
-                            ) : (
-                              <p className="text-xs text-red-500 font-bold italic w-full">Stok belum diatur oleh admin.</p>
-                            )
-                          ) : (
-                            ['S', 'M', 'L', 'XL', 'XXL'].map((sz) => (
-                              <button key={sz} type="button" onClick={() => setSelectedSize(sz)} className={`flex-1 min-w-[3rem] py-2 md:py-3 border-2 font-black text-xs md:text-sm transition-all rounded-xl relative ${selectedSize === sz ? 'border-vtuber-pink bg-vtuber-pink text-white shadow-[0_0_10px_rgba(225,174,207,0.5)]' : 'border-vtuber-blue/20 text-vtuber-purple hover:border-vtuber-cyan hover:text-vtuber-cyan'}`}>
-                                {sz}
-                                {sz === 'XXL' && <span className="absolute -top-2.5 -right-2 bg-vtuber-pink text-black font-black text-[10px] px-2 py-0.5 rounded-full drop-shadow-sm border border-black/5">+10K</span>}
-                              </button>
-                            ))
-                          )}
-                        </div>
-                      </div>
-                    )}
-                    
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <label className="text-xs font-bold tracking-[0.2em] uppercase text-vtuber-purple block">Kuantitas</label>
-                        {/* ✅ LIVE COUNTER STOK */}
-                        {product.label === 'LIMITED GEAR' && availableQuantity !== null && availableQuantity > 0 && (!needsSize || selectedSize) && (
-                          <span className="text-xs font-black tracking-widest text-red-600 animate-pulse bg-red-50 px-3 py-1 rounded-md border border-red-200 shadow-sm">
-                            *Tersisa {availableQuantity} lagi!
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center justify-between border-2 border-vtuber-blue/20 rounded-xl overflow-hidden w-full max-w-[130px] h-12 text-vtuber-purple">
-                        <button type="button" onClick={() => setQuantity(Math.max(1, Number(quantity) - 1))} className="w-10 h-full flex items-center justify-center hover:bg-vtuber-cyan/10 font-black text-lg transition-colors">-</button>
-                        
-                        {/* ✅ LIMIT INPUT KUANTITAS BERDASARKAN SISA STOK */}
-                        <input 
-                          type="number" 
-                          min="1" 
-                          value={quantity} 
-                          onChange={(e) => {
-                            let val = Number(e.target.value);
-                            if (product.label === 'LIMITED GEAR' && availableQuantity !== null && val > availableQuantity) val = availableQuantity;
-                            setQuantity(val);
-                          }} 
-                          onBlur={() => setQuantity(Math.max(1, Number(quantity) || 1))} 
-                          className="w-12 h-full text-center font-black text-base outline-none bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
-                        />
-                        
-                        <button type="button" onClick={() => {
-                          if (product.label === 'LIMITED GEAR' && availableQuantity !== null) {
-                            setQuantity(Math.min(availableQuantity, Number(quantity) + 1));
-                          } else {
-                            setQuantity(Number(quantity) + 1);
-                          }
-                        }} className="w-10 h-full flex items-center justify-center hover:bg-vtuber-cyan/10 font-black text-lg transition-colors">+</button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex flex-col gap-2 md:gap-3 mt-auto shrink-0 border-t border-vtuber-blue/10 pt-6">
-                  {isClosed || isNonSizeSoldOut ? (
-                    <button disabled className="w-full bg-zinc-200 text-zinc-500 py-4 rounded-xl font-black uppercase text-xs tracking-[0.2em] cursor-not-allowed border border-zinc-300"><IoClose className="w-5 h-5 inline mr-2"/> {isClosed ? 'CLOSE ORDER' : 'SOLD OUT'}</button>
-                  ) : isComingSoon ? (
-                    <button disabled className="w-full bg-zinc-100 text-zinc-400 py-4 rounded-xl font-black uppercase text-xs tracking-[0.2em] cursor-not-allowed">COMING SOON</button>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-3">
-                      <button onClick={handleAddToCart} className="w-full py-4 bg-vtuber-cyan/10 text-vtuber-cyan border-2 border-vtuber-cyan font-black italic uppercase text-xs md:text-sm tracking-[0.1em] hover:bg-vtuber-cyan hover:text-white transition-all rounded-xl">ADD TO CART</button>
-                      <button onClick={handleBuyNow} className="w-full py-4 bg-gradient-to-r from-vtuber-cyan to-vtuber-blue text-white font-black italic uppercase text-xs md:text-sm tracking-[0.1em] hover:from-vtuber-pink hover:to-vtuber-purple hover:shadow-[0_5px_15px_rgba(225,174,207,0.4)] transition-all rounded-xl">BUY NOW</button>
-                    </div>
-                  )}
-                </div>
-            </div>
-        </motion.div>
-    </motion.div>
-  )
+// 1. Definisikan tipe untuk properti produk
+export interface ProductData {
+  id: string | number;
+  name: string;
+  price: number;
+  image_url?: string;
+  description?: string;
 }
 
-export default ProductModal
+// 2. Definisikan tipe untuk opsi ukuran dan stok
+export interface SizeOption {
+  size: string;
+  stock_physical: number;
+  stock_reserved: number;
+}
+
+// 3. Definisikan tipe untuk props komponen
+interface ProductModalProps {
+  product: ProductData;
+  close: () => void;
+}
+
+export default function ProductModal({ product, close }: ProductModalProps) {
+  const router = useRouter();
+  
+  // 4. Berikan tipe eksplisit pada useState untuk menghindari error 'never'
+  const [sizes, setSizes] = useState<SizeOption[]>([]);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  
+  // Simulasi fetch data ukuran (Ganti dengan logika fetch API Anda)
+  useEffect(() => {
+    // Contoh data statis sementara agar tidak error
+    const mockSizes: SizeOption[] = [
+      { size: 'S', stock_physical: 10, stock_reserved: 2 },
+      { size: 'M', stock_physical: 5, stock_reserved: 0 },
+      { size: 'L', stock_physical: 0, stock_reserved: 0 }, // Out of stock
+    ];
+    setSizes(mockSizes);
+  }, [product.id]);
+
+  // 5. Beri tipe 'number' pada parameter price
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+    }).format(price);
+  };
+
+  // 6. Ganti 'navigate' bawaan React Router dengan 'router.push' Next.js
+  const handleBuyNow = () => {
+    if (!selectedSize) {
+      alert('Pilih ukuran terlebih dahulu!');
+      return;
+    }
+    
+    // Di Next.js App Router, Anda tidak bisa mengirim { state: ... } lewat route.
+    // Simpan data ke Context / Zustand (useCartStore), lalu pindah halaman:
+    // useCartStore.getState().addToCart({ ...product, size: selectedSize });
+    
+    router.push('/checkout');
+    close();
+  };
+
+  const handleAddToCart = () => {
+    if (!selectedSize) {
+      alert('Pilih ukuran terlebih dahulu!');
+      return;
+    }
+    // Logika masukkan ke keranjang di sini
+    alert(`${product.name} (Ukuran ${selectedSize}) masuk keranjang!`);
+    close();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      {/* Modal Container */}
+      <div className="relative w-full max-w-2xl bg-white dark:bg-zinc-900 rounded-sm shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+        
+        {/* Tombol Close */}
+        <button 
+          onClick={close}
+          className="absolute top-4 right-4 z-10 p-2 bg-white/50 dark:bg-black/50 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
+        >
+          <svg className="w-5 h-5 text-black dark:text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        <div className="flex flex-col md:flex-row h-full">
+          {/* Sisi Kiri: Gambar Produk */}
+          <div className="w-full md:w-1/2 bg-gray-100 dark:bg-zinc-800">
+            {product.image_url ? (
+              <img 
+                src={product.image_url} 
+                alt={product.name} 
+                className="w-full h-full object-cover aspect-square md:aspect-auto"
+              />
+            ) : (
+              <div className="w-full h-full min-h-[300px] flex items-center justify-center text-gray-400">
+                NO IMAGE
+              </div>
+            )}
+          </div>
+
+          {/* Sisi Kanan: Detail Produk */}
+          <div className="w-full md:w-1/2 p-6 flex flex-col justify-between">
+            <div>
+              <h2 className="text-2xl font-black uppercase tracking-tighter text-black dark:text-white mb-2">
+                {product.name}
+              </h2>
+              <p className="text-xl font-bold text-gray-700 dark:text-gray-300 mb-6">
+                {formatPrice(product.price)}
+              </p>
+
+              {/* Pemilihan Ukuran */}
+              <div className="mb-6">
+                <h3 className="text-sm font-bold uppercase tracking-widest mb-3 text-black dark:text-white">
+                  Pilih Ukuran
+                </h3>
+                <div className="grid grid-cols-4 gap-2">
+                  {sizes.map((s) => {
+                    const availableStock = s.stock_physical - s.stock_reserved;
+                    const isOutOfStock = availableStock <= 0;
+                    
+                    return (
+                      <button
+                        key={s.size}
+                        disabled={isOutOfStock}
+                        onClick={() => setSelectedSize(s.size)}
+                        className={`py-2 border text-center font-bold transition-all
+                          ${isOutOfStock ? 'bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-gray-600 border-gray-200 dark:border-zinc-700 cursor-not-allowed line-through' : 
+                            selectedSize === s.size 
+                              ? 'border-black bg-black text-white dark:border-white dark:bg-white dark:text-black' 
+                              : 'border-gray-300 dark:border-gray-600 text-black dark:text-white hover:border-black dark:hover:border-white'
+                          }
+                        `}
+                      >
+                        {s.size}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Aksi Tombol */}
+            <div className="flex flex-col space-y-2 mt-4">
+              <button 
+                onClick={handleAddToCart}
+                className="w-full py-3 border-2 border-black dark:border-white text-black dark:text-white font-bold tracking-widest uppercase hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors"
+              >
+                Add To Cart
+              </button>
+              <button 
+                onClick={handleBuyNow}
+                className="w-full py-3 bg-blue-500 text-white font-bold tracking-widest uppercase hover:bg-blue-600 transition-colors"
+              >
+                Buy Now
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}

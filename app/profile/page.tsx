@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabaseClient'
 import { FaUserCircle, FaShoppingBag, FaSignOutAlt, FaCreditCard, FaClock, FaCheckCircle, FaTruck } from 'react-icons/fa'
 import Swal from 'sweetalert2'
 
@@ -254,7 +254,5 @@ const Profile = () => {
     </div>
   )
 }
-
-export default Profile
 
 export default Profile

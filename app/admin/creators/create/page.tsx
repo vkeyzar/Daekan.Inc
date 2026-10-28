@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabaseClient'
 import Swal from 'sweetalert2'
 
 const CreateCreator = ({ isOpen, onClose, refreshData }: { isOpen?: boolean; onClose?: any; refreshData?: any }) => {
@@ -169,7 +169,5 @@ const CreateCreator = ({ isOpen, onClose, refreshData }: { isOpen?: boolean; onC
     </div>
   )
 }
-
-export default CreateCreator
 
 export default CreateCreator

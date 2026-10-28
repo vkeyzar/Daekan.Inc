@@ -6,7 +6,7 @@ import Footer from '@/components/Footer'
 import ProductGrid from '@/components/ProductGrid'
 import ProductModal from '@/components/ProductModal'
 import { AnimatePresence } from 'framer-motion'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabaseClient'
 
 const Products = () => {
   const [products, setProducts] = useState<any[]>([])

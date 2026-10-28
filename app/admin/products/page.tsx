@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabaseClient'
 import Swal from 'sweetalert2'
 
 const ProductList = ({ products = [], refreshData, onOpenEdit }: { products?: any[]; refreshData?: any; onOpenEdit?: any }) => {
@@ -121,7 +121,5 @@ const ProductList = ({ products = [], refreshData, onOpenEdit }: { products?: an
     </div>
   )
 }
-
-export default ProductList
 
 export default ProductList

@@ -1,97 +1,108 @@
 'use client';
-import React, { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { FaStar, FaPlus, FaCheckCircle } from 'react-icons/fa'
-import { useRouter } from 'next/navigation'
-import { supabase } from '../lib/supabaseClient'
-import ReviewFormModal from './ReviewFormModal'
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient'; // Pastikan path ini benar mengarah ke konfigurasi Supabase lo
 
-const ReviewSection = ({ session }) => {
-  const [reviews, setReviews] = useState([])
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const router = useRouter()
+// 1. Deklarasikan struktur data Review
+interface ReviewData {
+  id: string | number;
+  product_id?: string;
+  user_name: string;
+  rating: number;
+  title: string;
+  comment: string;
+  is_verified: boolean;
+  image_url?: string;
+  created_at?: string;
+}
+
+// 2. Berikan tipe eksplisit pada props session
+export default function ReviewSection({ session }: { session: any }) {
+  // 3. Pasang tipe ReviewData[] ke state reviews
+  const [reviews, setReviews] = useState<ReviewData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchReviews();
+  }, []);
 
   const fetchReviews = async () => {
     try {
-      setLoading(true)
-      const { data, error } = await supabase.from('reviews').select('*').order('created_at', { ascending: false })
-      if (error) throw error
-      setReviews(data || [])
-    } catch (error) {
-      console.error('Error loading reviews:', error.message)
+      setLoading(true);
+      // Contoh fetch dari Supabase (Sesuaikan dengan nama tabel lo)
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      if (data) setReviews(data as ReviewData[]);
+    } catch (error: any) { // 4. Tambahkan ': any' untuk membungkam error 'unknown'
+      console.error('Gagal mengambil review:', error.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  useEffect(() => { fetchReviews() }, [])
-
-  const handleWriteReview = () => {
-    if (!session) router.push('/login')
-    else setIsModalOpen(true)
+  if (loading) {
+    return <div className="text-center py-12">Loading reviews...</div>;
   }
 
   return (
-    <section id="reviews" className="w-full bg-white dark:bg-black py-24 px-4 md:px-10 relative z-10 font-sans border-t border-black dark:border-white">
-      <div className="max-w-screen-2xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
-          <div className="text-left">
-            <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-2 text-black dark:text-white">
-              CUSTOMER REVIEWS
-            </h2>
-            <p className="font-bold text-sm tracking-widest uppercase flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
-              From {reviews.length} total reviews <FaCheckCircle className="text-black dark:text-white" />
-            </p>
-          </div>
-
-          <button
-            onClick={handleWriteReview}
-            className="flex items-center gap-2 px-8 py-4 bg-black dark:bg-white text-white dark:text-black text-xs font-black tracking-[0.2em] uppercase border border-black dark:border-white hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-all duration-300"
-          >
-            <FaPlus size={12} /> Write A Review
-          </button>
+    <section className="py-12 bg-white dark:bg-black text-black dark:text-white transition-colors duration-300">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center mb-8 border-b border-gray-200 dark:border-gray-800 pb-4">
+          <h2 className="text-2xl font-black tracking-tighter uppercase">Customer Reviews</h2>
+          {session ? (
+            <button className="px-4 py-2 bg-blue-500 text-white text-sm font-bold tracking-widest hover:bg-blue-600 transition-colors">
+              TULIS REVIEW
+            </button>
+          ) : (
+            <span className="text-sm font-medium text-gray-500">Login untuk menulis review</span>
+          )}
         </div>
 
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <p className="animate-pulse font-bold tracking-widest text-black dark:text-white uppercase">LOADING FEEDBACK...</p>
-          </div>
-        ) : (
-          <div className="flex md:grid md:grid-cols-3 lg:grid-cols-4 gap-6 overflow-x-auto pb-10 no-scrollbar snap-x">
-            {reviews.map((rev) => (
-              <motion.div
-                key={rev.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                className="min-w-[300px] md:min-w-full bg-white dark:bg-black border border-black dark:border-white p-5 snap-center transition-all duration-300 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
-              >
-                {rev.image_url && (
-                  <div className="w-full h-80 mb-5 overflow-hidden bg-zinc-100 dark:bg-zinc-900">
-                    <img src={rev.image_url} alt="Review" className="w-full h-full object-cover transition-all duration-700 hover:scale-110" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {reviews.length > 0 ? (
+            reviews.map((review) => (
+              <div key={review.id} className="p-5 border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-zinc-900 rounded-sm">
+                
+                {/* Header Reviewer */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-bold text-sm">{review.user_name}</span>
+                    {review.is_verified && (
+                      <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                      </svg>
+                    )}
                   </div>
-                )}
-
-                <div className="flex gap-1 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <FaStar key={i} size={14} className={i < rev.rating ? "text-black dark:text-white" : "text-zinc-300 dark:text-zinc-700"} />
-                  ))}
+                  {/* Rating Bintang */}
+                  <div className="flex text-yellow-400">
+                    {[...Array(5)].map((_, i) => (
+                      <svg key={i} className={`w-4 h-4 ${i < review.rating ? 'fill-current' : 'text-gray-300 dark:text-gray-600'}`} viewBox="0 0 24 24">
+                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                      </svg>
+                    ))}
+                  </div>
                 </div>
 
-                <p className="font-bold text-[10px] text-black dark:text-white uppercase tracking-[0.2em] mb-1">
-                  {rev.user_name} {rev.is_verified && <span className="ml-1">✓</span>}
-                </p>
-                <h4 className="font-black uppercase text-xl mb-2 tracking-tighter text-black dark:text-white">{rev.title}</h4>
-                <p className="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed font-medium">"{rev.comment}"</p>
-              </motion.div>
-            ))}
-          </div>
-        )}
+                {/* Judul & Komentar */}
+                <h3 className="font-bold text-md mb-2">{review.title}</h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed mb-4">{review.comment}</p>
+
+                {/* Optional Image */}
+                {review.image_url && (
+                  <div className="mt-4">
+                    <img src={review.image_url} alt="Review attachment" className="w-full h-32 object-cover rounded-sm border border-gray-200 dark:border-gray-700" />
+                  </div>
+                )}
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-500 italic col-span-full">Belum ada review untuk produk ini.</p>
+          )}
+        </div>
       </div>
-
-      <ReviewFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} session={session} onSuccess={fetchReviews} />
     </section>
-  )
+  );
 }
-
-export default ReviewSection

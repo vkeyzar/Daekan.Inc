@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabaseClient'
 import { useRouter } from 'next/navigation'
 import Swal from 'sweetalert2'
 import CreateProduct from './products/create/page'
@@ -268,7 +268,5 @@ const AdminDashboard = () => {
     </div>
   )
 }
-
-export default AdminDashboard
 
 export default AdminDashboard

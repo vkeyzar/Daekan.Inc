@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabaseClient'
 import Swal from 'sweetalert2'
 
 const CreatorList = ({ creators = [], refreshData, onOpenEditCreator }: { creators?: any[]; refreshData?: any; onOpenEditCreator?: any }) => {
@@ -133,7 +133,5 @@ const CreatorList = ({ creators = [], refreshData, onOpenEditCreator }: { creato
     </div>
   )
 }
-
-export default CreatorList
 
 export default CreatorList

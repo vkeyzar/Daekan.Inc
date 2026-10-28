@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabaseClient'
 import { FaArrowLeft, FaShieldAlt, FaCheckCircle, FaChevronDown } from 'react-icons/fa'
 import { motion, AnimatePresence } from 'framer-motion'
 import Swal from 'sweetalert2'
-import useCartStore from '@/lib/store/useCartStore' 
+import useCartStore from '@/lib/store/useCartStore'
 
 const Checkout = () => {
   const router = useRouter()
@@ -310,7 +310,5 @@ const Checkout = () => {
     </div>
   )
 }
-
-export default Checkout
 
 export default Checkout

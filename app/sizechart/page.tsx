@@ -4,7 +4,7 @@ import React, { Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { FaArrowLeft, FaRulerCombined } from 'react-icons/fa'
 import { motion } from 'framer-motion'
-import { supabase } from '@/lib/supabase' 
+import { supabase } from '@/lib/supabaseClient' 
 
 const SizeChartContent = () => {
   const router = useRouter()
@@ -55,7 +55,5 @@ const SizeChart = () => {
     </Suspense>
   )
 }
-
-export default SizeChart
 
 export default SizeChart

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, Suspense } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabaseClient'
 import { useRouter, useSearchParams } from 'next/navigation' 
 import Link from 'next/link'
 import Swal from 'sweetalert2' 
@@ -79,7 +79,5 @@ const Login = () => {
     </Suspense>
   )
 }
-
-export default Login
 
 export default Login

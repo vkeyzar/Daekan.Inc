@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabaseClient'
 import Swal from 'sweetalert2'
 
 const DEFAULT_SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
@@ -221,7 +221,5 @@ const CreateProduct = ({ isOpen, onClose, refreshData, categories = [] }: { isOp
     </div>
   )
 }
-
-export default CreateProduct
 
 export default CreateProduct
