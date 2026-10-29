@@ -259,7 +259,7 @@ export default function ProductDetailPage() {
             className="group inline-flex items-center gap-2 px-3 py-1.5 border border-black/15 dark:border-white/20 bg-transparent text-zinc-700 dark:text-zinc-300 font-semibold text-sm tracking-wide hover:border-black dark:hover:border-white hover:text-black dark:hover:text-white active:scale-[0.98] transition-all cursor-pointer"
           >
             <FaArrowLeft size={12} className="transition-transform duration-200 group-hover:-translate-x-0.5" />
-            <span>Kembali</span>
+            <span>BACK</span>
           </button>
         </div>
 

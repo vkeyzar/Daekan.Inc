@@ -29,7 +29,7 @@ const SizeChartContent = () => {
               onClick={() => router.back()}
               className="flex items-center gap-2 font-black uppercase text-xs sm:text-sm tracking-widest text-black dark:text-white hover:opacity-60 transition-opacity mb-6 cursor-pointer"
             >
-              <FaArrowLeft /> KEMBALI
+              <FaArrowLeft /> BACK
             </button>
 
             <div className="flex items-center gap-3 border-b-2 border-black dark:border-white pb-4">
