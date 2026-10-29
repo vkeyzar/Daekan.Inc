@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react'
+import React, { useState, Suspense } from 'react'
 import { supabase } from '@/lib/supabaseClient'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Swal from 'sweetalert2'
 import Navbar from '@/components/Navbar'
@@ -34,7 +35,16 @@ const REQUIREMENTS: Requirement[] = [
   { key: 'hasSpecial', label: 'Simbol Spesial (!@#$ dll)', test: (p: string) => /[^A-Za-z0-9]/.test(p) },
 ]
 
-const Register = () => {
+const RegisterForm = () => {
+  const searchParams = useSearchParams()
+  const rawRedirect =
+    searchParams.get('redirect') ||
+    searchParams.get('callbackUrl') ||
+    searchParams.get('returnTo') ||
+    ''
+  const redirectTo =
+    rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : ''
+
   const [email,       setEmail]       = useState('')
   const [password,    setPassword]    = useState('')
   const [loading,     setLoading]     = useState(false)
@@ -200,13 +210,24 @@ const Register = () => {
 
           <p className="mt-8 text-zinc-600 dark:text-zinc-400 text-[11px] text-center uppercase tracking-[0.2em] font-bold">
             Already a member?{' '}
-            <Link href="/login" className="text-black dark:text-white font-black underline underline-offset-4 hover:opacity-70">
+            <Link
+              href={redirectTo ? `/login?redirect=${encodeURIComponent(redirectTo)}` : '/login'}
+              className="text-black dark:text-white font-black underline underline-offset-4 hover:opacity-70"
+            >
               Login
             </Link>
           </p>
         </form>
       </div>
     </div>
+  )
+}
+
+const Register = () => {
+  return (
+    <Suspense fallback={null}>
+      <RegisterForm />
+    </Suspense>
   )
 }
 

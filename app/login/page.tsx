@@ -13,6 +13,14 @@ const LoginForm = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
 
+  const rawRedirect =
+    searchParams.get('redirect') ||
+    searchParams.get('callbackUrl') ||
+    searchParams.get('returnTo') ||
+    '/'
+  const redirectTo =
+    rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/'
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -31,10 +39,11 @@ const LoginForm = () => {
     }
 
     if (data.session) {
-      Swal.fire({ title: 'WELCOME!', text: 'Login berhasil!', icon: 'success', timer: 1500, showConfirmButton: false });
-      const rawReturnTo = searchParams.get('returnTo') || '/';
-      const redirectTo = rawReturnTo.startsWith('/') && !rawReturnTo.startsWith('//') ? rawReturnTo : '/';
-      setTimeout(() => router.push(redirectTo), 1500);
+      Swal.fire({ title: 'WELCOME!', text: 'Login berhasil!', icon: 'success', timer: 1200, showConfirmButton: false });
+      setTimeout(() => {
+        router.push(redirectTo);
+        router.refresh();
+      }, 1200);
     }
   };
 
@@ -49,9 +58,15 @@ const LoginForm = () => {
           <h2 className="text-3xl font-black mb-1.5 uppercase tracking-tighter text-black dark:text-white">
             DAEKAN <span className="font-light text-zinc-500 dark:text-zinc-400">LOGIN</span>
           </h2>
-          <p className="text-zinc-500 dark:text-zinc-400 text-[11px] uppercase tracking-[0.25em] mb-8 font-bold">
+          <p className="text-zinc-500 dark:text-zinc-400 text-[11px] uppercase tracking-[0.25em] mb-6 font-bold">
             Access your icon dashboard
           </p>
+
+          {redirectTo !== '/' && (
+            <div className="mb-6 border-l-4 border-black dark:border-white bg-zinc-50 dark:bg-zinc-900 px-4 py-3 text-xs font-bold uppercase tracking-wider text-black dark:text-white">
+              Silakan masuk terlebih dahulu untuk melanjutkan ke halaman tujuan.
+            </div>
+          )}
 
           <div className="space-y-5">
             <div>
@@ -89,7 +104,10 @@ const LoginForm = () => {
 
           <p className="mt-8 text-zinc-600 dark:text-zinc-400 text-[11px] text-center uppercase tracking-[0.2em] font-bold">
             Belum punya akun?{' '}
-            <Link href="/register" className="text-black dark:text-white font-black underline underline-offset-4 hover:opacity-70">
+            <Link
+              href={redirectTo !== '/' ? `/register?redirect=${encodeURIComponent(redirectTo)}` : '/register'}
+              className="text-black dark:text-white font-black underline underline-offset-4 hover:opacity-70"
+            >
               Daftar di sini
             </Link>
           </p>

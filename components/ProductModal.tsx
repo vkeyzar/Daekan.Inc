@@ -110,25 +110,13 @@ export default function ProductModal({ product, close }: ProductModalProps) {
       data: { session },
     } = await supabase.auth.getSession();
 
+    close();
+
     if (!session) {
-      const result = await Swal.fire({
-        title: 'OTENTIKASI DIPERLUKAN',
-        text: 'Silakan masuk ke akun Anda atau mendaftar terlebih dahulu untuk dapat melanjutkan proses pembelian.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#000000',
-        cancelButtonColor: '#71717a',
-        confirmButtonText: 'KE HALAMAN LOGIN',
-        cancelButtonText: 'BATAL',
-      });
-      if (result.isConfirmed) {
-        close();
-        router.push('/login?returnTo=/checkout');
-      }
+      router.push('/login?redirect=/checkout');
       return;
     }
 
-    close();
     router.push('/checkout');
   };
 

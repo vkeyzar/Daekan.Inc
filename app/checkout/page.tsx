@@ -12,9 +12,9 @@ import Navbar from '@/components/Navbar'
 
 const Checkout = () => {
   const router = useRouter()
-  const cartFromStore = useCartStore((state: any) => state.items)
-  const clearCart = useCartStore((state: any) => state.clearCart)
-  const [cartItems, setCartItems] = useState<any[]>([])
+  const cartItems = useCartStore((state) => state.items)
+  const hasHydrated = useCartStore((state) => state.hasHydrated)
+  const clearCart = useCartStore((state) => state.clearCart)
   const [formData, setFormData] = useState({ full_name: '', whatsapp: '', address: '', province: 'JAWA_TENGAH' })
   const [loading, setLoading] = useState(false)
   const [authChecking, setAuthChecking] = useState(true)
@@ -25,14 +25,7 @@ const Checkout = () => {
     const verifyAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
-        await Swal.fire({
-          title: 'OTENTIKASI DIPERLUKAN',
-          text: 'Silakan masuk ke akun Anda terlebih dahulu untuk melanjutkan proses pembayaran.',
-          icon: 'warning',
-          confirmButtonColor: '#000000',
-          confirmButtonText: 'KE HALAMAN LOGIN',
-        })
-        router.replace('/login?returnTo=/checkout')
+        router.replace('/login?redirect=/checkout')
         return
       }
       setAuthChecking(false)
@@ -41,13 +34,6 @@ const Checkout = () => {
   }, [router])
 
   useEffect(() => {
-    if (cartFromStore && cartFromStore.length > 0) {
-      setCartItems(cartFromStore)
-    }
-  }, [cartFromStore])
-
-  useEffect(() => {
-    useCartStore.persist.rehydrate();
     const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || '';
     const snapUrl = clientKey.includes('SB-')
       ? "https://app.sandbox.midtrans.com/snap/snap.js"
@@ -70,7 +56,7 @@ const Checkout = () => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(price || 0)
   }
 
-  if (authChecking) return (
+  if (authChecking || !hasHydrated) return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-black text-black dark:text-white font-sans">
       <Navbar />
       <div className="flex-1 flex items-center justify-center font-black tracking-[0.2em] text-xs uppercase animate-pulse">
@@ -116,7 +102,7 @@ const Checkout = () => {
     }
 
     try {
-      const result = await createTransaction(cartItems, formData);
+      const result = await createTransaction(cartItems as any, formData);
 
       if (!result.ok) {
         setLoading(false);

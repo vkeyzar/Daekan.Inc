@@ -22,7 +22,7 @@ const Footer = () => {
                     : 'https://corhxzcsgvcckigxleeo.supabase.co/storage/v1/object/public/asset/Daekan_New_Logo_Black33.33x_copy2.png'
                 }
                 alt="Daekan Inc."
-                className="h-12 md:h-14 w-auto object-contain scale-[1.35] origin-left"
+                className="h-[50px] md:h-[58px] w-auto object-contain scale-[1.35] origin-left"
               />
             </div>
 
@@ -73,12 +73,12 @@ const Footer = () => {
 
           </div>
         </div>
+      </div>
 
-        <div className="pt-8 border-t border-black dark:border-white flex md:flex-row justify-center items-center gap-4">
-          <p className="text-xs md:text-[13px] text-zinc-600 dark:text-zinc-400 tracking-[0.2em] uppercase font-bold text-center">
-            &copy; 2026 DAEKAN INC. All Rights Reserved.
-          </p>
-        </div>
+      <div className="w-full border-t border-black dark:border-white pt-8 px-4 flex justify-center items-center">
+        <p className="text-[10px] sm:text-xs md:text-[13px] text-zinc-600 dark:text-zinc-400 tracking-[0.1em] sm:tracking-[0.2em] uppercase font-bold text-center break-words max-w-full">
+          &copy; 2026 DAEKAN INC. All Rights Reserved.
+        </p>
       </div>
     </footer>
   )

@@ -4,14 +4,11 @@ import React, { useState, useEffect, Suspense } from 'react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import ProductGrid from '@/components/ProductGrid'
-import ProductModal from '@/components/ProductModal'
-import { AnimatePresence } from 'framer-motion'
 import { supabase } from '@/lib/supabaseClient'
 
-const Products = () => {
+const AllProductsPage = () => {
   const [products, setProducts] = useState<any[]>([])
   const [categories, setCategories] = useState<any[]>([])
-  const [selectedProduct, setSelectedProduct] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -32,7 +29,6 @@ const Products = () => {
 
   return (
     <div className="relative min-h-screen bg-white dark:bg-black text-black dark:text-white flex flex-col font-sans">
-
       <div className="relative z-10 flex-1 flex flex-col">
         <Navbar />
         <div className="flex-1 pt-8">
@@ -42,18 +38,14 @@ const Products = () => {
             </div>
           ) : (
             <Suspense fallback={<div className="flex justify-center items-center h-[50vh]"><p className="animate-pulse font-bold tracking-widest text-black dark:text-white uppercase">Loading Gear...</p></div>}>
-              <ProductGrid products={products} categories={categories} onOpenModal={setSelectedProduct} selectedProduct={selectedProduct} />
+              <ProductGrid products={products} categories={categories} mode="all" title="ALL PRODUCTS" />
             </Suspense>
           )}
         </div>
         <Footer />
       </div>
-
-      <AnimatePresence>
-        {selectedProduct && <ProductModal product={selectedProduct} close={() => setSelectedProduct(null)} />}
-      </AnimatePresence>
     </div>
   )
 }
 
-export default Products
+export default AllProductsPage

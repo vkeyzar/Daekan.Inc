@@ -1,64 +1,37 @@
-'use client';
 import React from 'react'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
 
 const Hero = () => {
   return (
-    <div className="w-full min-h-[calc(100vh-4rem)] bg-white dark:bg-black text-black dark:text-white flex flex-col justify-center items-center px-6 py-16 relative overflow-hidden font-sans">
+    <section className="relative w-full min-h-screen overflow-hidden bg-slate-800">
+      {/* TODO: aktifkan saat aset foto sudah tersedia (taruh di /public/images/hero.jpg) */}
+      {/* <img
+        src="/images/hero.jpg"
+        alt="DAEKANINC hero"
+        className="absolute inset-0 h-full w-full object-cover"
+      /> */}
 
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: 'easeOut' }}
-        className="text-center z-10 w-full max-w-7xl"
-      >
-        {/* EYEBROW */}
-        <p className="text-[11px] md:text-xs font-bold uppercase tracking-[0.4em] mb-6 md:mb-8 text-black dark:text-white">
-          Official Store — Est. 2025
-        </p>
+      {/* Overlay adaptif tema */}
+      <div className="absolute inset-0 bg-black/40 dark:bg-black/60 transition-colors duration-500 ease-in-out" />
 
-        {/* GIANT DAEKAN */}
-        <h1 className="font-black uppercase leading-none tracking-tighter text-[18vw] md:text-[14vw] lg:text-[12vw] text-black dark:text-white select-none">
-          DAEKAN
+      {/* Konten */}
+      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 text-center font-[Helvetica,'Helvetica_Neue',Arial,sans-serif]">
+        <h1 className="whitespace-nowrap text-[clamp(2rem,11vw,3.5rem)] italic tracking-wider text-white sm:text-6xl md:text-8xl lg:text-9xl">
+          <span className="font-bold">DAEKAN</span>
+          <span className="font-normal">INC</span>
         </h1>
-
-        {/* SUBTITLE LINE */}
-        <div className="flex items-center justify-center gap-4 my-6 md:my-8">
-          <div className="h-[1px] flex-1 bg-black dark:bg-white opacity-30 max-w-[120px] sm:max-w-[200px]" />
-          <p className="text-[11px] md:text-xs font-bold uppercase tracking-[0.3em] text-black dark:text-white">
-            Designed to be Willing
-          </p>
-          <div className="h-[1px] flex-1 bg-black dark:bg-white opacity-30 max-w-[120px] sm:max-w-[200px]" />
-        </div>
-
-        {/* CTA */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8 max-w-xs sm:max-w-none mx-auto">
-          <a
-            href="#new-arrivals"
-            className="px-10 py-4 bg-black dark:bg-white text-white dark:text-black font-black text-[11px] md:text-xs tracking-[0.25em] uppercase border border-black dark:border-white hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-all duration-300"
-          >
-            SHOP NOW
-          </a>
-          <Link
-            href="/products"
-            className="px-10 py-4 bg-transparent text-black dark:text-white font-black text-[11px] md:text-xs tracking-[0.25em] uppercase border border-black dark:border-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all duration-300"
-          >
-            VIEW ALL
-          </Link>
-        </div>
-      </motion.div>
-
-      {/* Bottom ticker line */}
-      <div className="absolute bottom-6 left-0 w-full px-4 overflow-hidden">
-        <p className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.35em] sm:tracking-[0.5em] text-center text-zinc-500 dark:text-zinc-400">
-          DAEKAN INC. — OFFICIAL MERCHANDISE — LIMITED DROPS
+        <p className="mt-4 text-sm tracking-wide text-white sm:text-base md:text-lg">
+          Designed to be willing.
         </p>
-      </div>
 
-      {/* Brutalist horizontal rule bottom */}
-      <div className="absolute bottom-0 left-0 w-full h-[1px] bg-black dark:bg-white opacity-20" />
-    </div>
+        <Link
+          href="/products"
+          className="mt-24 bg-white px-8 py-3 text-base font-medium text-black sm:mt-32 sm:px-10 sm:py-4 sm:text-lg md:mt-40 md:px-12 md:py-5 md:text-xl transition-colors duration-300 hover:bg-slate-200"
+        >
+          Shop Collection
+        </Link>
+      </div>
+    </section>
   )
 }
 

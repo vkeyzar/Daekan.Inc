@@ -1,16 +1,17 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import type { ProductData } from '@/lib/types';
 
 export type { ProductData };
 
 interface SquareProductCardProps {
   product: ProductData;
-  onOpenModal: (product: ProductData) => void;
+  onOpenModal?: (product: ProductData) => void;
 }
 
-export default function SquareProductCard({ product, onOpenModal }: SquareProductCardProps) {
+export default function SquareProductCard({ product }: SquareProductCardProps) {
   const productName = product.name || (product as any).title || 'UNKNOWN GEAR';
   const isComingSoon = !product.price || product.price === 0;
   const isSale = product.original_price && Number(product.original_price) > Number(product.price);
@@ -38,8 +39,8 @@ export default function SquareProductCard({ product, onOpenModal }: SquareProduc
   const showSaleBadge = isSale && !isComingSoon && !isSaleExpired && !isClosed;
 
   return (
-    <div
-      onClick={() => onOpenModal(product)}
+    <Link
+      href={`/products/${product.id}`}
       className={`group relative bg-white dark:bg-black border border-black dark:border-white p-4 cursor-pointer transition-all duration-300 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] w-[200px] md:w-[240px] shrink-0 aspect-square flex flex-col overflow-hidden font-sans ${isClosed ? 'opacity-80' : ''}`}
     >
       {isClosed && (
@@ -86,6 +87,6 @@ export default function SquareProductCard({ product, onOpenModal }: SquareProduc
           )}
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

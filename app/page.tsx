@@ -4,19 +4,16 @@ import React, { useState, useEffect, useRef } from 'react'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import Hero from '@/components/Hero'
-import ReviewSection from '@/components/ReviewSection'
-import SquareProductCard from '@/components/SquareProductCard'
-import ProductModal from '@/components/ProductModal'
+// import ReviewSection from '@/components/ReviewSection' // moved to /reviews
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa'
-import { AnimatePresence } from 'framer-motion'
 
 const Home = () => {
   const [session, setSession] = useState<any>(null)
   const [products, setProducts] = useState<any[]>([])
   const [categories, setCategories] = useState<any[]>([])
-  const [selectedProduct, setSelectedProduct] = useState<any>(null)
+  const [latestProducts, setLatestProducts] = useState<any[]>([])
 
   const collabScrollRef = useRef<HTMLDivElement>(null)
   const genreScrollRef = useRef<HTMLDivElement>(null)
@@ -26,11 +23,14 @@ const Home = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => setSession(session))
 
     const fetchData = async () => {
-      const [prodRes, catRes] = await Promise.all([
+      const [prodRes, catRes, latestRes] = await Promise.all([
         supabase.from('products').select('*').order('created_at', { ascending: false }),
-        supabase.from('categories').select('*').order('created_at', { ascending: false })
+        supabase.from('categories').select('*').order('created_at', { ascending: false }),
+        // Fallback default: 3 newest products (until a "new arrivals" category exists)
+        supabase.from('products').select('*').order('created_at', { ascending: false }).limit(3)
       ])
 
+      if (latestRes.data) setLatestProducts(latestRes.data)
       if (prodRes.data) setProducts(prodRes.data)
       if (catRes.data) setCategories(catRes.data)
     }
@@ -54,7 +54,9 @@ const Home = () => {
   }
 
   const latestCategory = categories.find((c: any) => products.some((p: any) => p.category_id === c.id))
-  const highlightProducts = latestCategory ? products.filter((p: any) => p.category_id === latestCategory.id) : []
+
+  const formatIDR = (price: number | string) =>
+    new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(Number(price))
 
   const remainingCategories = categories.filter((cat: any) => cat.id !== latestCategory?.id);
   const dbCategoryCards = remainingCategories.map((cat: any) => {
@@ -83,28 +85,72 @@ const Home = () => {
         <Navbar />
         <section id="home"><Hero /></section>
 
-        <section id="new-arrivals" className="py-24 px-4 md:px-10 max-w-[1400px] mx-auto">
+        <section id="new-arrivals" className="py-24 w-full">
 
-          <div className="text-center mb-12">
+          <div className="text-center mb-12 px-4">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase tracking-tighter text-black dark:text-white">
-              NEW ARRIVALS:{' '}
-              <span className="text-black dark:text-white">{latestCategory ? latestCategory.name : 'DAEKAN GEAR'}</span>
+              Latest Drop Just In
             </h2>
             <p className="font-bold tracking-[0.25em] text-[11px] md:text-xs mt-2 uppercase text-zinc-600 dark:text-zinc-400">
               Official Latest Release
             </p>
           </div>
 
-          <div className="relative group/slider">
-            <div ref={collabScrollRef} className="flex overflow-x-auto gap-6 snap-x pb-8 px-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-              {highlightProducts.length > 0 ? (
-                highlightProducts.map((p: any) => <SquareProductCard key={p.id} product={p} onOpenModal={setSelectedProduct} />)
-              ) : (
-                <p className="text-center w-full font-bold text-xs tracking-[0.2em] text-zinc-500 dark:text-zinc-400">NO NEW GEAR FOUND.</p>
-              )}
+          {latestProducts.length > 0 ? (
+            <div className="flex overflow-x-auto snap-x snap-mandatory gap-0 pl-px pt-px pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] md:grid md:grid-cols-3 md:gap-0 md:overflow-hidden">
+              {latestProducts.map((p: any) => {
+                const name = p.name || p.title || 'UNKNOWN GEAR'
+                const soldOut = p.is_open === false
+                return (
+                  <Link
+                    key={p.id}
+                    href={`/products/${p.id}`}
+                    className={`group cursor-pointer shrink-0 w-[78%] sm:w-[60%] md:w-auto -ml-px -mt-px snap-start relative hover:z-10 border border-black dark:border-white bg-white dark:bg-black overflow-hidden transition-all duration-300 ${soldOut ? 'opacity-80' : ''}`}
+                  >
+                    {soldOut && (
+                      <div className="absolute inset-0 bg-black/50 z-[10] flex items-center justify-center backdrop-blur-[1px]">
+                        <span className="bg-black text-white px-4 py-1.5 font-black text-xs tracking-[0.2em] uppercase -rotate-12 border border-white/20 shadow-xl">
+                          SOLD OUT
+                        </span>
+                      </div>
+                    )}
+                    <div className="relative aspect-square overflow-hidden border-b border-black dark:border-white">
+                      <img
+                        src={p.image_url || p.image}
+                        alt={name}
+                        className={`w-full h-full object-contain p-4 transition-transform duration-500 relative z-[5] ${
+                          soldOut
+                            ? 'grayscale opacity-60 [filter:grayscale(100%)_drop-shadow(0_6px_14px_rgba(0,0,0,0.35))]'
+                            : 'group-hover:scale-105 [filter:drop-shadow(0_6px_14px_rgba(0,0,0,0.35))] dark:[filter:drop-shadow(0_0_3px_rgba(255,255,255,0.9))_drop-shadow(0_0_12px_rgba(125,211,252,0.9))_drop-shadow(0_0_28px_rgba(125,211,252,0.7))_drop-shadow(0_0_48px_rgba(167,139,250,0.6))]'
+                        }`}
+                      />
+                    </div>
+                    <div className="p-3 md:p-4 text-left">
+                      <h3 className="text-xs md:text-sm font-black uppercase tracking-[0.1em] line-clamp-2 leading-tight text-black dark:text-white" title={name}>
+                        {name}
+                      </h3>
+                      <p className={`mt-1 text-xs md:text-sm font-bold ${soldOut ? 'text-zinc-500' : 'text-zinc-600 dark:text-zinc-400'}`}>
+                        {!p.price || p.price === 0 ? 'Coming Soon' : formatIDR(p.price)}
+                      </p>
+                    </div>
+                  </Link>
+                )
+              })}
             </div>
+          ) : (
+            <p className="text-center w-full font-bold text-xs tracking-[0.2em] text-zinc-500 dark:text-zinc-400">NO NEW GEAR FOUND.</p>
+          )}
+
+          <div className="flex justify-center mt-10">
+            <Link
+              href="/products"
+              className="inline-block bg-black text-white rounded-none px-10 py-3 text-xs font-black uppercase tracking-[0.2em] border border-black dark:border-white hover:opacity-80 transition-opacity"
+            >
+              View all
+            </Link>
           </div>
 
+          {/* HIDDEN TEMPORARILY: More Daekan Goods
           <div className="flex justify-between items-end mt-24 mb-8 border-b border-black dark:border-white pb-4 px-2">
             <h3 className="text-xl md:text-2xl font-black uppercase text-black dark:text-white tracking-tighter">More Daekan Goods</h3>
             <Link href="/products" className="text-[11px] md:text-xs font-black uppercase tracking-[0.2em] text-black dark:text-white hover:opacity-60 transition-all shrink-0">
@@ -122,7 +168,7 @@ const Home = () => {
                 allCollectionCards.map((collection: any) => (
                   <Link
                     key={collection.id}
-                    href={`/products?tab=${collection.targetTab}&${collection.isGenre ? 'genre' : 'type'}=${collection.id}`}
+                    href={`/products?${collection.isGenre ? 'genre' : 'type'}=${encodeURIComponent(String(collection.id))}`}
                     className="group relative w-[200px] md:w-[240px] shrink-0 aspect-square overflow-hidden border border-black dark:border-white hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] transition-all duration-300 block bg-white dark:bg-black"
                   >
                     <img
@@ -149,14 +195,13 @@ const Home = () => {
               <FaChevronRight size={14} />
             </button>
           </div>
+          */}
         </section>
 
+        {/* HIDDEN: Customer reviews moved to /reviews
         <ReviewSection session={session} />
+        */}
       </div>
-
-      <AnimatePresence>
-        {selectedProduct && <ProductModal product={selectedProduct} close={() => setSelectedProduct(null)} />}
-      </AnimatePresence>
 
       <div className="relative z-10"><Footer /></div>
     </div>

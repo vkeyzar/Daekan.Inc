@@ -8,7 +8,7 @@ function redirectToLogin(request: NextRequest, response: NextResponse) {
   const url = request.nextUrl.clone();
   url.pathname = '/login';
   url.search = '';
-  url.searchParams.set('returnTo', request.nextUrl.pathname);
+  url.searchParams.set('redirect', request.nextUrl.pathname);
   const redirect = NextResponse.redirect(url);
   // Teruskan cookie hasil refresh token (jika ada)
   response.cookies.getAll().forEach((c) => redirect.cookies.set(c));

@@ -18,6 +18,7 @@ const UpdateProduct = ({ isOpen, onClose, productData, refreshData, categories =
   const [stocks, setStocks] = useState<any[]>(DEFAULT_SIZES.map(size => ({ size, stock_physical: '', stock_reserved: 0 })))
 
   useEffect(() => {
+    setImageFile(null)
     if (productData) {
       setProduct({
         ...productData,

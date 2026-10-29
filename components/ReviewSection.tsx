@@ -58,7 +58,7 @@ export default function ReviewSection({ session }: { session: any }) {
         cancelButtonText: 'BATAL',
       });
       if (result.isConfirmed) {
-        router.push('/login?returnTo=/#reviews');
+        router.push('/login?returnTo=/reviews');
       }
     } else {
       setIsModalOpen(true);
@@ -66,7 +66,7 @@ export default function ReviewSection({ session }: { session: any }) {
   };
 
   return (
-    <section id="reviews" className="w-full bg-white dark:bg-black text-black dark:text-white py-20 md:py-24 px-4 md:px-10 relative z-10 font-sans border-t border-black dark:border-white transition-colors duration-300">
+    <section id="reviews" className="w-full bg-white dark:bg-black text-black dark:text-white py-12 md:py-24 px-4 md:px-10 relative z-10 font-sans border-t border-black dark:border-white transition-colors duration-300">
       <div className="max-w-[1400px] mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-12 gap-6 border-b border-black dark:border-white pb-6">
           <div className="text-left">
@@ -92,7 +92,7 @@ export default function ReviewSection({ session }: { session: any }) {
             Loading Feedback...
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
             {reviews.length > 0 ? (
               reviews.map((review) => (
                 <div
@@ -122,7 +122,7 @@ export default function ReviewSection({ session }: { session: any }) {
                     <h3 className="font-black uppercase text-base md:text-lg mb-2 tracking-tight text-black dark:text-white">
                       {review.title}
                     </h3>
-                    <p className="text-zinc-600 dark:text-zinc-400 text-xs md:text-sm leading-relaxed font-medium">
+                    <p className="text-zinc-600 dark:text-zinc-400 text-sm md:text-sm leading-relaxed font-medium break-words">
                       &ldquo;{review.comment}&rdquo;
                     </p>
                   </div>
