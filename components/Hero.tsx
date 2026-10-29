@@ -29,7 +29,7 @@ const Hero = () => {
 
         <Link
           href="/products"
-          className="font-sans mt-24 bg-white px-8 py-3 text-base font-medium text-black sm:mt-32 sm:px-10 sm:py-4 sm:text-lg md:mt-40 md:px-12 md:py-5 md:text-xl transition-colors duration-300 hover:bg-slate-200"
+          className="font-sans mt-24 bg-white px-8 py-3 text-base font-medium text-black sm:mt-32 sm:px-10 sm:py-4 sm:text-lg md:mt-43 md:px-8 md:py-3 md:text-lg transition-colors duration-300 hover:bg-slate-200"
         >
           Shop Collection
         </Link>
