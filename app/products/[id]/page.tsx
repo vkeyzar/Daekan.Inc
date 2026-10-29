@@ -142,7 +142,7 @@ export default function ProductDetailPage() {
             onClick={() => router.back()}
             className="inline-flex items-center gap-2 px-4 py-2 border border-black dark:border-white bg-black text-white dark:bg-white dark:text-black font-bold text-sm uppercase tracking-wider cursor-pointer hover:opacity-80 transition-opacity"
           >
-            <FaArrowLeft size={12} /> Kembali
+            <FaArrowLeft size={12} /> BACK
           </button>
         </div>
         <Footer />
