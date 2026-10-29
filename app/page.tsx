@@ -100,7 +100,14 @@ const Home = () => {
             <div className="flex overflow-x-auto snap-x snap-mandatory gap-0 pl-px pt-px pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] md:grid md:grid-cols-3 md:gap-0 md:overflow-hidden">
               {latestProducts.map((p: any) => {
                 const name = p.name || p.title || 'UNKNOWN GEAR'
-                const soldOut = p.is_open === false
+                const isComingSoon = !p.price || Number(p.price) <= 0
+                const isSale = Boolean(p.original_price) && Number(p.original_price) > Number(p.price)
+                const isPreOrderExpired =
+                  p.label === 'PRE-ORDER' &&
+                  Boolean(p.sale_end_date) &&
+                  new Date(p.sale_end_date).getTime() <= Date.now()
+                const soldOut = p.is_open === false || isPreOrderExpired
+                const showSaleBadge = isSale && !isComingSoon && !soldOut
                 return (
                   <Link
                     key={p.id}
@@ -111,6 +118,13 @@ const Home = () => {
                       <div className="absolute inset-0 bg-black/50 z-[10] flex items-center justify-center backdrop-blur-[1px]">
                         <span className="bg-black text-white px-4 py-1.5 font-black text-xs tracking-[0.2em] uppercase -rotate-12 border border-white/20 shadow-xl">
                           SOLD OUT
+                        </span>
+                      </div>
+                    )}
+                    {showSaleBadge && (
+                      <div className="absolute top-0 left-0 bg-black dark:bg-white text-white dark:text-black px-3.5 py-1.5 md:px-5 md:py-2.5 z-[9] flex flex-col items-center justify-center">
+                        <span className="text-xs md:text-base font-black tracking-widest leading-none uppercase">
+                          SALE
                         </span>
                       </div>
                     )}
@@ -129,9 +143,20 @@ const Home = () => {
                       <h3 className="text-xs md:text-sm font-black uppercase tracking-[0.1em] line-clamp-2 leading-tight text-black dark:text-white" title={name}>
                         {name}
                       </h3>
-                      <p className={`mt-1 text-xs md:text-sm font-bold ${soldOut ? 'text-zinc-500' : 'text-zinc-600 dark:text-zinc-400'}`}>
-                        {!p.price || p.price === 0 ? 'Coming Soon' : formatIDR(p.price)}
-                      </p>
+                      {isComingSoon ? (
+                        <p className="mt-1 text-xs md:text-sm font-bold text-zinc-600 dark:text-zinc-400">Coming Soon</p>
+                      ) : (
+                        <div className="mt-1 flex items-center gap-2 flex-wrap">
+                          {isSale && !soldOut && (
+                            <p className="text-[11px] md:text-xs text-zinc-500 dark:text-zinc-400 line-through font-bold">
+                              {formatIDR(p.original_price)}
+                            </p>
+                          )}
+                          <p className={`text-xs md:text-sm font-bold ${soldOut ? 'text-zinc-500' : 'text-zinc-600 dark:text-zinc-400'}`}>
+                            {formatIDR(p.price)}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </Link>
                 )

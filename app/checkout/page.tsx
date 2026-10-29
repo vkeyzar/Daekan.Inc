@@ -170,9 +170,9 @@ const Checkout = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-white dark:bg-black text-black dark:text-white font-sans overflow-x-hidden">
+    <div className="min-h-screen flex flex-col bg-white dark:bg-black text-black dark:text-white font-sans">
       <Navbar />
-      <div className="max-w-6xl mx-auto w-full py-10 px-4 sm:px-8 md:px-12 flex-1">
+      <div className="max-w-6xl mx-auto w-full pt-10 pb-36 md:pb-44 px-4 sm:px-8 md:px-12 flex-1">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b-2 border-black dark:border-white pb-4">
           <button onClick={() => router.back()} className="flex items-center gap-2 font-black uppercase text-xs sm:text-sm tracking-widest text-black dark:text-white hover:opacity-60 transition-opacity cursor-pointer">
             <FaArrowLeft /> KEMBALI
@@ -213,7 +213,7 @@ const Checkout = () => {
 
                 <AnimatePresence>
                   {isDropdownOpen && (
-                    <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.2 }} className="absolute z-[100] top-full left-0 w-full mt-1 bg-white dark:bg-black border-2 border-black dark:border-white shadow-2xl overflow-y-auto max-h-56">
+                    <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.2 }} className="absolute z-[100] top-full left-0 w-full mt-1 bg-white dark:bg-black border-2 border-black dark:border-white shadow-2xl">
                       {provinceOptions.map((opt) => (
                         <div key={opt.value} onClick={() => { setFormData({ ...formData, province: opt.value }); setIsDropdownOpen(false); }} className={`px-5 py-3.5 text-xs sm:text-sm font-black uppercase cursor-pointer transition-colors ${formData.province === opt.value ? 'bg-black text-white dark:bg-white dark:text-black' : 'text-black dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900'}`}>
                           {opt.label}

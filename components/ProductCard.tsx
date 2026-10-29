@@ -1,29 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 
 const ProductCard = ({ product }: { product: any; onOpenModal?: (product: any) => void; isAnyModalOpen?: boolean }) => {
   const productName = product.name || product.title || 'UNKNOWN GEAR';
-  const isComingSoon = !product.price || product.price === 0;
-  const isSale = product.original_price && Number(product.original_price) > Number(product.price);
-  const isClosed = product.is_open === false;
-
-  const [isSaleExpired, setIsSaleExpired] = useState(false);
-
-  useEffect(() => {
-    if (product.sale_end_date) {
-      const timeLeft = new Date(product.sale_end_date).getTime() - Date.now();
-      if (timeLeft <= 0) setIsSaleExpired(true);
-      else setIsSaleExpired(false);
-    } else {
-      setIsSaleExpired(false);
-    }
-  }, [product.sale_end_date]);
+  const isComingSoon = !product.price || Number(product.price) <= 0;
+  const isSale = Boolean(product.original_price) && Number(product.original_price) > Number(product.price);
+  const isPreOrderExpired =
+    product.label === 'PRE-ORDER' &&
+    Boolean(product.sale_end_date) &&
+    new Date(product.sale_end_date).getTime() <= Date.now();
+  const isClosed = product.is_open === false || isPreOrderExpired;
 
   const formatIDR = (price: number | string) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(Number(price));
-  };/*  */
+  };
 
-  const showSaleBadge = isSale && !isComingSoon && !isSaleExpired && !isClosed;
+  const showSaleBadge = isSale && !isComingSoon && !isClosed;
 
   return (
     <Link
@@ -69,7 +61,7 @@ const ProductCard = ({ product }: { product: any; onOpenModal?: (product: any) =
             <p className="text-black dark:text-white font-black text-[11px] sm:text-xs uppercase tracking-tighter">Coming Soon</p>
           ) : (
             <div className="flex items-center gap-1.5 sm:gap-2 justify-center flex-wrap">
-              {isSale && !isSaleExpired && !isClosed && (
+              {isSale && !isClosed && (
                 <p className="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400 line-through font-bold">
                   {formatIDR(product.original_price)}
                 </p>
