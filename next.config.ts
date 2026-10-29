@@ -11,6 +11,16 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'corhxzcsgvcckigxleeo.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
+      }
+      ],
+  },
   async rewrites() {
     return [
       { source: '/admin-dashboard', destination: '/admin' },

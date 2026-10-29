@@ -1,15 +1,18 @@
 import React from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 const Hero = () => {
   return (
     <section className="relative w-full min-h-screen overflow-hidden bg-slate-800">
       {/* TODO: aktifkan saat aset foto sudah tersedia (taruh di /public/images/hero.jpg) */}
-      {/* <img
-        src="/images/hero.jpg"
+      <Image
+        src="https://corhxzcsgvcckigxleeo.supabase.co/storage/v1/object/public/asset/poster_web.webp"
         alt="DAEKANINC hero"
-        className="absolute inset-0 h-full w-full object-cover"
-      /> */}
+        fill
+        priority
+        className="object-cover"
+      />
 
       {/* Overlay adaptif tema */}
       <div className="absolute inset-0 bg-black/40 dark:bg-black/60 transition-colors duration-500 ease-in-out" />
