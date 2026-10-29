@@ -14,19 +14,27 @@ interface ProductModalProps {
   close: () => void;
 }
 
-const toCartItem = (product: ProductData, size: string) => ({
-  id: product.id,
-  name: product.name,
-  price: size === 'XXL' ? Number(product.price) + 10000 : Number(product.price),
-  image_url: product.image_url,
-  size,
-  label: product.label,
-});
+const toCartItem = (product: ProductData, size: string) => {
+  const mainImage = Array.isArray(product.image_url) ? product.image_url[0] : (product.image_url as unknown as string);
+  return {
+    id: product.id,
+    name: product.name,
+    price: size === 'XXL' ? Number(product.price) + 10000 : Number(product.price),
+    image_url: mainImage,
+    size,
+    label: product.label,
+  };
+};
 
 export default function ProductModal({ product, close }: ProductModalProps) {
   const router = useRouter();
   const hasSize = product.has_size !== false;
   const sizeChartCat = (product.product_line || '').toUpperCase().includes('COLLAB') ? 'COLLAB' : 'MERCH';
+
+  const images: string[] = Array.isArray(product.image_url)
+    ? product.image_url.filter(Boolean)
+    : (product.image_url ? [product.image_url as unknown as string] : []);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   const [sizes, setSizes] = useState<SizeOption[]>([]);
   const [selectedSize, setSelectedSize] = useState<string | null>(hasSize ? null : '-');
@@ -174,13 +182,33 @@ export default function ProductModal({ product, close }: ProductModalProps) {
         </button>
 
         {/* Sisi Kiri: Gambar Produk */}
-        <div className="w-full md:w-1/2 bg-zinc-50 dark:bg-zinc-900 border-b-2 md:border-b-0 md:border-r-2 border-black dark:border-white flex items-center justify-center p-6 min-h-[260px] md:min-h-[420px]">
-          {product.image_url ? (
-            <img
-              src={product.image_url}
-              alt={product.name}
-              className="w-full h-full max-h-[300px] md:max-h-[420px] object-contain"
-            />
+        <div className="w-full md:w-1/2 bg-zinc-50 dark:bg-zinc-900 border-b-2 md:border-b-0 md:border-r-2 border-black dark:border-white flex flex-col items-center justify-center p-6 min-h-[260px] md:min-h-[420px]">
+          {images.length > 0 ? (
+            <div className="w-full flex-1 flex flex-col items-center justify-center">
+              <img
+                src={images[activeImageIndex] || images[0]}
+                alt={product.name}
+                className="w-full h-full max-h-[280px] md:max-h-[360px] object-contain"
+              />
+              {images.length > 1 && (
+                <div className="flex items-center gap-2 mt-4 overflow-x-auto max-w-full pb-1">
+                  {images.map((img, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setActiveImageIndex(idx)}
+                      className={`w-12 h-12 p-1 border-2 bg-white dark:bg-black transition-all cursor-pointer shrink-0 ${
+                        activeImageIndex === idx
+                          ? 'border-black dark:border-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]'
+                          : 'border-zinc-300 dark:border-zinc-700 opacity-60 hover:opacity-100'
+                      }`}
+                    >
+                      <img src={img} alt={`thumbnail-${idx}`} className="w-full h-full object-contain" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           ) : (
             <div className="w-full h-full flex items-center justify-center text-zinc-400 font-bold text-sm">
               NO IMAGE

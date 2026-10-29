@@ -47,11 +47,13 @@ const ProductList = ({ products = [], refreshData, onOpenEdit }: any) => {
           </tr>
         </thead>
         <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-          {products.map((item: any) => (
+          {products.map((item: any) => {
+            const mainImage = (Array.isArray(item.image_url) ? item.image_url[0] : item.image_url) || 'https://via.placeholder.com/150';
+            return (
             <tr key={item.id} className="group hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-all duration-200">
               <td className="py-6 flex items-center gap-5">
                 <div className="w-20 h-20 bg-zinc-100 dark:bg-zinc-900 border border-black dark:border-white p-2 flex items-center justify-center shrink-0">
-                  <img src={item.image_url || 'https://via.placeholder.com/150'} className="max-w-full max-h-full object-contain" alt={item.name} />
+                  <img src={mainImage} className="max-w-full max-h-full object-contain" alt={item.name} />
                 </div>
                 <div>
                   <p className="font-black text-base md:text-lg uppercase tracking-tight leading-none mb-2 text-black dark:text-white">
@@ -137,7 +139,8 @@ const ProductList = ({ products = [], refreshData, onOpenEdit }: any) => {
                 </div>
               </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>

@@ -1,24 +1,27 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Swal from 'sweetalert2';
-import { FaArrowLeft } from 'react-icons/fa';
+import { FaArrowLeft, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { supabase } from '@/lib/supabaseClient';
 import useCartStore from '@/lib/store/useCartStore';
 import type { ProductData, SizeOption } from '@/lib/types';
 
-const toCartItem = (product: ProductData, size: string) => ({
-  id: product.id,
-  name: product.name,
-  price: size === 'XXL' ? Number(product.price) + 10000 : Number(product.price),
-  image_url: product.image_url,
-  size,
-  label: product.label,
-});
+const toCartItem = (product: ProductData, size: string) => {
+  const mainImage = Array.isArray(product.image_url) ? product.image_url[0] : (product.image_url as unknown as string);
+  return {
+    id: product.id,
+    name: product.name,
+    price: size === 'XXL' ? Number(product.price) + 10000 : Number(product.price),
+    image_url: mainImage,
+    size,
+    label: product.label,
+  };
+};
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -29,8 +32,11 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [sizes, setSizes] = useState<SizeOption[]>([]);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const mobileCarouselRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    setActiveImageIndex(0);
     if (!productId) return;
 
     const fetchProductAndStock = async () => {
@@ -87,6 +93,28 @@ export default function ProductDetailPage() {
     }).format(price);
   };
 
+  const scrollToMobileSlide = (index: number) => {
+    setActiveImageIndex(index);
+    if (mobileCarouselRef.current) {
+      const slideWidth = mobileCarouselRef.current.clientWidth;
+      mobileCarouselRef.current.scrollTo({
+        left: slideWidth * index,
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  const handleMobileScroll = () => {
+    if (!mobileCarouselRef.current) return;
+    const { scrollLeft, clientWidth } = mobileCarouselRef.current;
+    if (clientWidth > 0) {
+      const newIndex = Math.round(scrollLeft / clientWidth);
+      if (newIndex !== activeImageIndex) {
+        setActiveImageIndex(newIndex);
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col bg-white dark:bg-black text-black dark:text-white font-sans">
@@ -112,7 +140,7 @@ export default function ProductDetailPage() {
           <button
             type="button"
             onClick={() => router.back()}
-            className="inline-flex items-center gap-2.5 px-6 py-3.5 border border-black dark:border-white bg-black text-white dark:bg-white dark:text-black font-black text-xs uppercase tracking-[0.2em] cursor-pointer hover:opacity-80 transition-opacity"
+            className="inline-flex items-center gap-2 px-4 py-2 border border-black dark:border-white bg-black text-white dark:bg-white dark:text-black font-bold text-sm uppercase tracking-wider cursor-pointer hover:opacity-80 transition-opacity"
           >
             <FaArrowLeft size={12} /> Kembali
           </button>
@@ -123,6 +151,9 @@ export default function ProductDetailPage() {
   }
 
   const productName = product.name || (product as any).title || 'UNKNOWN GEAR';
+  const images: string[] = Array.isArray(product.image_url)
+    ? (product.image_url as string[]).filter(Boolean)
+    : (product.image_url || (product as any).image ? [((product.image_url as unknown as string) || (product as any).image)] : []);
   const hasSize = product.has_size !== false;
   const sizeChartCat = (product.product_line || '').toUpperCase().includes('COLLAB') ? 'COLLAB' : 'MERCH';
   const activePrice = selectedSize === 'XXL' ? Number(product.price) + 10000 : Number(product.price);
@@ -211,84 +242,189 @@ export default function ProductDetailPage() {
     router.push('/checkout');
   };
 
+  const imageDropShadowClass =
+    '[filter:drop-shadow(0_10px_24px_rgba(0,0,0,0.22))] dark:[filter:drop-shadow(0_0_4px_rgba(255,255,255,0.85))_drop-shadow(0_0_16px_rgba(125,211,252,0.75))_drop-shadow(0_0_32px_rgba(167,139,250,0.5))]';
+
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-black text-black dark:text-white font-sans">
       <Navbar />
 
-      <main className="flex-1 w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-12 lg:px-16 pt-4 pb-20 md:py-10">
-        {/* Back Button - Mudah dijangkau di layar HP & tampil elegan */}
-        <div className="mb-4 md:mb-8">
+      <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 sm:px-6 md:px-12 lg:px-16 pt-3 pb-16 md:pt-5 md:pb-24">
+        {/* Back Button - Subtle, compact, dengan jarak vertikal rapat ke kontainer produk */}
+        <div className="mb-3 md:mb-4">
           <button
             type="button"
             onClick={() => router.back()}
             aria-label="Kembali ke halaman sebelumnya"
-            className="group inline-flex items-center gap-3 min-h-[44px] px-4 py-2 border border-black/15 dark:border-white/20 bg-transparent text-black dark:text-white font-bold text-xs uppercase tracking-[0.2em] hover:border-black dark:hover:border-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black active:scale-[0.98] transition-all cursor-pointer"
+            className="group inline-flex items-center gap-2 px-3 py-1.5 border border-black/15 dark:border-white/20 bg-transparent text-zinc-700 dark:text-zinc-300 font-semibold text-sm tracking-wide hover:border-black dark:hover:border-white hover:text-black dark:hover:text-white active:scale-[0.98] transition-all cursor-pointer"
           >
-            <FaArrowLeft size={11} className="transition-transform duration-200 group-hover:-translate-x-0.5" />
+            <FaArrowLeft size={12} className="transition-transform duration-200 group-hover:-translate-x-0.5" />
             <span>Kembali</span>
           </button>
         </div>
 
-        {/* Layout Detail Produk Wide: Mobile bertumpuk (gambar penuh di atas, info di bawah), Desktop bersebelahan */}
-        <div className="w-full flex flex-col md:flex-row gap-8 md:gap-12 lg:gap-16 xl:gap-24 items-start">
-          {/* Kolom Kiri / Atas: Gambar Produk Ukuran Besar */}
-          <div className="relative w-full md:w-[54%] lg:w-[58%] aspect-square md:aspect-[4/3.6] bg-zinc-50/70 dark:bg-zinc-950/70 border border-black/10 dark:border-white/15 flex items-center justify-center p-6 sm:p-10 lg:p-16 overflow-hidden">
-            {isSale && !isComingSoon && !isUnavailable && (
-              <div className="absolute top-4 left-4 bg-black dark:bg-white text-white dark:text-black px-4 py-1.5 z-10">
-                <span className="text-[11px] font-black tracking-[0.2em] uppercase">
-                  SALE
-                </span>
-              </div>
-            )}
+        {/* Layout E-commerce Premium: Mobile 1 kolom, Desktop 2 kolom utama */}
+        <div className="w-full flex flex-col md:flex-row gap-6 md:gap-10 lg:gap-14 xl:gap-16 items-start">
+          {/* KOLOM KIRI: Image Gallery */}
+          <div className="w-full md:w-[56%] lg:w-[60%]">
+            {/* MOBILE VIEW: Horizontal Swipe Carousel */}
+            <div className="md:hidden relative w-full">
+              <div className="relative w-full bg-zinc-50/70 dark:bg-zinc-950/70 border border-black/10 dark:border-white/15 overflow-hidden">
+                {isSale && !isComingSoon && !isUnavailable && (
+                  <div className="absolute top-3 left-3 bg-black dark:bg-white text-white dark:text-black px-3 py-1 z-20">
+                    <span className="text-[10px] font-black tracking-[0.2em] uppercase">
+                      SALE
+                    </span>
+                  </div>
+                )}
 
-            {product.label && (
-              <div className="absolute top-4 right-4 bg-white/90 dark:bg-black/90 backdrop-blur-sm text-black dark:text-white border border-black/15 dark:border-white/20 px-3.5 py-1.5 z-10">
-                <span className="text-[10px] sm:text-[11px] font-bold tracking-[0.2em] uppercase">
-                  {product.label}
-                </span>
-              </div>
-            )}
+                {product.label && (
+                  <div className="absolute top-3 right-3 bg-white/90 dark:bg-black/90 backdrop-blur-sm text-black dark:text-white border border-black/15 dark:border-white/20 px-3 py-1 z-20">
+                    <span className="text-[10px] font-bold tracking-[0.2em] uppercase">
+                      {product.label}
+                    </span>
+                  </div>
+                )}
 
-            {product.image_url || (product as any).image ? (
-              <img
-                src={product.image_url || (product as any).image}
-                alt={productName}
-                className={`w-full h-full max-h-[420px] sm:max-h-[500px] lg:max-h-[600px] object-contain transition-transform duration-500 ${
-                  isUnavailable
-                    ? 'grayscale opacity-60 [filter:grayscale(100%)_drop-shadow(0_10px_24px_rgba(0,0,0,0.22))]'
-                    : '[filter:drop-shadow(0_10px_24px_rgba(0,0,0,0.22))] dark:[filter:drop-shadow(0_0_4px_rgba(255,255,255,0.85))_drop-shadow(0_0_16px_rgba(125,211,252,0.75))_drop-shadow(0_0_32px_rgba(167,139,250,0.5))]'
-                }`}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-zinc-400 font-black text-sm tracking-widest uppercase">
-                NO IMAGE
-              </div>
-            )}
+                {images.length > 0 ? (
+                  <div
+                    ref={mobileCarouselRef}
+                    onScroll={handleMobileScroll}
+                    className="flex w-full overflow-x-auto snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                  >
+                    {images.map((img, idx) => (
+                      <div
+                        key={idx}
+                        className="w-full shrink-0 snap-center aspect-square flex items-center justify-center p-6 sm:p-10"
+                      >
+                        <img
+                          src={img}
+                          alt={`${productName} - Foto ${idx + 1}`}
+                          className={`w-full h-full object-contain select-none ${imageDropShadowClass}`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="w-full aspect-square flex items-center justify-center text-zinc-400 font-black text-sm tracking-widest uppercase">
+                    NO IMAGE
+                  </div>
+                )}
 
-            {isUnavailable && !isComingSoon && (
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[1px]">
-                <span className="bg-black text-white px-5 py-2 font-black text-xs sm:text-sm tracking-[0.25em] uppercase -rotate-12 border border-white/30 shadow-xl">
-                  SOLD OUT
-                </span>
+                {isUnavailable && !isComingSoon && (
+                  <span className="absolute bottom-0 left-0 z-20 bg-white border border-black text-black text-xs font-bold uppercase tracking-wider px-2.5 py-1">
+                    Sold Out
+                  </span>
+                )}
+
+                {/* Navigasi Panah Mobile jika gambar > 1 */}
+                {images.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        scrollToMobileSlide(activeImageIndex > 0 ? activeImageIndex - 1 : images.length - 1)
+                      }
+                      aria-label="Foto sebelumnya"
+                      className="absolute left-2.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 flex items-center justify-center bg-white/85 dark:bg-black/85 border border-black/15 dark:border-white/20 text-black dark:text-white active:scale-95 transition"
+                    >
+                      <FaChevronLeft size={12} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        scrollToMobileSlide(activeImageIndex < images.length - 1 ? activeImageIndex + 1 : 0)
+                      }
+                      aria-label="Foto berikutnya"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 flex items-center justify-center bg-white/85 dark:bg-black/85 border border-black/15 dark:border-white/20 text-black dark:text-white active:scale-95 transition"
+                    >
+                      <FaChevronRight size={12} />
+                    </button>
+                  </>
+                )}
               </div>
-            )}
+
+              {/* Indikator Titik / Dots Carousel Mobile */}
+              {images.length > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-3">
+                  {images.map((_, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => scrollToMobileSlide(idx)}
+                      aria-label={`Lihat foto ${idx + 1}`}
+                      className={`h-1.5 transition-all duration-300 cursor-pointer ${
+                        activeImageIndex === idx
+                          ? 'w-6 bg-black dark:bg-white'
+                          : 'w-1.5 bg-black/25 dark:bg-white/25'
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* DESKTOP VIEW: Vertical Stack (Seluruh foto produk bersusun ke bawah dengan ukuran besar tanpa terpotong) */}
+            <div className="hidden md:flex md:flex-col md:gap-6">
+              {images.length > 0 ? (
+                images.map((img, idx) => (
+                  <div
+                    key={idx}
+                    className="relative w-full bg-zinc-50/70 dark:bg-zinc-950/70 border border-black/10 dark:border-white/15 flex items-center justify-center p-8 lg:p-12 overflow-hidden"
+                  >
+                    {idx === 0 && isSale && !isComingSoon && !isUnavailable && (
+                      <div className="absolute top-4 left-4 bg-black dark:bg-white text-white dark:text-black px-4 py-1.5 z-10">
+                        <span className="text-[11px] font-black tracking-[0.2em] uppercase">
+                          SALE
+                        </span>
+                      </div>
+                    )}
+
+                    {idx === 0 && product.label && (
+                      <div className="absolute top-4 right-4 bg-white/90 dark:bg-black/90 backdrop-blur-sm text-black dark:text-white border border-black/15 dark:border-white/20 px-3.5 py-1.5 z-10">
+                        <span className="text-[11px] font-bold tracking-[0.2em] uppercase">
+                          {product.label}
+                        </span>
+                      </div>
+                    )}
+
+                    <img
+                      src={img}
+                      alt={`${productName} - Foto ${idx + 1}`}
+                      className={`w-full h-auto max-h-[720px] object-contain transition-transform duration-500 ${imageDropShadowClass}`}
+                    />
+
+                    {idx === 0 && isUnavailable && !isComingSoon && (
+                      <span className="absolute bottom-0 left-0 z-10 bg-white border border-black text-black text-xs font-bold uppercase tracking-wider px-2.5 py-1">
+                        Sold Out
+                      </span>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="w-full aspect-[4/3] bg-zinc-50/70 dark:bg-zinc-950/70 border border-black/10 dark:border-white/15 flex items-center justify-center text-zinc-400 font-black text-sm tracking-widest uppercase">
+                  NO IMAGE
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Kolom Kanan / Bawah: Informasi Produk & Aksi */}
-          <div className="w-full md:w-[46%] lg:w-[42%] flex flex-col justify-between md:py-2">
+          {/* KOLOM KANAN: Product Info (Sticky pada Desktop) */}
+          <div className="w-full md:w-[44%] lg:w-[40%] sticky top-24 flex flex-col justify-between">
             <div>
               {product.category && (
-                <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-zinc-500 dark:text-zinc-400 mb-2.5">
+                <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-zinc-500 dark:text-zinc-400 mb-2">
                   {product.category}
                 </p>
               )}
 
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-[42px] font-black uppercase tracking-tight text-black dark:text-white leading-[1.1] mb-4">
+              {/* Nama Produk */}
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black uppercase tracking-tight text-black dark:text-white leading-[1.12] mb-3.5">
                 {productName}
               </h1>
 
               {/* Harga */}
-              <div className="flex items-baseline gap-3.5 mb-7 flex-wrap">
+              <div className="flex items-baseline gap-3.5 mb-6 flex-wrap pb-5 border-b border-black/10 dark:border-white/15">
                 {isComingSoon ? (
                   <p className="text-xl sm:text-2xl font-black uppercase tracking-wider text-black dark:text-white">
                     Coming Soon
@@ -312,17 +448,10 @@ export default function ProductDetailPage() {
                 )}
               </div>
 
-              {/* Deskripsi */}
-              {product.description && (
-                <div className="text-sm sm:text-[15px] text-zinc-600 dark:text-zinc-300 mb-8 border-y border-black/10 dark:border-white/15 py-6 leading-relaxed whitespace-pre-line">
-                  {product.description}
-                </div>
-              )}
-
-              {/* Pilihan Ukuran */}
+              {/* Varian / Pilihan Ukuran */}
               {hasSize && (
-                <div className="mb-8">
-                  <div className="flex items-center justify-between mb-3.5">
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-3">
                     <h2 className="text-xs font-black uppercase tracking-[0.2em] text-black dark:text-white">
                       Pilih Ukuran
                     </h2>
@@ -345,7 +474,7 @@ export default function ProductDetailPage() {
                           type="button"
                           disabled={isOutOfStock}
                           onClick={() => setSelectedSize(s.size)}
-                          className={`min-h-[48px] py-3 border text-center font-bold text-xs sm:text-sm tracking-wider transition-all cursor-pointer ${
+                          className={`min-h-[46px] py-2.5 border text-center font-bold text-xs sm:text-sm tracking-wider transition-all cursor-pointer ${
                             isOutOfStock
                               ? 'bg-zinc-100/70 dark:bg-zinc-900/50 text-zinc-300 dark:text-zinc-700 border-black/5 dark:border-white/5 cursor-not-allowed line-through'
                               : selectedSize === s.size
@@ -360,27 +489,39 @@ export default function ProductDetailPage() {
                   </div>
                 </div>
               )}
-            </div>
 
-            {/* Tombol Add to Cart & Buy Now (w-full agar mudah di-tap di mobile) */}
-            <div className="flex flex-col gap-3 pt-2">
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                disabled={isUnavailable}
-                className="w-full min-h-[54px] py-4 border border-black dark:border-white bg-black dark:bg-white text-white dark:text-black font-black text-xs sm:text-sm tracking-[0.22em] uppercase hover:opacity-85 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-              >
-                {isUnavailable ? 'Unavailable / Sold Out' : 'Add To Cart'}
-              </button>
+              {/* Tombol Add to Cart & Buy Now */}
+              <div className="flex flex-col gap-3 mb-7">
+                <button
+                  type="button"
+                  onClick={handleAddToCart}
+                  disabled={isUnavailable}
+                  className="w-full min-h-[52px] py-3.5 border border-black dark:border-white bg-black dark:bg-white text-white dark:text-black font-black text-xs sm:text-sm tracking-[0.22em] uppercase hover:opacity-85 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  {isUnavailable ? 'Unavailable / Sold Out' : 'Add To Cart'}
+                </button>
 
-              <button
-                type="button"
-                onClick={handleBuyNow}
-                disabled={isUnavailable}
-                className="w-full min-h-[54px] py-4 border border-black/25 dark:border-white/25 bg-transparent text-black dark:text-white font-black text-xs sm:text-sm tracking-[0.22em] uppercase hover:border-black dark:hover:border-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-              >
-                {isUnavailable ? 'Sold Out' : 'Buy Now'}
-              </button>
+                <button
+                  type="button"
+                  onClick={handleBuyNow}
+                  disabled={isUnavailable}
+                  className="w-full min-h-[52px] py-3.5 border border-black/25 dark:border-white/25 bg-transparent text-black dark:text-white font-black text-xs sm:text-sm tracking-[0.22em] uppercase hover:border-black dark:hover:border-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  {isUnavailable ? 'Sold Out' : 'Buy Now'}
+                </button>
+              </div>
+
+              {/* Deskripsi Produk */}
+              {product.description && (
+                <div className="border-t border-black/10 dark:border-white/15 pt-5">
+                  <h2 className="text-xs font-black uppercase tracking-[0.2em] text-black dark:text-white mb-3">
+                    Deskripsi Produk
+                  </h2>
+                  <div className="text-sm sm:text-[15px] text-zinc-600 dark:text-zinc-300 leading-relaxed whitespace-pre-line">
+                    {product.description}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

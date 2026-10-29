@@ -15,7 +15,7 @@ const VtuberCollabsPage = () => {
     const fetchData = async () => {
       setLoading(true)
       const [prodRes, catRes] = await Promise.all([
-        supabase.from('products').select('*').order('id', { ascending: true }),
+        supabase.from('products').select('*, product_stocks(*)').order('id', { ascending: true }),
         supabase.from('categories').select('*')
       ])
 

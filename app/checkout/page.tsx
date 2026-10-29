@@ -236,7 +236,10 @@ const Checkout = () => {
                 {cartItems.map((item: any, index: number) => (
                   <div key={index} className="flex items-center gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-3 last:border-0">
                     <div className="w-16 h-16 bg-zinc-50 dark:bg-zinc-900 p-1.5 shrink-0 border border-black dark:border-white">
-                      <img src={item.image_url || item.image} alt={item.name} className="w-full h-full object-contain" />
+                      {(() => {
+                        const itemImg = (Array.isArray(item.image_url) ? item.image_url[0] : item.image_url) || item.image;
+                        return <img src={itemImg || 'https://via.placeholder.com/150'} alt={item.name} className="w-full h-full object-contain" />;
+                      })()}
                     </div>
                     <div className="text-left flex-1 min-w-0">
                       <h4 className="font-black uppercase tracking-tight text-sm leading-tight mb-1 text-black dark:text-white truncate">{item.name}</h4>

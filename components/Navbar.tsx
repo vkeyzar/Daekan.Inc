@@ -117,23 +117,28 @@ export default function Navbar() {
     const categories: any[] = catRes.data || [];
     const pickRandom = (arr: any[]) => arr[Math.floor(Math.random() * arr.length)];
     const tabOf = (p: any) => ((p.product_line || '').toUpperCase().includes('COLLAB') ? 'collab' : 'merch');
+    const getProdImg = (p: any) => {
+      if (!p) return '';
+      if (Array.isArray(p.image_url)) return p.image_url[0] || '';
+      return p.image_url || '';
+    };
 
     const genreCards = categories
       .map((cat) => {
-        const prods = products.filter((p) => p.category_id === cat.id && p.image_url);
+        const prods = products.filter((p) => p.category_id === cat.id && p.image_url && (Array.isArray(p.image_url) ? p.image_url.length > 0 : true));
         if (!prods.length) return null;
         const p = pickRandom(prods);
-        return { id: cat.id, name: cat.name, image: p.image_url, isGenre: true, targetTab: tabOf(p) };
+        return { id: cat.id, name: cat.name, image: getProdImg(p), isGenre: true, targetTab: tabOf(p) };
       })
       .filter(Boolean) as CollectionCard[];
 
     const types = [...new Set(products.map((p) => (p.category || '').toUpperCase()).filter(Boolean))];
     const typeCards = types
       .map((type) => {
-        const prods = products.filter((p) => (p.category || '').toUpperCase() === type && p.image_url);
+        const prods = products.filter((p) => (p.category || '').toUpperCase() === type && p.image_url && (Array.isArray(p.image_url) ? p.image_url.length > 0 : true));
         if (!prods.length) return null;
         const p = pickRandom(prods);
-        return { id: type, name: type, image: p.image_url, isGenre: false, targetTab: tabOf(p) };
+        return { id: type, name: type, image: getProdImg(p), isGenre: false, targetTab: tabOf(p) };
       })
       .filter(Boolean) as CollectionCard[];
 
@@ -151,7 +156,7 @@ export default function Navbar() {
       .eq('product_line', PRODUCT_LINE_BY_KEY[key])
       .not('image_url', 'is', null);
     if (id !== requestId.current) return; // abaikan respons usang
-    const images = (data || []).map((d: any) => d.image_url).filter(Boolean);
+    const images = (data || []).map((d: any) => Array.isArray(d.image_url) ? d.image_url[0] : d.image_url).filter(Boolean);
     const image = images.length ? images[Math.floor(Math.random() * images.length)] : null;
     setRandomImages((prev) => ({ ...prev, [key]: image }));
     setRandomLoading(null);
@@ -229,7 +234,7 @@ export default function Navbar() {
             <Link href="/reviews" onClick={() => setOpenDropdown(null)} className="uppercase hover:opacity-60 transition-opacity duration-200">
               REVIEWS
             </Link>
-            <Link href="/about" onClick={() => setOpenDropdown(null)} className="uppercase hover:opacity-60 transition-opacity duration-200">
+            <Link href="/about-us" onClick={() => setOpenDropdown(null)} className="uppercase hover:opacity-60 transition-opacity duration-200">
               ABOUT US
             </Link>
           </div>
@@ -538,7 +543,7 @@ export default function Navbar() {
                 REVIEWS
               </Link>
               <Link
-                href="/about"
+                href="/about-us"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="text-lg font-black uppercase tracking-[0.25em] text-black dark:text-white border-b border-zinc-200 dark:border-zinc-800 pb-4 hover:opacity-60 transition-opacity"
               >

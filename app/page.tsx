@@ -24,10 +24,10 @@ const Home = () => {
 
     const fetchData = async () => {
       const [prodRes, catRes, latestRes] = await Promise.all([
-        supabase.from('products').select('*').order('created_at', { ascending: false }),
+        supabase.from('products').select('*, product_stocks(*)').order('created_at', { ascending: false }),
         supabase.from('categories').select('*').order('created_at', { ascending: false }),
         // Fallback default: 3 newest products (until a "new arrivals" category exists)
-        supabase.from('products').select('*').order('created_at', { ascending: false }).limit(3)
+        supabase.from('products').select('*, product_stocks(*)').order('created_at', { ascending: false }).limit(3)
       ])
 
       if (latestRes.data) setLatestProducts(latestRes.data)
@@ -58,13 +58,19 @@ const Home = () => {
   const formatIDR = (price: number | string) =>
     new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(Number(price))
 
+  const getProductImage = (prod: any) => {
+    if (!prod) return '';
+    if (Array.isArray(prod.image_url)) return prod.image_url[0] || '';
+    return prod.image_url || prod.image || '';
+  }
+
   const remainingCategories = categories.filter((cat: any) => cat.id !== latestCategory?.id);
   const dbCategoryCards = remainingCategories.map((cat: any) => {
     const catProds = products.filter((p: any) => p.category_id === cat.id);
     if (catProds.length === 0) return null;
     const randomProd = catProds[Math.floor(Math.random() * catProds.length)];
     const targetTab = (randomProd.product_line || '').toUpperCase().includes('COLLAB') ? 'collab' : 'merch';
-    return { id: cat.id, name: cat.name, image: randomProd.image_url, isGenre: true, targetTab }
+    return { id: cat.id, name: cat.name, image: getProductImage(randomProd), isGenre: true, targetTab }
   }).filter(Boolean);
 
   const uniqueProductTypes = [...new Set(products.map((p: any) => (p.category || '').toUpperCase()).filter(Boolean))];
@@ -73,7 +79,7 @@ const Home = () => {
     if (typeProds.length === 0) return null;
     const randomProd = typeProds[Math.floor(Math.random() * typeProds.length)];
     const targetTab = (randomProd.product_line || '').toUpperCase().includes('COLLAB') ? 'collab' : 'merch';
-    return { id: type, name: type, image: randomProd.image_url, isGenre: false, targetTab }
+    return { id: type, name: type, image: getProductImage(randomProd), isGenre: false, targetTab }
   }).filter(Boolean);
 
   const allCollectionCards = [...dbCategoryCards, ...itemTypeCards];
@@ -106,21 +112,25 @@ const Home = () => {
                   p.label === 'PRE-ORDER' &&
                   Boolean(p.sale_end_date) &&
                   new Date(p.sale_end_date).getTime() <= Date.now()
-                const soldOut = p.is_open === false || isPreOrderExpired
+                const isLimitedOutOfStock =
+                  p.label === 'LIMITED GEAR' &&
+                  Array.isArray(p.product_stocks) &&
+                  (p.product_stocks.length === 0 ||
+                    p.product_stocks.every((s: any) => Number(s.stock_physical) - Number(s.stock_reserved) <= 0))
+                const isOutOfStock =
+                  (p.stock !== undefined && p.stock !== null && Number(p.stock) <= 0) ||
+                  isLimitedOutOfStock ||
+                  (Array.isArray(p.product_stocks) &&
+                    p.product_stocks.length > 0 &&
+                    p.product_stocks.every((s: any) => Number(s.stock_physical) - Number(s.stock_reserved) <= 0))
+                const soldOut = p.is_open === false || isPreOrderExpired || isOutOfStock
                 const showSaleBadge = isSale && !isComingSoon && !soldOut
                 return (
                   <Link
                     key={p.id}
                     href={`/products/${p.id}`}
-                    className={`group cursor-pointer shrink-0 w-[78%] sm:w-[60%] md:w-auto -ml-px -mt-px snap-start relative hover:z-10 border border-black dark:border-white bg-white dark:bg-black overflow-hidden transition-all duration-300 ${soldOut ? 'opacity-80' : ''}`}
+                    className="group cursor-pointer shrink-0 w-[78%] sm:w-[60%] md:w-auto -ml-px -mt-px snap-start relative hover:z-10 border border-black dark:border-white bg-white dark:bg-black overflow-hidden transition-all duration-300"
                   >
-                    {soldOut && (
-                      <div className="absolute inset-0 bg-black/50 z-[10] flex items-center justify-center backdrop-blur-[1px]">
-                        <span className="bg-black text-white px-4 py-1.5 font-black text-xs tracking-[0.2em] uppercase -rotate-12 border border-white/20 shadow-xl">
-                          SOLD OUT
-                        </span>
-                      </div>
-                    )}
                     {showSaleBadge && (
                       <div className="absolute top-0 left-0 bg-black dark:bg-white text-white dark:text-black px-3.5 py-1.5 md:px-5 md:py-2.5 z-[9] flex flex-col items-center justify-center">
                         <span className="text-xs md:text-base font-black tracking-widest leading-none uppercase">
@@ -130,14 +140,15 @@ const Home = () => {
                     )}
                     <div className="relative aspect-square overflow-hidden border-b border-black dark:border-white">
                       <img
-                        src={p.image_url || p.image}
+                        src={getProductImage(p) || 'https://via.placeholder.com/300?text=No+Image'}
                         alt={name}
-                        className={`w-full h-full object-contain p-4 transition-transform duration-500 relative z-[5] ${
-                          soldOut
-                            ? 'grayscale opacity-60 [filter:grayscale(100%)_drop-shadow(0_6px_14px_rgba(0,0,0,0.35))]'
-                            : 'group-hover:scale-105 [filter:drop-shadow(0_6px_14px_rgba(0,0,0,0.35))] dark:[filter:drop-shadow(0_0_3px_rgba(255,255,255,0.9))_drop-shadow(0_0_12px_rgba(125,211,252,0.9))_drop-shadow(0_0_28px_rgba(125,211,252,0.7))_drop-shadow(0_0_48px_rgba(167,139,250,0.6))]'
-                        }`}
+                        className="w-full h-full object-contain p-4 transition-transform duration-500 relative z-[5] group-hover:scale-105 [filter:drop-shadow(0_6px_14px_rgba(0,0,0,0.35))] dark:[filter:drop-shadow(0_0_3px_rgba(255,255,255,0.9))_drop-shadow(0_0_12px_rgba(125,211,252,0.9))_drop-shadow(0_0_28px_rgba(125,211,252,0.7))_drop-shadow(0_0_48px_rgba(167,139,250,0.6))]"
                       />
+                      {soldOut && !isComingSoon && (
+                        <span className="absolute bottom-0 left-0 z-10 bg-white border border-black text-black text-[10px] sm:text-xs font-bold uppercase tracking-wider px-2 py-1 leading-none">
+                          Sold Out
+                        </span>
+                      )}
                     </div>
                     <div className="p-3 md:p-4 text-left">
                       <h3 className="text-xs md:text-sm font-black uppercase tracking-[0.1em] line-clamp-2 leading-tight text-black dark:text-white" title={name}>
@@ -152,7 +163,7 @@ const Home = () => {
                               {formatIDR(p.original_price)}
                             </p>
                           )}
-                          <p className={`text-xs md:text-sm font-bold ${soldOut ? 'text-zinc-500' : 'text-zinc-600 dark:text-zinc-400'}`}>
+                          <p className="text-xs md:text-sm font-bold text-zinc-600 dark:text-zinc-400">
                             {formatIDR(p.price)}
                           </p>
                         </div>

@@ -4,7 +4,7 @@ export interface ProductData {
   price: number;
   original_price?: number;
   product_line?: string;
-  image_url?: string;
+  image_url?: string[];
   description?: string;
   category?: string;
   label?: string;
@@ -23,7 +23,7 @@ export interface CartItem {
   id: string | number;
   name: string;
   price: number;
-  image_url?: string;
+  image_url?: string | string[];
   size: string;
   quantity: number;
   label?: string;

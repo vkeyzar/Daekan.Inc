@@ -58,11 +58,16 @@ export default function SquareProductCard({ product }: SquareProductCardProps) {
       )}
 
       <div className="flex-1 min-h-0 relative flex items-center justify-center mb-3">
-        <img
-          src={product.image_url || (product as any).image}
-          alt={productName}
-          className={`w-full h-full object-contain drop-shadow-sm transition-transform duration-500 group-hover:scale-105 ${isClosed ? 'grayscale opacity-60' : ''}`}
-        />
+        {(() => {
+          const mainImage = (Array.isArray(product.image_url) ? product.image_url[0] : (product.image_url as unknown as string)) || (product as any).image;
+          return (
+            <img
+              src={mainImage || 'https://via.placeholder.com/300?text=No+Image'}
+              alt={productName}
+              className={`w-full h-full object-contain drop-shadow-sm transition-transform duration-500 group-hover:scale-105 ${isClosed ? 'grayscale opacity-60' : ''}`}
+            />
+          );
+        })()}
       </div>
 
       <div className="shrink-0 text-center transition-all duration-500 flex flex-col justify-end">

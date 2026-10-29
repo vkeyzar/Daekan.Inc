@@ -114,11 +114,14 @@ export default function SidebarCart({ isOpen, onClose }: SidebarCartProps) {
             displayItems.map((item, index) => (
               <div key={`${item.id}-${item.size}-${index}`} className="flex gap-3 sm:gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4 sm:pb-6 last:border-b-0">
                 <div className="w-20 h-20 sm:w-24 sm:h-24 bg-zinc-50 dark:bg-zinc-900 border border-black dark:border-white overflow-hidden flex-shrink-0 p-1.5 sm:p-2">
-                  {item.image_url ? (
-                    <img src={item.image_url} alt={item.name} className="w-full h-full object-contain" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[10px] sm:text-xs text-zinc-400 font-bold">NO IMG</div>
-                  )}
+                  {(() => {
+                    const itemImage = Array.isArray(item.image_url) ? item.image_url[0] : item.image_url;
+                    return itemImage ? (
+                      <img src={itemImage} alt={item.name} className="w-full h-full object-contain" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[10px] sm:text-xs text-zinc-400 font-bold">NO IMG</div>
+                    );
+                  })()}
                 </div>
 
                 <div className="flex-1 min-w-0 flex flex-col justify-between">
