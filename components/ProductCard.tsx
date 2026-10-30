@@ -1,7 +1,17 @@
 import React from 'react';
 import Link from 'next/link';
 
-const ProductCard = ({ product }: { product: any; onOpenModal?: (product: any) => void; isAnyModalOpen?: boolean }) => {
+const ProductCard = ({
+  product,
+  onOpenModal,
+  isAnyModalOpen,
+  aspectRatioClass = 'aspect-square',
+}: {
+  product: any;
+  onOpenModal?: (product: any) => void;
+  isAnyModalOpen?: boolean;
+  aspectRatioClass?: string;
+}) => {
   const productName = product.name || product.title || 'UNKNOWN GEAR';
   const isComingSoon = !product.price || Number(product.price) <= 0;
   const isSale = Boolean(product.original_price) && Number(product.original_price) > Number(product.price);
@@ -32,7 +42,7 @@ const ProductCard = ({ product }: { product: any; onOpenModal?: (product: any) =
   return (
     <Link
       href={`/products/${product.id}`}
-      className="group relative bg-white dark:bg-black border border-black dark:border-white p-2.5 sm:p-4 md:p-5 cursor-pointer transition-all duration-300 w-full aspect-square flex flex-col overflow-hidden font-sans"
+      className={`group relative bg-white dark:bg-black border border-black dark:border-white p-2.5 sm:p-4 md:p-5 cursor-pointer transition-all duration-300 w-full ${aspectRatioClass} flex flex-col overflow-hidden font-sans`}
     >
       {showSaleBadge && (
         <div className="absolute top-0 left-0 bg-black dark:bg-white text-white dark:text-black px-2.5 py-1 sm:px-4 sm:py-2 md:px-5 md:py-2.5 z-[9] flex flex-col items-center justify-center">

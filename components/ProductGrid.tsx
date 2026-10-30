@@ -4,6 +4,7 @@ import ProductCard from './ProductCard'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaFilter, FaSortAmountDown, FaChevronDown, FaCheck } from 'react-icons/fa'
 import { useSearchParams } from 'next/navigation'
+import { getProductColSpan, getProductAspectRatio } from '@/lib/gridUtils'
 
 type DropdownOption = { value: string; label: string }
 
@@ -163,13 +164,6 @@ const ProductGrid = ({ products, categories, mode = 'all', title, gridColsClass:
     return ['ALL', ...Array.from(uniqueTypes)]
   }, [lineFilteredProducts])
 
-  const gridColsClass =
-    processedProducts.length === 1
-      ? 'grid-cols-1'
-      : processedProducts.length === 2
-        ? 'grid-cols-1 md:grid-cols-2'
-        : (customGridColsClass || 'grid-cols-2 md:grid-cols-2 lg:grid-cols-3');
-
   return (
     <div className="w-full bg-white dark:bg-black text-black dark:text-white pb-20 px-0 relative z-10 font-sans">
 
@@ -224,20 +218,23 @@ const ProductGrid = ({ products, categories, mode = 'all', title, gridColsClass:
           viewport={{ once: true, amount: 0.1 }}
           transition={{ duration: 0.6, delay: 0.1 }}
           variants={fadeUp}
-          className={`grid ${gridColsClass} gap-0 w-full pl-px pt-px overflow-hidden`}
+          className="grid grid-cols-6 gap-0 w-full pl-px pt-px overflow-hidden"
         >
           <AnimatePresence>
             {processedProducts.length > 0 ? (
-              processedProducts.map((product) => (
+              processedProducts.map((product, idx) => (
                 <motion.div
                   key={product.id}
                   layout
                   initial={{ opacity: 0, scale: 0.96 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.96 }}
-                  className="-ml-px -mt-px relative hover:z-10"
+                  className={`${getProductColSpan(idx, processedProducts.length)} -ml-px -mt-px relative hover:z-10`}
                 >
-                  <ProductCard product={product} />
+                  <ProductCard
+                    product={product}
+                    aspectRatioClass={getProductAspectRatio(idx, processedProducts.length)}
+                  />
                 </motion.div>
               ))
             ) : (
