@@ -84,6 +84,13 @@ const Home = () => {
 
   const allCollectionCards = [...dbCategoryCards, ...itemTypeCards];
 
+  const gridColsClass =
+    latestProducts.length === 1
+      ? 'grid-cols-1'
+      : latestProducts.length === 2
+        ? 'grid-cols-1 md:grid-cols-2'
+        : 'md:grid-cols-3';
+
   return (
     <div className="relative min-h-screen bg-white dark:bg-black text-black dark:text-white font-sans">
 
@@ -103,7 +110,13 @@ const Home = () => {
           </div>
 
           {latestProducts.length > 0 ? (
-            <div className="flex overflow-x-auto snap-x snap-mandatory gap-0 pl-px pt-px pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] md:grid md:grid-cols-3 md:gap-0 md:overflow-hidden">
+            <div
+              className={
+                latestProducts.length < 3
+                  ? `grid ${gridColsClass} gap-0 pl-px pt-px md:gap-0 md:overflow-hidden`
+                  : `flex overflow-x-auto snap-x snap-mandatory gap-0 pl-px pt-px pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] md:grid ${gridColsClass} md:gap-0 md:overflow-hidden`
+              }
+            >
               {latestProducts.map((p: any) => {
                 const name = p.name || p.title || 'UNKNOWN GEAR'
                 const isComingSoon = !p.price || Number(p.price) <= 0
@@ -129,7 +142,9 @@ const Home = () => {
                   <Link
                     key={p.id}
                     href={`/products/${p.id}`}
-                    className="group cursor-pointer shrink-0 w-[78%] sm:w-[60%] md:w-auto -ml-px -mt-px snap-start relative hover:z-10 border border-black dark:border-white bg-white dark:bg-black overflow-hidden transition-all duration-300"
+                    className={`group cursor-pointer shrink-0 ${
+                      latestProducts.length < 3 ? 'w-full' : 'w-[78%] sm:w-[60%]'
+                    } md:w-auto -ml-px -mt-px snap-start relative hover:z-10 border border-black dark:border-white bg-white dark:bg-black overflow-hidden transition-all duration-300`}
                   >
                     {showSaleBadge && (
                       <div className="absolute top-0 left-0 bg-black dark:bg-white text-white dark:text-black px-3.5 py-1.5 md:px-5 md:py-2.5 z-[9] flex flex-col items-center justify-center">

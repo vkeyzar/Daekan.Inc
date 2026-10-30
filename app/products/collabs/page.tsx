@@ -27,6 +27,13 @@ const VtuberCollabsPage = () => {
     window.scrollTo(0, 0)
   }, [])
 
+  const gridColsClass =
+    products.length === 1
+      ? 'grid-cols-1'
+      : products.length === 2
+        ? 'grid-cols-1 md:grid-cols-2'
+        : 'grid-cols-2 md:grid-cols-2 lg:grid-cols-3';
+
   return (
     <div className="relative min-h-screen bg-white dark:bg-black text-black dark:text-white flex flex-col font-sans">
       <div className="relative z-10 flex-1 flex flex-col">
@@ -38,7 +45,7 @@ const VtuberCollabsPage = () => {
             </div>
           ) : (
             <Suspense fallback={<div className="flex justify-center items-center h-[50vh]"><p className="animate-pulse font-bold tracking-widest text-black dark:text-white uppercase">Loading Gear...</p></div>}>
-              <ProductGrid products={products} categories={categories} mode="collabs" title="VTUBER COLLABS" />
+              <ProductGrid products={products} categories={categories} mode="collabs" title="VTUBER COLLABS" gridColsClass={gridColsClass} />
             </Suspense>
           )}
         </div>

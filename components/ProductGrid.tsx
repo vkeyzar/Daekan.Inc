@@ -16,6 +16,7 @@ interface ProductGridProps {
   title?: string
   onOpenModal?: (product: any) => void
   selectedProduct?: any
+  gridColsClass?: string
 }
 
 const Dropdown = ({ value, onChange, options, icon, label, className = '' }: { value: string; onChange: (v: string) => void; options: DropdownOption[]; icon: React.ReactNode; label: string; className?: string }) => {
@@ -92,7 +93,7 @@ const DEFAULT_TITLES: Record<ProductGridMode, string> = {
   merch: 'DAEKAN MERCH',
 }
 
-const ProductGrid = ({ products, categories, mode = 'all', title }: ProductGridProps) => {
+const ProductGrid = ({ products, categories, mode = 'all', title, gridColsClass: customGridColsClass }: ProductGridProps) => {
   const searchParams = useSearchParams()
 
   const [selectedGenre, setSelectedGenre] = useState(searchParams?.get('genre') || 'ALL')
@@ -162,6 +163,13 @@ const ProductGrid = ({ products, categories, mode = 'all', title }: ProductGridP
     return ['ALL', ...Array.from(uniqueTypes)]
   }, [lineFilteredProducts])
 
+  const gridColsClass =
+    processedProducts.length === 1
+      ? 'grid-cols-1'
+      : processedProducts.length === 2
+        ? 'grid-cols-1 md:grid-cols-2'
+        : (customGridColsClass || 'grid-cols-2 md:grid-cols-2 lg:grid-cols-3');
+
   return (
     <div className="w-full bg-white dark:bg-black text-black dark:text-white pb-20 px-0 relative z-10 font-sans">
 
@@ -216,7 +224,7 @@ const ProductGrid = ({ products, categories, mode = 'all', title }: ProductGridP
           viewport={{ once: true, amount: 0.1 }}
           transition={{ duration: 0.6, delay: 0.1 }}
           variants={fadeUp}
-          className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-0 w-full pl-px pt-px overflow-hidden"
+          className={`grid ${gridColsClass} gap-0 w-full pl-px pt-px overflow-hidden`}
         >
           <AnimatePresence>
             {processedProducts.length > 0 ? (
