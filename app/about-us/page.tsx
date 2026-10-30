@@ -42,7 +42,7 @@ export default function AboutUsPage() {
 
           {/* Bagian 1: Designed to be Willing. */}
           <section className="mt-4 sm:mt-6 space-y-4 sm:space-y-5 mb-10 sm:mb-14">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-black dark:text-white">
+            <h2 className="text-base sm:text-lg md:text-xl font-bold text-black dark:text-white">
               Designed to be Willing.
             </h2>
 
@@ -65,7 +65,7 @@ export default function AboutUsPage() {
 
           {/* Bagian 2: Where Anime Culture Meets Minimalist Aesthetics */}
           <section className="space-y-4 sm:space-y-5">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-black dark:text-white">
+            <h2 className="text-base sm:text-lg md:text-xl font-bold text-black dark:text-white">
               Where Anime Culture Meets Minimalist Aesthetics
             </h2>
 
