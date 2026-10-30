@@ -14,7 +14,7 @@ export default function AboutUsPage() {
     <div className="min-h-screen flex flex-col bg-white dark:bg-black text-black dark:text-white font-sans">
       <Navbar />
 
-      <main className="flex-1 w-full px-5 sm:px-8 md:px-12 py-12 sm:py-16 md:py-24 flex items-center justify-center">
+      <main className="flex-1 w-full px-5 sm:px-8 md:px-12 pt-8 pb-16 sm:pt-12 sm:pb-20 flex items-center justify-center">
         <motion.article
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -22,13 +22,27 @@ export default function AboutUsPage() {
           className="w-full max-w-3xl mx-auto text-center"
         >
           {/* Judul Utama */}
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-black dark:text-white mb-10 sm:mb-14">
-            About Us
+          <h1 className="text-3xl sm:text-5xl md:text-5xl font-black uppercase tracking-tighter text-black dark:text-white mb-2 sm:mb-3">
+            ABOUT US
           </h1>
 
+          {/* Logo Daekan: Rapat & Presisi Tanpa Spasi Berlebihan */}
+          <div className="flex justify-center items-center my-1 sm:my-1 md:my-1">
+            <img
+              src="https://corhxzcsgvcckigxleeo.supabase.co/storage/v1/object/public/asset/Daekan_New_Logo_Black33.33x_copy2.png"
+              alt="Daekan Inc."
+              className="dark:hidden w-full max-w-[240px] sm:max-w-[340px] md:max-w-[420px] lg:max-w-[480px] h-auto object-contain transition-transform duration-300 hover:scale-105"
+            />
+            <img
+              src="https://corhxzcsgvcckigxleeo.supabase.co/storage/v1/object/public/asset/Daekan_New_Logo_White_Copy33.33x2.png"
+              alt="Daekan Inc."
+              className="hidden dark:block w-full max-w-[240px] sm:max-w-[340px] md:max-w-[420px] lg:max-w-[480px] h-auto object-contain transition-transform duration-300 hover:scale-105"
+            />
+          </div>
+
           {/* Bagian 1: Designed to be Willing. */}
-          <section className="space-y-5 sm:space-y-6 mb-12 sm:mb-16">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-black dark:text-white">
+          <section className="mt-4 sm:mt-6 space-y-4 sm:space-y-5 mb-10 sm:mb-14">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-black dark:text-white">
               Designed to be Willing.
             </h2>
 
@@ -50,8 +64,8 @@ export default function AboutUsPage() {
           </section>
 
           {/* Bagian 2: Where Anime Culture Meets Minimalist Aesthetics */}
-          <section className="space-y-5 sm:space-y-6">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-black dark:text-white">
+          <section className="space-y-4 sm:space-y-5">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-black dark:text-white">
               Where Anime Culture Meets Minimalist Aesthetics
             </h2>
 
@@ -77,4 +91,3 @@ export default function AboutUsPage() {
     </div>
   );
 }
-
