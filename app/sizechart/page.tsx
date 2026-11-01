@@ -9,15 +9,9 @@ import Navbar from '@/components/Navbar'
 
 const SizeChartContent = () => {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const category = searchParams.get('cat') || 'MERCH'
-  const isCollab = category.toUpperCase() === 'COLLAB'
 
-  const merchImageUrl = supabase.storage.from('asset').getPublicUrl('size_chart_merch.png').data.publicUrl
-  const collabImageUrl = supabase.storage.from('asset').getPublicUrl('size_chart_collab.png').data.publicUrl
-
-  const imageUrl = isCollab ? collabImageUrl : merchImageUrl
-  const pageTitle = isCollab ? 'PANDUAN UKURAN KOLABORASI' : 'PANDUAN UKURAN DAEKAN'
+  const imageUrl = supabase.storage.from('asset').getPublicUrl('size_chart_merch.png').data.publicUrl
+  const pageTitle = 'PANDUAN UKURAN DAEKAN'
 
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-black text-black dark:text-white font-sans">

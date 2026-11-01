@@ -155,7 +155,7 @@ export default function ProductDetailPage() {
     ? (product.image_url as string[]).filter(Boolean)
     : (product.image_url || (product as any).image ? [((product.image_url as unknown as string) || (product as any).image)] : []);
   const hasSize = product.has_size !== false;
-  const sizeChartCat = (product.product_line || '').toUpperCase().includes('COLLAB') ? 'COLLAB' : 'MERCH';
+  const sizeChartCat = 'MERCH';
   const activePrice = selectedSize === 'XXL' ? Number(product.price) + 10000 : Number(product.price);
 
   const isComingSoon = !product.price || product.price <= 0;

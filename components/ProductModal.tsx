@@ -29,7 +29,7 @@ const toCartItem = (product: ProductData, size: string) => {
 export default function ProductModal({ product, close }: ProductModalProps) {
   const router = useRouter();
   const hasSize = product.has_size !== false;
-  const sizeChartCat = (product.product_line || '').toUpperCase().includes('COLLAB') ? 'COLLAB' : 'MERCH';
+  const sizeChartCat = 'MERCH';
 
   const images: string[] = Array.isArray(product.image_url)
     ? product.image_url.filter(Boolean)
