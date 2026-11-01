@@ -26,8 +26,8 @@ const Home = () => {
       const [prodRes, catRes, latestRes] = await Promise.all([
         supabase.from('products').select('*, product_stocks(*)').order('created_at', { ascending: false }),
         supabase.from('categories').select('*').order('created_at', { ascending: false }),
-        // Fallback default: 3 newest products (until a "new arrivals" category exists)
-        supabase.from('products').select('*, product_stocks(*)').order('created_at', { ascending: false }).limit(3)
+        // Single Featured Product: 1 produk terbaru
+        supabase.from('products').select('*, product_stocks(*)').order('created_at', { ascending: false }).limit(1)
       ])
 
       if (latestRes.data) setLatestProducts(latestRes.data)
@@ -103,16 +103,8 @@ const Home = () => {
           </div>
 
           {latestProducts.length > 0 ? (
-            <div
-              className={`flex overflow-x-auto snap-x snap-mandatory gap-0 pl-px pt-px pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] md:grid ${
-                latestProducts.length === 1
-                  ? 'md:grid-cols-1'
-                  : latestProducts.length === 2
-                    ? 'md:grid-cols-2'
-                    : 'md:grid-cols-3'
-              } md:gap-0 md:overflow-hidden`}
-            >
-              {latestProducts.map((p: any) => {
+            <div className="flex justify-center px-4">
+              {latestProducts.slice(0, 1).map((p: any) => {
                 const name = p.name || p.title || 'UNKNOWN GEAR'
                 const isComingSoon = !p.price || Number(p.price) <= 0
                 const isSale = Boolean(p.original_price) && Number(p.original_price) > Number(p.price)
@@ -137,43 +129,47 @@ const Home = () => {
                   <Link
                     key={p.id}
                     href={`/products/${p.id}`}
-                    className={`group cursor-pointer shrink-0 ${
-                      latestProducts.length === 1 ? 'w-full' : 'w-[78%] sm:w-[60%]'
-                    } md:w-auto -ml-px -mt-px snap-start relative hover:z-10 border border-black dark:border-white bg-white dark:bg-black overflow-hidden transition-all duration-300`}
+                    className="group cursor-pointer w-full max-w-md md:max-w-lg relative border-2 border-black dark:border-white bg-white dark:bg-black overflow-hidden shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] hover:-translate-y-1 transition-all duration-300"
                   >
-                    {showSaleBadge && (
-                      <div className="absolute top-0 left-0 bg-black dark:bg-white text-white dark:text-black px-3.5 py-1.5 md:px-5 md:py-2.5 z-[9] flex flex-col items-center justify-center">
+                    {showSaleBadge ? (
+                      <div className="absolute top-0 left-0 bg-black dark:bg-white text-white dark:text-black px-4 py-2 md:px-5 md:py-2.5 z-[9] flex flex-col items-center justify-center">
                         <span className="text-xs md:text-base font-black tracking-widest leading-none uppercase">
                           SALE
                         </span>
                       </div>
+                    ) : (
+                      <div className="absolute top-0 left-0 bg-black dark:bg-white text-white dark:text-black px-4 py-2 z-[9] flex items-center justify-center">
+                        <span className="text-[10px] md:text-xs font-black tracking-[0.2em] leading-none uppercase">
+                          JUST DROPPED
+                        </span>
+                      </div>
                     )}
-                    <div className="relative aspect-square overflow-hidden border-b border-black dark:border-white">
+                    <div className="relative aspect-square overflow-hidden border-b-2 border-black dark:border-white">
                       <img
                         src={getProductImage(p) || 'https://via.placeholder.com/300?text=No+Image'}
                         alt={name}
-                        className="w-full h-full object-contain p-4 transition-transform duration-500 relative z-[5] group-hover:scale-105 [filter:drop-shadow(0_6px_14px_rgba(0,0,0,0.35))] dark:[filter:drop-shadow(0_0_3px_rgba(255,255,255,0.9))_drop-shadow(0_0_12px_rgba(125,211,252,0.9))_drop-shadow(0_0_28px_rgba(125,211,252,0.7))_drop-shadow(0_0_48px_rgba(167,139,250,0.6))]"
+                        className="w-full h-full object-contain p-6 md:p-8 transition-transform duration-500 relative z-[5] group-hover:scale-105 [filter:drop-shadow(0_6px_14px_rgba(0,0,0,0.35))] dark:[filter:drop-shadow(0_0_3px_rgba(255,255,255,0.9))_drop-shadow(0_0_12px_rgba(125,211,252,0.9))_drop-shadow(0_0_28px_rgba(125,211,252,0.7))_drop-shadow(0_0_48px_rgba(167,139,250,0.6))]"
                       />
                       {soldOut && !isComingSoon && (
-                        <span className="absolute bottom-0 left-0 z-10 bg-white border border-black text-black text-[10px] sm:text-xs font-bold uppercase tracking-wider px-2 py-1 leading-none">
+                        <span className="absolute bottom-0 left-0 z-10 bg-white border border-black text-black text-xs font-bold uppercase tracking-wider px-3 py-1.5 leading-none">
                           Sold Out
                         </span>
                       )}
                     </div>
-                    <div className="p-3 md:p-4 text-left">
-                      <h3 className="text-xs md:text-sm font-black uppercase tracking-[0.1em] line-clamp-2 leading-tight text-black dark:text-white" title={name}>
+                    <div className="p-6 md:p-8 text-center">
+                      <h3 className="text-base md:text-xl font-black uppercase tracking-[0.12em] line-clamp-2 leading-tight text-black dark:text-white" title={name}>
                         {name}
                       </h3>
                       {isComingSoon ? (
-                        <p className="mt-1 text-xs md:text-sm font-bold text-zinc-600 dark:text-zinc-400">Coming Soon</p>
+                        <p className="mt-2 text-sm md:text-base font-bold text-zinc-600 dark:text-zinc-400">Coming Soon</p>
                       ) : (
-                        <div className="mt-1 flex items-center gap-2 flex-wrap">
+                        <div className="mt-2 flex items-center justify-center gap-3 flex-wrap">
                           {isSale && !soldOut && (
-                            <p className="text-[11px] md:text-xs text-zinc-500 dark:text-zinc-400 line-through font-bold">
+                            <p className="text-xs md:text-sm text-zinc-500 dark:text-zinc-400 line-through font-bold">
                               {formatIDR(p.original_price)}
                             </p>
                           )}
-                          <p className="text-xs md:text-sm font-bold text-zinc-600 dark:text-zinc-400">
+                          <p className="text-sm md:text-lg font-extrabold text-zinc-800 dark:text-zinc-200">
                             {formatIDR(p.price)}
                           </p>
                         </div>
