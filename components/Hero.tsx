@@ -77,7 +77,7 @@ const Hero = () => {
           }}
         >
           <Link
-            href="/products/collabs"
+            href="/products/14"
             className={`${HERO_BUTTON_CLASS} absolute top-[73.5%] left-[79.6%] -translate-x-1/2 -translate-y-1/2 z-10`}
           >
             PRE-ORDER NOW
