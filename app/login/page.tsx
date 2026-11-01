@@ -79,17 +79,60 @@ const LoginForm = () => {
 
     setLoading(true);
     try {
+      const resendVerification = async (targetEmail: string) => {
+        try {
+          const emailRedirectTo =
+            typeof window !== 'undefined'
+              ? `${window.location.origin}/login${redirectTo !== '/' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`
+              : undefined;
+          const { error: resendErr } = await supabase.auth.resend({
+            type: 'signup',
+            email: targetEmail,
+            options: { emailRedirectTo },
+          });
+          if (resendErr) throw resendErr;
+          Swal.fire({
+            title: 'EMAIL DIKIRIM ULANG',
+            text: `Link verifikasi baru telah dikirim ke ${targetEmail}. Silakan cek inbox atau folder spam Anda.`,
+            icon: 'success',
+            confirmButtonColor: '#000000',
+          });
+        } catch (err: any) {
+          Swal.fire({
+            title: 'GAGAL KIRIM ULANG',
+            text: err?.message || 'Gagal mengirim ulang email verifikasi. Silakan coba beberapa saat lagi.',
+            icon: 'error',
+            confirmButtonColor: '#000000',
+          });
+        }
+      };
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email: cleanEmail,
         password,
       });
 
       if (error) {
+        if (error.message.includes('Email not confirmed')) {
+          Swal.fire({
+            title: 'EMAIL BELUM DIVERIFIKASI',
+            text: 'Silakan verifikasi email Anda terlebih dahulu. Belum menerima email konfirmasi?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'KIRIM ULANG EMAIL',
+            cancelButtonText: 'TUTUP',
+            confirmButtonColor: '#000000',
+          }).then((res) => {
+            if (res.isConfirmed) {
+              resendVerification(cleanEmail);
+            }
+          });
+          return;
+        }
+
         let message = 'Terjadi kesalahan sistem.';
         if (error.message.includes('Invalid login credentials')) {
           message = 'Email atau password tidak valid.';
-        } else if (error.message.includes('Email not confirmed')) {
-          message = 'Silakan verifikasi email Anda terlebih dahulu.';
         } else if (error.message.includes('Too many requests')) {
           message = 'Terlalu banyak percobaan login. Silakan coba beberapa saat lagi.';
         }
@@ -103,13 +146,20 @@ const LoginForm = () => {
       }
 
       if (data.user && data.user.confirmed_at === null) {
+        await supabase.auth.signOut();
         Swal.fire({
           title: 'AKSES DITANGGUHKAN',
-          text: 'Silakan verifikasi email Anda.',
+          text: 'Silakan verifikasi email Anda terlebih dahulu. Ingin mengirim ulang link verifikasi?',
           icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'KIRIM ULANG EMAIL',
+          cancelButtonText: 'TUTUP',
           confirmButtonColor: '#000000',
+        }).then((res) => {
+          if (res.isConfirmed) {
+            resendVerification(cleanEmail);
+          }
         });
-        await supabase.auth.signOut();
         return;
       }
 

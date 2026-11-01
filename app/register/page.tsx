@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -54,6 +54,9 @@ const RegisterForm = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
+  const [cooldown, setCooldown] = useState(0);
   const [showChecker, setShowChecker] = useState(false);
   const [pwChecks, setPwChecks] = useState<PwChecks>({
     hasUpper: false,
@@ -61,6 +64,71 @@ const RegisterForm = () => {
     hasNumber: false,
     hasSpecial: false,
   });
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => {
+      setCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
+
+  const getEmailRedirectUrl = () => {
+    if (typeof window === 'undefined') return undefined;
+    return `${window.location.origin}/login${redirectTo ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`;
+  };
+
+  const handleResendVerification = async (targetEmail?: string) => {
+    const emailToSend = sanitizeEmailInput(targetEmail || registeredEmail || email).toLowerCase();
+    if (!emailToSend || !STRICT_EMAIL_REGEX.test(emailToSend)) {
+      Swal.fire({
+        title: 'EMAIL TIDAK VALID',
+        text: 'Masukkan alamat email yang benar untuk mengirim ulang verifikasi.',
+        icon: 'warning',
+        confirmButtonColor: '#000000',
+      });
+      return;
+    }
+    if (resending || cooldown > 0) return;
+
+    setResending(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: emailToSend,
+        options: {
+          emailRedirectTo: getEmailRedirectUrl(),
+        },
+      });
+
+      if (error) throw error;
+
+      setRegisteredEmail(emailToSend);
+      setCooldown(60);
+      Swal.fire({
+        title: 'EMAIL DIKIRIM ULANG',
+        text: `Link verifikasi baru telah dikirim ke ${emailToSend}. Silakan cek inbox atau folder spam Anda.`,
+        icon: 'success',
+        confirmButtonColor: '#000000',
+      });
+    } catch (error: any) {
+      const rawMessage = String(error?.message || '');
+      let errorMsg = 'Gagal mengirim ulang email verifikasi.';
+      if (rawMessage.toLowerCase().includes('rate limit') || rawMessage.toLowerCase().includes('for security purposes')) {
+        errorMsg = 'Terlalu banyak permintaan. Silakan tunggu sekitar 60 detik sebelum mencoba lagi.';
+      } else if (rawMessage) {
+        errorMsg = rawMessage;
+      }
+      Swal.fire({
+        title: 'GAGAL KIRIM ULANG',
+        text: errorMsg,
+        icon: 'error',
+        confirmButtonColor: '#000000',
+      });
+    } finally {
+      setResending(false);
+    }
+  };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -128,16 +196,41 @@ const RegisterForm = () => {
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: cleanEmail,
         password,
+        options: {
+          emailRedirectTo: getEmailRedirectUrl(),
+        },
       });
 
       if (error) throw error;
 
+      // Deteksi akun yang sudah pernah terdaftar (Supabase mengembalikan identities kosong saat Confirm Email aktif)
+      if (data?.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+        Swal.fire({
+          title: 'EMAIL SUDAH TERDAFTAR',
+          text: 'Email ini sudah terdaftar. Silakan login atau kirim ulang email verifikasi jika belum aktif.',
+          icon: 'info',
+          showCancelButton: true,
+          confirmButtonText: 'KIRIM ULANG VERIFIKASI',
+          cancelButtonText: 'TUTUP',
+          confirmButtonColor: '#000000',
+        }).then((res) => {
+          if (res.isConfirmed) {
+            handleResendVerification(cleanEmail);
+          }
+        });
+        setRegisteredEmail(cleanEmail);
+        return;
+      }
+
+      setRegisteredEmail(cleanEmail);
+      setCooldown(60);
+
       Swal.fire({
         title: 'REGISTRASI BERHASIL',
-        text: 'Cek email Anda untuk konfirmasi akun.',
+        text: 'Cek email Anda (termasuk folder Spam/Promosi) untuk konfirmasi akun.',
         icon: 'success',
         confirmButtonColor: '#000000',
       });
@@ -285,6 +378,26 @@ const RegisterForm = () => {
           >
             {loading ? 'PROCESSING...' : 'REGISTER ACCOUNT'}
           </button>
+
+          {registeredEmail && (
+            <div className="mt-5 p-4 border border-black dark:border-white bg-zinc-50 dark:bg-zinc-900 text-center space-y-2.5">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300">
+                Belum menerima email verifikasi di <span className="text-black dark:text-white font-black">{registeredEmail}</span>?
+              </p>
+              <button
+                type="button"
+                disabled={resending || cooldown > 0}
+                onClick={() => handleResendVerification(registeredEmail)}
+                className="w-full py-2.5 px-4 border border-black dark:border-white bg-white dark:bg-black text-black dark:text-white font-black text-[11px] uppercase tracking-[0.2em] hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all disabled:opacity-50 cursor-pointer"
+              >
+                {resending
+                  ? 'MENGIRIM ULANG...'
+                  : cooldown > 0
+                    ? `KIRIM ULANG EMAIL (${cooldown}s)`
+                    : 'KIRIM ULANG EMAIL VERIFIKASI'}
+              </button>
+            </div>
+          )}
 
           <p className="mt-8 text-zinc-600 dark:text-zinc-400 text-[11px] text-center uppercase tracking-[0.2em] font-bold">
             Already a member?{' '}

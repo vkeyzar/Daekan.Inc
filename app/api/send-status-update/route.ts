@@ -58,12 +58,12 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const data = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: 'DAEKAN INC. <admin@daekan.store>',
       to: email,
       subject: subject,
       html: `
-        <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-w: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+        <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
           <div style="background-color: ${badgeColor}; padding: 30px; text-align: center;">
             <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 800; font-style: italic; letter-spacing: 2px;">DAEKAN INC.</h1>
           </div>
@@ -90,8 +90,11 @@ export async function POST(req: NextRequest) {
       `,
     });
 
-    return NextResponse.json(data);
+    if (error) throw error;
+
+    return NextResponse.json({ message: 'Email status berhasil dikirim', data });
   } catch (error: unknown) {
+    console.error("Error kirim email status:", error);
     return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }
