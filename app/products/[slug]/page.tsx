@@ -9,6 +9,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { supabase } from '@/lib/supabaseClient';
 import useCartStore from '@/lib/store/useCartStore';
+import { extractIdFromSlug } from '@/lib/slugUtils';
 import type { ProductData, SizeOption } from '@/lib/types';
 
 const toCartItem = (product: ProductData, size: string) => {
@@ -26,7 +27,8 @@ const toCartItem = (product: ProductData, size: string) => {
 export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const productId = Array.isArray(params?.id) ? params.id[0] : params?.id;
+  const rawSlug = Array.isArray(params?.slug) ? params.slug[0] : params?.slug;
+  const extractedId = rawSlug ? extractIdFromSlug(rawSlug) : undefined;
 
   const [product, setProduct] = useState<ProductData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -37,7 +39,7 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     setActiveImageIndex(0);
-    if (!productId) return;
+    if (!extractedId) return;
 
     const fetchProductAndStock = async () => {
       setLoading(true);
@@ -45,7 +47,7 @@ export default function ProductDetailPage() {
       const { data: prodData, error: prodError } = await supabase
         .from('products')
         .select('*')
-        .eq('id', productId)
+        .eq('id', extractedId)
         .single();
 
       if (prodError || !prodData) {
@@ -83,7 +85,7 @@ export default function ProductDetailPage() {
     };
 
     fetchProductAndStock();
-  }, [productId]);
+  }, [extractedId]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('id-ID', {

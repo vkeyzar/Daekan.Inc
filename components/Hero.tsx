@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa'
+import { supabase } from '@/lib/supabaseClient'
+import { generateSlug } from '@/lib/slugUtils'
 
 const TOTAL_SLIDES = 2
 
@@ -12,6 +14,20 @@ const HERO_BUTTON_CLASS =
 
 const Hero = () => {
   const [currentSlide, setCurrentSlide] = useState(0)
+  const [collabHref, setCollabHref] = useState('/products/14')
+
+  useEffect(() => {
+    supabase
+      .from('products')
+      .select('id, name')
+      .eq('id', 14)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setCollabHref(`/products/${generateSlug(data.name, data.id)}`)
+        }
+      })
+  }, [])
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -77,7 +93,7 @@ const Hero = () => {
           }}
         >
           <Link
-            href="/products/14"
+            href={collabHref}
             className={`${HERO_BUTTON_CLASS} absolute top-[73.5%] left-[79.6%] -translate-x-1/2 -translate-y-1/2 z-10`}
           >
             PRE-ORDER NOW

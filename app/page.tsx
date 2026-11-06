@@ -8,6 +8,7 @@ import Hero from '@/components/Hero'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabaseClient'
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa'
+import { generateSlug } from '@/lib/slugUtils'
 
 const Home = () => {
   const [session, setSession] = useState<any>(null)
@@ -128,7 +129,7 @@ const Home = () => {
                 return (
                   <Link
                     key={p.id}
-                    href={`/products/${p.id}`}
+                    href={`/products/${generateSlug(p.name || p.title, p.id)}`}
                     className="group cursor-pointer w-full max-w-md md:max-w-lg relative border-2 border-black dark:border-white bg-white dark:bg-black overflow-hidden shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] hover:-translate-y-1 transition-all duration-300"
                   >
                     {showSaleBadge ? (

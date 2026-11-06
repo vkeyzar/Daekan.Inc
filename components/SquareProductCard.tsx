@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import type { ProductData } from '@/lib/types';
+import { generateSlug } from '@/lib/slugUtils';
 
 export type { ProductData };
 
@@ -40,7 +41,7 @@ export default function SquareProductCard({ product }: SquareProductCardProps) {
 
   return (
     <Link
-      href={`/products/${product.id}`}
+      href={`/products/${generateSlug(product.name || (product as any).title, product.id)}`}
       className={`group relative bg-white dark:bg-black border border-black dark:border-white p-4 cursor-pointer transition-all duration-300 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] w-[200px] md:w-[240px] shrink-0 aspect-square flex flex-col overflow-hidden font-sans ${isClosed ? 'opacity-80' : ''}`}
     >
       {isClosed && (

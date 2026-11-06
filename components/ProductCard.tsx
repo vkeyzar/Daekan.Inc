@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { generateSlug } from '@/lib/slugUtils';
 
 const ProductCard = ({
   product,
@@ -41,7 +42,7 @@ const ProductCard = ({
 
   return (
     <Link
-      href={`/products/${product.id}`}
+      href={`/products/${generateSlug(product.name || product.title, product.id)}`}
       className={`group relative bg-white dark:bg-black border border-black dark:border-white p-2.5 sm:p-4 md:p-5 cursor-pointer transition-all duration-300 w-full ${aspectRatioClass} flex flex-col overflow-hidden font-sans`}
     >
       {showSaleBadge && (
